@@ -1,0 +1,12 @@
+### An entry in the user's own "my meds" list. Tidal only ever records what
+### the user says they took; it never suggests doses.
+class: Medication
+table: medication
+fields:
+  ### The user this medication belongs to.
+  userId: UuidValue
+  ### E.g. "Ibuprofen".
+  name: String
+  ### Free text, e.g. "400 mg". Shown next to the name and copied onto each
+  ### dose log unless the user says otherwise.
+  usualDose: String

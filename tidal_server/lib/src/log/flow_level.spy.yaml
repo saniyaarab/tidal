@@ -1,0 +1,7 @@
+### How heavy the period flow was on a given day. `none` means no period that day.
+enum: FlowLevel
+values:
+  - none
+  - light
+  - medium
+  - heavy

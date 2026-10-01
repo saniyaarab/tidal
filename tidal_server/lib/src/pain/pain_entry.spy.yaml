@@ -1,0 +1,12 @@
+### A single pain log: how bad it was, where, and when.
+class: PainEntry
+table: pain_entry
+fields:
+  ### The user this entry belongs to.
+  userId: UuidValue
+  ### When the pain was logged. Always "now" at the time of logging.
+  timestamp: DateTime
+  ### Pain level from 0 (no pain) to 10 (worst pain).
+  level: int
+  ### Where the pain was felt. Can be empty if the user didn't say.
+  locations: List<PainLocation>

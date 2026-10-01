@@ -1,0 +1,26 @@
+emailIdp:
+  - login:
+  - startRegistration:
+  - verifyRegistrationCode:
+  - finishRegistration:
+  - startPasswordReset:
+  - verifyPasswordResetCode:
+  - finishPasswordReset:
+  - hasAccount:
+jwtRefresh:
+  - refreshAccessToken:
+log:
+  - saveDay:
+  - getRange:
+  - deleteAll:
+pain:
+  - logPain:
+  - getPainRange:
+  - myMeds:
+  - addMedication:
+  - logDose:
+  - getDoseRange:
+  - getLastDose:
+  - getPendingCheckIn:
+  - recordRelief:
+  - snoozeCheckIn:

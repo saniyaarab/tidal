@@ -1,0 +1,20 @@
+### One user's log for a single calendar day: period flow, mood, and a note.
+### There is at most one DayLog per user per date (see the unique index below).
+class: DayLog
+table: day_log
+fields:
+  ### The user this log belongs to.
+  userId: UuidValue
+  ### The calendar day this log is for, stored as midnight UTC of that day.
+  date: DateTime
+  ### Period flow for the day. Defaults to `none` (no period logged).
+  flow: FlowLevel, default=none
+  ### Mood for the day, if logged.
+  mood: Mood?
+  ### Freeform note, if the user wrote one.
+  note: String?
+
+indexes:
+  day_log_user_date_idx:
+    fields: userId, date
+    unique: true

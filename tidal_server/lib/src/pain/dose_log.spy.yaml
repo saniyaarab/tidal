@@ -1,0 +1,20 @@
+### A single one-tap record of a medication dose being taken.
+class: DoseLog
+table: dose_log
+fields:
+  ### The user this dose log belongs to.
+  userId: UuidValue
+  ### Which medication was taken.
+  medicationId: int, relation(parent=medication)
+  ### When the dose was taken. Always "now" at the time of logging.
+  timestamp: DateTime
+  ### Snapshot of the dose taken, e.g. "400 mg" (copied from the
+  ### medication's usualDose at the time of logging).
+  dose: String
+  ### Pain level right before taking the dose, if known.
+  painBefore: int?
+  ### Pain level at the "did it help?" check-in, once answered.
+  painAfter: int?
+  ### Set by CheckInFutureCall, 1 hour after the dose (or 30 minutes after
+  ### a snooze). True means the check-in is ready to show the user.
+  checkInDue: bool, default=false

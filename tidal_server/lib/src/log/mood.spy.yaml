@@ -1,0 +1,9 @@
+### The user's overall mood for a day.
+enum: Mood
+values:
+  - happy
+  - calm
+  - tired
+  - irritated
+  - sad
+  - anxious

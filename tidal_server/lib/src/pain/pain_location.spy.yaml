@@ -1,0 +1,8 @@
+### Where the pain was felt. A PainEntry can have more than one.
+enum: PainLocation
+values:
+  - cramps
+  - lowerBack
+  - head
+  - legs
+  - stomach
