@@ -62,14 +62,20 @@ Tidal is a period and pain tracker: a Flutter app (`tidal_flutter`) backed by a 
 - Me no longer shows cycle settings; it shows a read-only "Age" row and sign out. `saveBirthYear` is sign-up-only (throws once set); `cycle_length_sheet.dart` and `pickAndSaveBirthYear` were deleted.
 - `DayBands` shows pain (with time since, e.g. "3h ago"), mood and note only — medications were removed from Home and Calendar at the developer's request (they're in the Medications sheet), so neither screen fetches doses or meds any more. The Insights "Avg period" card shows just the number, with no note.
 
-**Step 9 (partner sharing) was cut** by the developer. The bottom bar's Partner tab still shows a placeholder; it's planned to become a self-care Journal (design pending from the developer).
+**Step 9 (partner sharing) was cut** by the developer; its tab is now the Journal (below).
 
 **Step 10 (privacy + delete all data) is done.**
 
 - `PrivacyEndpoint.deleteAllMyData` (`tidal_server/lib/src/privacy/privacy_endpoint.dart`): in one transaction, deletes the user's `DayLog`, `Period`, `PainEntry`, `DoseLog`, `Medication` and `CycleSettings` rows, then the account via `const AuthUsers().delete` (cascades to the email login, profile and sessions), then broadcasts `RevokedAuthenticationUser`. Nothing is kept, not even anonymously. Tested in `privacy_endpoint_test.dart` with real auth users.
 - `PrivacyScreen` (`tidal_flutter/lib/screens/privacy_screen.dart`), opened from a "Privacy" row on Me: the three agreed lines, a red "Delete all my data" button, a confirm dialog, then `client.auth.updateSignedInUser(null)` to forget the sign-in locally (the account no longer exists to sign out of) — the app returns to the sign-in screen.
 
-**Next**: the Journal tab (waiting on the developer's design screenshot), then the demo video.
+**The Journal tab is done (Oct 2, 2026).** See "Journal" in CLAUDE.md.
+
+- `JournalEntry` (`tidal_server/lib/src/journal/journal_entry.spy.yaml`, has a `table`): `userId`, `date`, `activities` (`List<SelfCareActivity>`, an enum of the 15 checklist items), `bestMoment`. Unique on `userId, date`. Migration `20261002210506235-journal`.
+- `JournalEndpoint`: `getDay`, `saveDay` (replaces the whole day; rejects future dates; stores activities in checklist order; blank text becomes null). Tested in `journal_endpoint_test.dart`. `PrivacyEndpoint.deleteAllMyData` also deletes journal entries.
+- `JournalScreen` (`tidal_flutter/lib/screens/journal_screen.dart`): date with prev/next arrows (next disabled on today), "Self care today" checklist with outline icons cycling rose/lavender/yellow, and a rose-bordered "Best moment of the day" box. Ticks save immediately; typing saves 800 ms after a pause and when changing day. `coming_soon_screen.dart` was deleted (no placeholders left).
+
+**Next**: see "Plan to the deadline" in CLAUDE.md (medication reminders with future calls, deploy to Serverpod Cloud, demo video).
 
 The user starts the server and Flutter app with `serverpod start`. There is no need to check if the server is running: make the changes and call the `serverpod` MCP tools as needed. If the server is not running, an informative error message will be received from the MCP server. Then STOP and ask the user to start it. NEVER start the server yourself. The Flutter app is started along with it, or can be launched from the MCP tool `spawn_flutter_app`.
 

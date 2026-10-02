@@ -58,3 +58,24 @@ extension MedicationTypeLabel on MedicationType {
     MedicationType.other => 'Other',
   };
 }
+
+/// Display name for each [SelfCareActivity] on the Journal checklist.
+extension SelfCareActivityLabel on SelfCareActivity {
+  String get label => switch (this) {
+    SelfCareActivity.meditated => 'Meditated',
+    SelfCareActivity.calledFriend => 'Called a Friend',
+    SelfCareActivity.hitSnooze => 'Hit Snooze',
+    SelfCareActivity.listenedToMusic => 'Listened to Music',
+    SelfCareActivity.snackedHealthy => 'Snacked Healthy',
+    SelfCareActivity.wentOutside => 'Went Outside',
+    SelfCareActivity.readBook => 'Read a Book',
+    SelfCareActivity.tookBath => 'Took a Bath',
+    SelfCareActivity.drewOrPainted => 'Drew or Painted',
+    SelfCareActivity.cookedMeal => 'Cooked a Meal',
+    SelfCareActivity.plannedTrip => 'Planned a Trip',
+    SelfCareActivity.huggedSomeone => 'Hugged Someone',
+    SelfCareActivity.madeTea => 'Made Some Tea',
+    SelfCareActivity.complimentedMe => 'Complimented Me',
+    SelfCareActivity.tookNap => 'Took a Nap',
+  };
+}

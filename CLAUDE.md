@@ -25,7 +25,7 @@ Demo story: "My periods are painful and I take painkillers. My tracker couldn't 
 10. Privacy screen + "delete all my data" (agreed Oct 2, 2026): a "Privacy" row on Me opens a Privacy screen with exactly these three lines — "Only you can see your data.", "Tidal never shares or sells it.", "You can delete everything at any time." — and a red "Delete all my data" button. It asks "Delete all your data? This can't be undone." (Cancel / red Delete), then deletes everything tied to the user — day logs, periods, pain entries, medications, doses, sign-up answers, and the account itself — and signs them out. Nothing is kept.
 
 Stretch only if ahead: doctor summary PDF export, "pack your painkillers" reminder, offline sync.
-Future (not MVP, developer's ideas): log more of what affects symptoms — bowel movements/IBS (pain relief after a bowel movement), caffeine and water (breast pain), foods (bloating), sugar cravings — and find patterns in why some cycles hurt more than others, with healthier swaps for cravings; medication schedules and reminders; anonymous research data to learn patterns across users (e.g. IBS and period pain) — consent model still to be decided by the developer (opt-in recommended for legal reasons: GDPR, Washington's My Health My Data Act); until then, delete removes everything; flag periods longer than 8 days as a possible menorrhagia anomaly and warn/track it; flag missed or unusually long cycles as anomalies; ask the user whether they're regular, irregular, or have PCOS/endometriosis and handle each case; reminders and events on future dates.
+Future (not MVP, developer's ideas): log more of what affects symptoms — bowel movements/IBS (pain relief after a bowel movement), caffeine and water (breast pain), foods (bloating), sugar cravings — and find patterns in why some cycles hurt more than others, with healthier swaps for cravings; medication schedules and reminders; gamified cycle companion (developer's idea, Oct 2, 2026): every user gets a dragon-like creature egg around their (estimated) ovulation day — given regardless of how accurate the estimate is — that hatches and grows with the cycle and with consistent logins, and stays forever (never shrinks, gets sick or dies; missed days are never punished). Not a baby — avoid pregnancy/loss imagery. Users keep the default creature or buy more eggs from a future digital store, collecting them in a pets/familiars list. Could use Serverpod future calls to schedule the egg. Notes: creature designs must be original (inspired by games like Pokémon GO, not copied); selling digital items inside iOS/Android apps generally has to go through Apple's and Google's in-app purchase systems; anonymous research data to learn patterns across users (e.g. IBS and period pain) — consent model still to be decided by the developer (opt-in recommended for legal reasons: GDPR, Washington's My Health My Data Act); until then, delete removes everything; flag periods longer than 8 days as a possible menorrhagia anomaly and warn/track it; flag missed or unusually long cycles as anomalies; ask the user whether they're regular, irregular, or have PCOS/endometriosis and handle each case; reminders and events on future dates.
 Cut: pregnancy mode, community, wearables, ML.
 
 ## Period tracking (agreed with the developer, Oct 2, 2026)
@@ -57,6 +57,12 @@ Pain entries and medications taken store the day they belong to, the time they h
 ## Insights (MVP, agreed Oct 2, 2026)
 The Insights tab shows "Avg cycle: N days" and "Avg period: N days", then a bar chart with one bar per recent cycle (up to 6): bar height is the cycle length, the bottom part shaded rose for its period days, a dashed line at the average cycle length. Cycles left out of the average are drawn faded and labelled with an asterisk ("53*"). Chart library: fl_chart.
 
+## Journal (agreed Oct 2, 2026; replaces the Partner tab)
+A daily self-care journal, one page per day, with prev/next arrows to move between days. Past days can be edited; future days can't. Exactly two headings and no other text:
+- "Self care today": 15 activities, each with an outline icon (illustrations later) and a tap-to-check circle — Meditated, Called a Friend, Hit Snooze, Listened to Music, Snacked Healthy, Went Outside, Read a Book, Took a Bath, Drew or Painted, Cooked a Meal, Planned a Trip, Hugged Someone, Made Some Tea, Complimented Me, Took a Nap.
+- "Best moment of the day": a free-text box in a rose-bordered card.
+Saved on the server as the user taps/types. Included in "Delete all my data". Daily (not weekly) so future insights can relate self-care to pain and mood.
+
 ## Data models (.spy.yaml)
 - DayLog: userId, date, flow (none/light/medium/heavy), mood, note
 - PainEntry: userId, date, timestamp, loggedAt, level, locations
@@ -64,13 +70,13 @@ The Insights tab shows "Avg cycle: N days" and "Avg period: N days", then a bar 
 - DoseLog: userId, medicationId, date, timestamp, loggedAt, dose
 - Period: userId, startDate, endDate (nullable; null = not confirmed yet, so the end is assumed from the default period length)
 - Prediction: userId, nextStart, confidenceDays
-- PartnerLink: ownerId, partnerId, inviteCode, sharesPhase, sharesPainStatus
+- JournalEntry: userId, date, activities (list of SelfCareActivity), bestMoment
 
 ## Endpoints
 - LogEndpoint: saveDay, getRange, deleteAll
 - PainEndpoint: logPain, logDose, myMeds
 - InsightEndpoint: getPrediction, getPainInsights
-- PartnerEndpoint: createInvite, acceptInvite, watchPartner (stream)
+- JournalEndpoint: getDay, saveDay
 Every endpoint only returns the signed-in user's own data.
 
 ## Design system (pastel, soft, feminine)
@@ -84,11 +90,11 @@ Every endpoint only returns the signed-in user's own data.
 - All tokens live in one theme file
 
 ## Screens (wireframes exist; layout inspired by the Maya app, look is Tidal's own)
-- Bottom nav: Home, Calendar, Insights, Partner, Me. Yellow round "+" button on Home and Calendar.
+- Bottom nav: Home, Calendar, Insights, Journal, Me. Yellow round "+" button on Home and Calendar.
 - Home ("Today"): cycle day + next period at the top; a large lavender day circle (date, "Day 1", "Period · heavy") with prev/next arrows; below it, full-width pastel bands per logged item (pain = rose, mood = yellow, note = lavender; medications are not shown on Home or Calendar, only in the Medications sheet); a "your pattern" tip row.
 - Log menu (+): two big tiles, Pain (rose) and Painkiller (lavender), then round pastel buttons: Flow, Mood, Symptoms, Note, Share, Reminder.
 - Log pain sheet: 0–10 circles (rose ramp), location chips, one-tap "my meds" list, "Save".
-- Calendar, Insights (Pain/Cycle/History tabs), Partner view as described in the MVP.
+- Calendar, Insights, Journal as described above.
 
 ## Current step
 Step 1 (foundation) is done: auth, DayLog + LogEndpoint, app shell with bottom nav and "+", Home screen with day circle and bands, Log sheet for Flow/Mood/Note.
@@ -97,7 +103,7 @@ Step 5 (check-in) was built and then removed at the developer's request. Step 6 
 Step 7 (predictions) is done: InsightEndpoint.getPrediction derives cycle starts from DayLog flow and averages the last 3-6 cycle lengths; Home shows "Cycle day N · Next period in Nd" and Calendar shows predicted-period and fertile-window rings. See AGENTS.md for what's built and where.
 Period tracking by long-press (see the section above) is done: `Period` table + PeriodEndpoint, predictions from periods, Calendar long-press with Undo, Home circle opens Calendar, notes-only future dates, read-only period length on Me.
 Medications (step 4 redesign), editable pain/medication times, and Insights MVP (step 8) are done. Me shows only Age (read-only) and sign out.
-Step 10 (privacy + delete all data) is done. Step 9 (partner sharing) was cut; the Partner tab will become a self-care Journal (design pending from the developer).
+Step 10 (privacy + delete all data) is done. Step 9 (partner sharing) was cut. The Journal tab (replacing Partner) is done.
 Next: see "Plan to the deadline" below.
 
 ## Judging (from the hackathon page)
@@ -108,7 +114,7 @@ Next: see "Plan to the deadline" below.
 Also: "small and finished rather than huge and broken". Extra prizes: Most Valuable Feedback ($500 + Cloud credits) and Best Hackathon Post (Cloud credits). Deadline Oct 14, 2026; winners announced Oct 22 at the Full Stack Flutter conference.
 
 ## Plan to the deadline (agreed Oct 2, 2026; own target Oct 12)
-1. Journal tab (replaces Partner): self-care journal — waiting on the developer's design screenshot; design it together before building.
+1. Done: Journal tab (replaces Partner), see "Journal" above.
 2. Medication reminders using Serverpod future calls (~1 day) — for "Use of the Serverpod stack". Design together before building.
 3. Deploy to Serverpod Cloud (~half a day) — a live link for "Does it work".
 4. Demo video (≤ 3 min) and project description (~2 days).

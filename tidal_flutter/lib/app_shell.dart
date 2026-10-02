@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'screens/calendar_screen.dart';
-import 'screens/coming_soon_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/insights_screen.dart';
+import 'screens/journal_screen.dart';
 import 'screens/me_screen.dart';
 
 /// The app's shell: bottom navigation between Home, Calendar, Insights,
-/// Partner, and Me. Each tab keeps its own state (via IndexedStack), and
+/// Journal, and Me. Each tab keeps its own state (via IndexedStack), and
 /// each tab's screen owns its own "+" button if it needs one.
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -39,7 +39,7 @@ class _AppShellState extends State<AppShell> {
     _home,
     _calendar,
     InsightsScreen(key: ValueKey(_insightsVisits)),
-    const ComingSoonScreen(title: 'Partner'),
+    const JournalScreen(),
     const MeScreen(),
   ];
 
@@ -75,8 +75,8 @@ class _AppShellState extends State<AppShell> {
             label: 'Insights',
           ),
           NavigationDestination(
-            icon: Icon(Icons.favorite_border),
-            label: 'Partner',
+            icon: Icon(Icons.auto_stories_outlined),
+            label: 'Journal',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

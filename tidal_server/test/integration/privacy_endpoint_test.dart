@@ -43,6 +43,12 @@ void main() {
         '400 mg',
       );
       await endpoints.pain.logDose(asUser, medication.id!, today, now);
+      await endpoints.journal.saveDay(
+        asUser,
+        today,
+        [SelfCareActivity.madeTea],
+        'Tea in the sun',
+      );
     }
 
     group('when not signed in', () {
@@ -86,6 +92,13 @@ void main() {
         );
         expect(
           await Medication.db.count(
+            session,
+            where: (t) => t.userId.equals(userId),
+          ),
+          0,
+        );
+        expect(
+          await JournalEntry.db.count(
             session,
             where: (t) => t.userId.equals(userId),
           ),

@@ -17,6 +17,8 @@ import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
 import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
+import 'package:tidal_server/src/generated/journal/self_care_activity.dart'
+    as _iq27cpnk;
 import 'package:tidal_server/src/generated/log/day_log.dart' as _izjvvr32;
 import 'package:tidal_server/src/generated/pain/dose_log.dart' as _ixayhju8;
 import 'package:tidal_server/src/generated/pain/medication.dart' as _i1bzforx;
@@ -28,6 +30,8 @@ import 'package:tidal_server/src/generated/period/period_span.dart'
 import 'insights/cycle_settings.dart' as _irypdw9c;
 import 'insights/cycle_summary.dart' as _itpp364r;
 import 'insights/prediction.dart' as _itygu37j;
+import 'journal/journal_entry.dart' as _iofjnpf3;
+import 'journal/self_care_activity.dart' as _idiy7rnf;
 import 'log/day_log.dart' as _ig2h1g4e;
 import 'log/flow_level.dart' as _i6jt696r;
 import 'log/mood.dart' as _iyv1k8fz;
@@ -45,6 +49,8 @@ import 'period/period_span.dart' as _i2feo9ly;
 export 'insights/cycle_settings.dart';
 export 'insights/cycle_summary.dart';
 export 'insights/prediction.dart';
+export 'journal/journal_entry.dart';
+export 'journal/self_care_activity.dart';
 export 'log/day_log.dart';
 export 'log/flow_level.dart';
 export 'log/mood.dart';
@@ -277,6 +283,66 @@ class Protocol extends _is.DatabaseSerializationManager {
       managed: true,
     ),
     _isp.TableDefinition(
+      name: 'journal_entry',
+      dartName: 'JournalEntry',
+      schema: 'public',
+      module: 'tidal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'date',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'activities',
+          columnType: _isp.ColumnType.json,
+          isNullable: false,
+          dartType: 'List<protocol:SelfCareActivity>',
+        ),
+        _isp.ColumnDefinition(
+          name: 'bestMoment',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'journal_entry_user_date_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'date',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
       name: 'medication',
       dartName: 'Medication',
       schema: 'public',
@@ -485,6 +551,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _itygu37j.Prediction) {
       return _itygu37j.Prediction.fromJson(data) as T;
     }
+    if (t == _iofjnpf3.JournalEntry) {
+      return _iofjnpf3.JournalEntry.fromJson(data) as T;
+    }
+    if (t == _idiy7rnf.SelfCareActivity) {
+      return _idiy7rnf.SelfCareActivity.fromJson(data) as T;
+    }
     if (t == _ig2h1g4e.DayLog) {
       return _ig2h1g4e.DayLog.fromJson(data) as T;
     }
@@ -536,6 +608,13 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_itygu37j.Prediction?>()) {
       return (data != null ? _itygu37j.Prediction.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_iofjnpf3.JournalEntry?>()) {
+      return (data != null ? _iofjnpf3.JournalEntry.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_idiy7rnf.SelfCareActivity?>()) {
+      return (data != null ? _idiy7rnf.SelfCareActivity.fromJson(data) : null)
+          as T;
     }
     if (t == _is.getType<_ig2h1g4e.DayLog?>()) {
       return (data != null ? _ig2h1g4e.DayLog.fromJson(data) : null) as T;
@@ -596,9 +675,21 @@ class Protocol extends _is.DatabaseSerializationManager {
               : null)
           as T;
     }
+    if (t == List<_idiy7rnf.SelfCareActivity>) {
+      return (data as List)
+              .map((e) => deserialize<_idiy7rnf.SelfCareActivity>(e))
+              .toList()
+          as T;
+    }
     if (t == List<_i9r8gfuz.PainLocation>) {
       return (data as List)
               .map((e) => deserialize<_i9r8gfuz.PainLocation>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iq27cpnk.SelfCareActivity>) {
+      return (data as List)
+              .map((e) => deserialize<_iq27cpnk.SelfCareActivity>(e))
               .toList()
           as T;
     }
@@ -655,6 +746,8 @@ class Protocol extends _is.DatabaseSerializationManager {
       _irypdw9c.CycleSettings => 'CycleSettings',
       _itpp364r.CycleSummary => 'CycleSummary',
       _itygu37j.Prediction => 'Prediction',
+      _iofjnpf3.JournalEntry => 'JournalEntry',
+      _idiy7rnf.SelfCareActivity => 'SelfCareActivity',
       _ig2h1g4e.DayLog => 'DayLog',
       _i6jt696r.FlowLevel => 'FlowLevel',
       _iyv1k8fz.Mood => 'Mood',
@@ -689,6 +782,10 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'CycleSummary';
       case _itygu37j.Prediction():
         return 'Prediction';
+      case _iofjnpf3.JournalEntry():
+        return 'JournalEntry';
+      case _idiy7rnf.SelfCareActivity():
+        return 'SelfCareActivity';
       case _ig2h1g4e.DayLog():
         return 'DayLog';
       case _i6jt696r.FlowLevel():
@@ -751,6 +848,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'Prediction') {
       return deserialize<_itygu37j.Prediction>(data['data']);
+    }
+    if (dataClassName == 'JournalEntry') {
+      return deserialize<_iofjnpf3.JournalEntry>(data['data']);
+    }
+    if (dataClassName == 'SelfCareActivity') {
+      return deserialize<_idiy7rnf.SelfCareActivity>(data['data']);
     }
     if (dataClassName == 'DayLog') {
       return deserialize<_ig2h1g4e.DayLog>(data['data']);
@@ -837,6 +940,8 @@ class Protocol extends _is.DatabaseSerializationManager {
     switch (t) {
       case _irypdw9c.CycleSettings:
         return _irypdw9c.CycleSettings.t;
+      case _iofjnpf3.JournalEntry:
+        return _iofjnpf3.JournalEntry.t;
       case _ig2h1g4e.DayLog:
         return _ig2h1g4e.DayLog.t;
       case _ijd9wd5s.DoseLog:

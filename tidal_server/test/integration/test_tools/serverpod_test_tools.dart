@@ -21,6 +21,10 @@ import 'package:tidal_server/src/generated/insights/cycle_summary.dart'
     as _i2sl7nzz;
 import 'package:tidal_server/src/generated/insights/prediction.dart'
     as _inmytcm7;
+import 'package:tidal_server/src/generated/journal/journal_entry.dart'
+    as _i3f3v8c7;
+import 'package:tidal_server/src/generated/journal/self_care_activity.dart'
+    as _iq27cpnk;
 import 'package:tidal_server/src/generated/log/day_log.dart' as _izjvvr32;
 import 'package:tidal_server/src/generated/log/flow_level.dart' as _idptobfz;
 import 'package:tidal_server/src/generated/log/mood.dart' as _ij0gfvc4;
@@ -171,6 +175,8 @@ class TestEndpoints {
 
   late final _InsightEndpoint insight;
 
+  late final _JournalEndpoint journal;
+
   late final _LogEndpoint log;
 
   late final _PainEndpoint pain;
@@ -196,6 +202,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     insight = _InsightEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    journal = _JournalEndpoint(
       endpoints,
       serializationManager,
     );
@@ -838,6 +848,85 @@ class _InsightEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
+class _JournalEndpoint {
+  _JournalEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Future<_i3f3v8c7.JournalEntry?> getDay(
+    _ist.TestSessionBuilder sessionBuilder,
+    DateTime date,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'journal',
+            method: 'getDay',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'journal',
+          methodName: 'getDay',
+          parameters: _ist.testObjectToJson({'date': date}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i3f3v8c7.JournalEntry?>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_i3f3v8c7.JournalEntry> saveDay(
+    _ist.TestSessionBuilder sessionBuilder,
+    DateTime date,
+    List<_iq27cpnk.SelfCareActivity> activities,
+    String? bestMoment,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'journal',
+            method: 'saveDay',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'journal',
+          methodName: 'saveDay',
+          parameters: _ist.testObjectToJson({
+            'date': date,
+            'activities': activities,
+            'bestMoment': bestMoment,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i3f3v8c7.JournalEntry>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

@@ -20,6 +20,9 @@ insight:
   - saveCycleLength:
   - getPeriodLength:
   - savePeriodLength:
+journal:
+  - getDay:
+  - saveDay:
 log:
   - saveDay:
   - getRange:

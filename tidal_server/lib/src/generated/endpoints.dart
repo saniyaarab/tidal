@@ -15,6 +15,8 @@ import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
 import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
+import 'package:tidal_server/src/generated/journal/self_care_activity.dart'
+    as _iq27cpnk;
 import 'package:tidal_server/src/generated/log/flow_level.dart' as _idptobfz;
 import 'package:tidal_server/src/generated/log/mood.dart' as _ij0gfvc4;
 import 'package:tidal_server/src/generated/pain/medication_type.dart'
@@ -26,6 +28,7 @@ import 'package:tidal_server/src/generated/period/period_change.dart'
 import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../insights/insight_endpoint.dart' as _irr87mt6;
+import '../journal/journal_endpoint.dart' as _iz3uglki;
 import '../log/log_endpoint.dart' as _iyqvybpl;
 import '../pain/pain_endpoint.dart' as _i9flen3s;
 import '../period/period_endpoint.dart' as _ivapd1ri;
@@ -51,6 +54,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'insight',
+          null,
+        ),
+      'journal': _iz3uglki.JournalEndpoint()
+        ..initialize(
+          server,
+          'journal',
           null,
         ),
       'log': _iyqvybpl.LogEndpoint()
@@ -413,6 +422,62 @@ class Endpoints extends _is.EndpointDispatch {
                   .savePeriodLength(
                     session,
                     params['days'],
+                  ),
+        ),
+      },
+    );
+    connectors['journal'] = _is.EndpointConnector(
+      name: 'journal',
+      endpoint: endpoints['journal']!,
+      methodConnectors: {
+        'getDay': _is.MethodConnector(
+          name: 'getDay',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['journal'] as _iz3uglki.JournalEndpoint).getDay(
+                    session,
+                    params['date'],
+                  ),
+        ),
+        'saveDay': _is.MethodConnector(
+          name: 'saveDay',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'activities': _is.ParameterDescription(
+              name: 'activities',
+              type: _is.getType<List<_iq27cpnk.SelfCareActivity>>(),
+              nullable: false,
+            ),
+            'bestMoment': _is.ParameterDescription(
+              name: 'bestMoment',
+              type: _is.getType<String?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['journal'] as _iz3uglki.JournalEndpoint).saveDay(
+                    session,
+                    params['date'],
+                    params['activities'],
+                    params['bestMoment'],
                   ),
         ),
       },

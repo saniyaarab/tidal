@@ -21,6 +21,10 @@ import 'package:tidal_client/src/protocol/insights/cycle_summary.dart'
     as _iw3iju6d;
 import 'package:tidal_client/src/protocol/insights/prediction.dart'
     as _iodim5iz;
+import 'package:tidal_client/src/protocol/journal/journal_entry.dart'
+    as _iz8exxuw;
+import 'package:tidal_client/src/protocol/journal/self_care_activity.dart'
+    as _ifegaqrf;
 import 'package:tidal_client/src/protocol/log/day_log.dart' as _i91iyawq;
 import 'package:tidal_client/src/protocol/log/flow_level.dart' as _ieqssu4z;
 import 'package:tidal_client/src/protocol/log/mood.dart' as _io0y0e3q;
@@ -370,6 +374,42 @@ class EndpointInsight extends _isc.EndpointRef {
       );
 }
 
+/// The daily self-care journal: which activities the user did each day and
+/// their best moment of the day.
+///
+/// Every method only ever reads or writes the signed-in user's own data.
+/// {@category Endpoint}
+class EndpointJournal extends _isc.EndpointRef {
+  EndpointJournal(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'journal';
+
+  /// The journal entry for [date], or null if nothing was saved that day.
+  _ida.Future<_iz8exxuw.JournalEntry?> getDay(DateTime date) =>
+      caller.callServerEndpoint<_iz8exxuw.JournalEntry?>(
+        'journal',
+        'getDay',
+        {'date': date},
+      );
+
+  /// Saves the whole journal entry for [date], replacing what was there.
+  /// Throws for future dates — only today and earlier can be journaled.
+  _ida.Future<_iz8exxuw.JournalEntry> saveDay(
+    DateTime date,
+    List<_ifegaqrf.SelfCareActivity> activities,
+    String? bestMoment,
+  ) => caller.callServerEndpoint<_iz8exxuw.JournalEntry>(
+    'journal',
+    'saveDay',
+    {
+      'date': date,
+      'activities': activities,
+      'bestMoment': bestMoment,
+    },
+  );
+}
+
 /// Endpoint for logging day-to-day info: period flow, mood, and notes.
 ///
 /// Every method only ever reads or writes the signed-in user's own data.
@@ -606,9 +646,9 @@ class EndpointPrivacy extends _isc.EndpointRef {
   String get name => 'privacy';
 
   /// Permanently deletes everything tied to the signed-in user — day logs,
-  /// periods, pain entries, medications and doses, sign-up answers — and
-  /// then their account itself, signing them out everywhere. Nothing is
-  /// kept, not even anonymously.
+  /// periods, pain entries, medications and doses, journal entries, sign-up
+  /// answers — and then their account itself, signing them out everywhere.
+  /// Nothing is kept, not even anonymously.
   ///
   /// Runs in one transaction, so either everything is deleted or nothing is.
   _ida.Future<void> deleteAllMyData() => caller.callServerEndpoint<void>(
@@ -659,6 +699,7 @@ class Client extends _isc.ServerpodClientShared {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
     insight = EndpointInsight(this);
+    journal = EndpointJournal(this);
     log = EndpointLog(this);
     pain = EndpointPain(this);
     period = EndpointPeriod(this);
@@ -671,6 +712,8 @@ class Client extends _isc.ServerpodClientShared {
   late final EndpointJwtRefresh jwtRefresh;
 
   late final EndpointInsight insight;
+
+  late final EndpointJournal journal;
 
   late final EndpointLog log;
 
@@ -687,6 +730,7 @@ class Client extends _isc.ServerpodClientShared {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
     'insight': insight,
+    'journal': journal,
     'log': log,
     'pain': pain,
     'period': period,

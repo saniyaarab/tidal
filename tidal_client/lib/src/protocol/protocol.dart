@@ -16,6 +16,8 @@ import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
     as _iaic;
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
+import 'package:tidal_client/src/protocol/journal/self_care_activity.dart'
+    as _ifegaqrf;
 import 'package:tidal_client/src/protocol/log/day_log.dart' as _i91iyawq;
 import 'package:tidal_client/src/protocol/pain/dose_log.dart' as _i95dlci0;
 import 'package:tidal_client/src/protocol/pain/medication.dart' as _i2f8rdmx;
@@ -25,6 +27,8 @@ import 'package:tidal_client/src/protocol/period/period_span.dart' as _idzkd17y;
 import 'insights/cycle_settings.dart' as _irypdw9c;
 import 'insights/cycle_summary.dart' as _itpp364r;
 import 'insights/prediction.dart' as _itygu37j;
+import 'journal/journal_entry.dart' as _iofjnpf3;
+import 'journal/self_care_activity.dart' as _idiy7rnf;
 import 'log/day_log.dart' as _ig2h1g4e;
 import 'log/flow_level.dart' as _i6jt696r;
 import 'log/mood.dart' as _iyv1k8fz;
@@ -42,6 +46,8 @@ import 'period/period_span.dart' as _i2feo9ly;
 export 'insights/cycle_settings.dart';
 export 'insights/cycle_summary.dart';
 export 'insights/prediction.dart';
+export 'journal/journal_entry.dart';
+export 'journal/self_care_activity.dart';
 export 'log/day_log.dart';
 export 'log/flow_level.dart';
 export 'log/mood.dart';
@@ -101,6 +107,12 @@ class Protocol extends _isc.SerializationManager {
     if (t == _itygu37j.Prediction) {
       return _itygu37j.Prediction.fromJson(data) as T;
     }
+    if (t == _iofjnpf3.JournalEntry) {
+      return _iofjnpf3.JournalEntry.fromJson(data) as T;
+    }
+    if (t == _idiy7rnf.SelfCareActivity) {
+      return _idiy7rnf.SelfCareActivity.fromJson(data) as T;
+    }
     if (t == _ig2h1g4e.DayLog) {
       return _ig2h1g4e.DayLog.fromJson(data) as T;
     }
@@ -152,6 +164,13 @@ class Protocol extends _isc.SerializationManager {
     }
     if (t == _isc.getType<_itygu37j.Prediction?>()) {
       return (data != null ? _itygu37j.Prediction.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_iofjnpf3.JournalEntry?>()) {
+      return (data != null ? _iofjnpf3.JournalEntry.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_idiy7rnf.SelfCareActivity?>()) {
+      return (data != null ? _idiy7rnf.SelfCareActivity.fromJson(data) : null)
+          as T;
     }
     if (t == _isc.getType<_ig2h1g4e.DayLog?>()) {
       return (data != null ? _ig2h1g4e.DayLog.fromJson(data) : null) as T;
@@ -212,9 +231,21 @@ class Protocol extends _isc.SerializationManager {
               : null)
           as T;
     }
+    if (t == List<_idiy7rnf.SelfCareActivity>) {
+      return (data as List)
+              .map((e) => deserialize<_idiy7rnf.SelfCareActivity>(e))
+              .toList()
+          as T;
+    }
     if (t == List<_i9r8gfuz.PainLocation>) {
       return (data as List)
               .map((e) => deserialize<_i9r8gfuz.PainLocation>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ifegaqrf.SelfCareActivity>) {
+      return (data as List)
+              .map((e) => deserialize<_ifegaqrf.SelfCareActivity>(e))
               .toList()
           as T;
     }
@@ -268,6 +299,8 @@ class Protocol extends _isc.SerializationManager {
       _irypdw9c.CycleSettings => 'CycleSettings',
       _itpp364r.CycleSummary => 'CycleSummary',
       _itygu37j.Prediction => 'Prediction',
+      _iofjnpf3.JournalEntry => 'JournalEntry',
+      _idiy7rnf.SelfCareActivity => 'SelfCareActivity',
       _ig2h1g4e.DayLog => 'DayLog',
       _i6jt696r.FlowLevel => 'FlowLevel',
       _iyv1k8fz.Mood => 'Mood',
@@ -302,6 +335,10 @@ class Protocol extends _isc.SerializationManager {
         return 'CycleSummary';
       case _itygu37j.Prediction():
         return 'Prediction';
+      case _iofjnpf3.JournalEntry():
+        return 'JournalEntry';
+      case _idiy7rnf.SelfCareActivity():
+        return 'SelfCareActivity';
       case _ig2h1g4e.DayLog():
         return 'DayLog';
       case _i6jt696r.FlowLevel():
@@ -360,6 +397,12 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'Prediction') {
       return deserialize<_itygu37j.Prediction>(data['data']);
+    }
+    if (dataClassName == 'JournalEntry') {
+      return deserialize<_iofjnpf3.JournalEntry>(data['data']);
+    }
+    if (dataClassName == 'SelfCareActivity') {
+      return deserialize<_idiy7rnf.SelfCareActivity>(data['data']);
     }
     if (dataClassName == 'DayLog') {
       return deserialize<_ig2h1g4e.DayLog>(data['data']);
