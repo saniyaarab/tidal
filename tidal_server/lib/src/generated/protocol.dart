@@ -25,6 +25,8 @@ import 'package:tidal_server/src/generated/pain/pain_location.dart'
     as _iv8cvxsn;
 import 'future_calls_generated_models/check_in_future_call_check_model.dart'
     as _iy7j8eve;
+import 'insights/cycle_settings.dart' as _irypdw9c;
+import 'insights/prediction.dart' as _itygu37j;
 import 'log/day_log.dart' as _ig2h1g4e;
 import 'log/flow_level.dart' as _i6jt696r;
 import 'log/mood.dart' as _iyv1k8fz;
@@ -32,6 +34,8 @@ import 'pain/dose_log.dart' as _ijd9wd5s;
 import 'pain/medication.dart' as _ifw90bis;
 import 'pain/pain_entry.dart' as _irsb51xy;
 import 'pain/pain_location.dart' as _i9r8gfuz;
+export 'insights/cycle_settings.dart';
+export 'insights/prediction.dart';
 export 'log/day_log.dart';
 export 'log/flow_level.dart';
 export 'log/mood.dart';
@@ -48,6 +52,64 @@ class Protocol extends _is.DatabaseSerializationManager {
   static final Protocol _instance = Protocol._().._registerHostProtocols();
 
   static List<_isp.TableDefinition> get targetTableDefinitions => [
+    _isp.TableDefinition(
+      name: 'cycle_settings',
+      dartName: 'CycleSettings',
+      schema: 'public',
+      module: 'tidal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'typicalCycleDays',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '28',
+        ),
+        _isp.ColumnDefinition(
+          name: 'typicalPeriodDays',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '5',
+        ),
+        _isp.ColumnDefinition(
+          name: 'birthYear',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'cycle_settings_user_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
     _isp.TableDefinition(
       name: 'day_log',
       dartName: 'DayLog',
@@ -300,6 +362,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _iy7j8eve.CheckInFutureCallCheckModel) {
       return _iy7j8eve.CheckInFutureCallCheckModel.fromJson(data) as T;
     }
+    if (t == _irypdw9c.CycleSettings) {
+      return _irypdw9c.CycleSettings.fromJson(data) as T;
+    }
+    if (t == _itygu37j.Prediction) {
+      return _itygu37j.Prediction.fromJson(data) as T;
+    }
     if (t == _ig2h1g4e.DayLog) {
       return _ig2h1g4e.DayLog.fromJson(data) as T;
     }
@@ -326,6 +394,13 @@ class Protocol extends _is.DatabaseSerializationManager {
               ? _iy7j8eve.CheckInFutureCallCheckModel.fromJson(data)
               : null)
           as T;
+    }
+    if (t == _is.getType<_irypdw9c.CycleSettings?>()) {
+      return (data != null ? _irypdw9c.CycleSettings.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_itygu37j.Prediction?>()) {
+      return (data != null ? _itygu37j.Prediction.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_ig2h1g4e.DayLog?>()) {
       return (data != null ? _ig2h1g4e.DayLog.fromJson(data) : null) as T;
@@ -399,6 +474,8 @@ class Protocol extends _is.DatabaseSerializationManager {
   static String? getClassNameForType(Type type) {
     return switch (type) {
       _iy7j8eve.CheckInFutureCallCheckModel => 'CheckInFutureCallCheckModel',
+      _irypdw9c.CycleSettings => 'CycleSettings',
+      _itygu37j.Prediction => 'Prediction',
       _ig2h1g4e.DayLog => 'DayLog',
       _i6jt696r.FlowLevel => 'FlowLevel',
       _iyv1k8fz.Mood => 'Mood',
@@ -422,6 +499,10 @@ class Protocol extends _is.DatabaseSerializationManager {
     switch (data) {
       case _iy7j8eve.CheckInFutureCallCheckModel():
         return 'CheckInFutureCallCheckModel';
+      case _irypdw9c.CycleSettings():
+        return 'CycleSettings';
+      case _itygu37j.Prediction():
+        return 'Prediction';
       case _ig2h1g4e.DayLog():
         return 'DayLog';
       case _i6jt696r.FlowLevel():
@@ -464,6 +545,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'CheckInFutureCallCheckModel') {
       return deserialize<_iy7j8eve.CheckInFutureCallCheckModel>(data['data']);
+    }
+    if (dataClassName == 'CycleSettings') {
+      return deserialize<_irypdw9c.CycleSettings>(data['data']);
+    }
+    if (dataClassName == 'Prediction') {
+      return deserialize<_itygu37j.Prediction>(data['data']);
     }
     if (dataClassName == 'DayLog') {
       return deserialize<_ig2h1g4e.DayLog>(data['data']);
@@ -527,6 +614,8 @@ class Protocol extends _is.DatabaseSerializationManager {
       }
     }
     switch (t) {
+      case _irypdw9c.CycleSettings:
+        return _irypdw9c.CycleSettings.t;
       case _ig2h1g4e.DayLog:
         return _ig2h1g4e.DayLog.t;
       case _ijd9wd5s.DoseLog:

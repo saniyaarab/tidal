@@ -64,5 +64,6 @@ Every endpoint only returns the signed-in user's own data.
 ## Current step
 Step 1 (foundation) is done: auth, DayLog + LogEndpoint, app shell with bottom nav and "+", Home screen with day circle and bands, Log sheet for Flow/Mood/Note.
 Steps 3-4 (pain + medication logging) are done: PainEntry/Medication/DoseLog + PainEndpoint, Pain and Painkiller log sheets, Home bands for pain and doses (ordered by time).
-Steps 5-6 (check-in + calendar) are done: CheckInFutureCall + recordRelief/snoozeCheckIn, CheckInScreen (shown automatically from Home when a check-in is due), CalendarScreen with a month grid (period rings, pain dots, tap-to-select day detail). See AGENTS.md for what's built and where.
-Next: predictions (step 7), then pain insights (step 8).
+Steps 5-6 (check-in + calendar) are done: CheckInFutureCall + recordRelief/snoozeCheckIn, CheckInScreen (shown automatically from Home when a check-in is due), CalendarScreen with a month grid (period rings, pain dots, tap-to-select day detail).
+Step 7 (predictions) is done: InsightEndpoint.getPrediction derives cycle starts from DayLog flow and averages the last 3-6 cycle lengths; Home shows "Cycle day N · Next period in Nd" and Calendar shows predicted-period and fertile-window rings. See AGENTS.md for what's built and where.
+Next: pain insights (step 8).

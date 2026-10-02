@@ -21,6 +21,8 @@ import 'package:tidal_client/src/protocol/pain/dose_log.dart' as _i95dlci0;
 import 'package:tidal_client/src/protocol/pain/medication.dart' as _i2f8rdmx;
 import 'package:tidal_client/src/protocol/pain/pain_entry.dart' as _imzr3ook;
 import 'package:tidal_client/src/protocol/pain/pain_location.dart' as _ivkbsfwn;
+import 'insights/cycle_settings.dart' as _irypdw9c;
+import 'insights/prediction.dart' as _itygu37j;
 import 'log/day_log.dart' as _ig2h1g4e;
 import 'log/flow_level.dart' as _i6jt696r;
 import 'log/mood.dart' as _iyv1k8fz;
@@ -28,6 +30,8 @@ import 'pain/dose_log.dart' as _ijd9wd5s;
 import 'pain/medication.dart' as _ifw90bis;
 import 'pain/pain_entry.dart' as _irsb51xy;
 import 'pain/pain_location.dart' as _i9r8gfuz;
+export 'insights/cycle_settings.dart';
+export 'insights/prediction.dart';
 export 'log/day_log.dart';
 export 'log/flow_level.dart';
 export 'log/mood.dart';
@@ -71,6 +75,12 @@ class Protocol extends _isc.SerializationManager {
       }
     }
 
+    if (t == _irypdw9c.CycleSettings) {
+      return _irypdw9c.CycleSettings.fromJson(data) as T;
+    }
+    if (t == _itygu37j.Prediction) {
+      return _itygu37j.Prediction.fromJson(data) as T;
+    }
     if (t == _ig2h1g4e.DayLog) {
       return _ig2h1g4e.DayLog.fromJson(data) as T;
     }
@@ -91,6 +101,13 @@ class Protocol extends _isc.SerializationManager {
     }
     if (t == _i9r8gfuz.PainLocation) {
       return _i9r8gfuz.PainLocation.fromJson(data) as T;
+    }
+    if (t == _isc.getType<_irypdw9c.CycleSettings?>()) {
+      return (data != null ? _irypdw9c.CycleSettings.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_itygu37j.Prediction?>()) {
+      return (data != null ? _itygu37j.Prediction.fromJson(data) : null) as T;
     }
     if (t == _isc.getType<_ig2h1g4e.DayLog?>()) {
       return (data != null ? _ig2h1g4e.DayLog.fromJson(data) : null) as T;
@@ -160,6 +177,8 @@ class Protocol extends _isc.SerializationManager {
 
   static String? getClassNameForType(Type type) {
     return switch (type) {
+      _irypdw9c.CycleSettings => 'CycleSettings',
+      _itygu37j.Prediction => 'Prediction',
       _ig2h1g4e.DayLog => 'DayLog',
       _i6jt696r.FlowLevel => 'FlowLevel',
       _iyv1k8fz.Mood => 'Mood',
@@ -181,6 +200,10 @@ class Protocol extends _isc.SerializationManager {
     }
 
     switch (data) {
+      case _irypdw9c.CycleSettings():
+        return 'CycleSettings';
+      case _itygu37j.Prediction():
+        return 'Prediction';
       case _ig2h1g4e.DayLog():
         return 'DayLog';
       case _i6jt696r.FlowLevel():
@@ -216,6 +239,12 @@ class Protocol extends _isc.SerializationManager {
     var dataClassName = data['className'];
     if (dataClassName is! String) {
       return super.deserializeByClassName(data);
+    }
+    if (dataClassName == 'CycleSettings') {
+      return deserialize<_irypdw9c.CycleSettings>(data['data']);
+    }
+    if (dataClassName == 'Prediction') {
+      return deserialize<_itygu37j.Prediction>(data['data']);
     }
     if (dataClassName == 'DayLog') {
       return deserialize<_ig2h1g4e.DayLog>(data['data']);

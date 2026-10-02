@@ -7,12 +7,11 @@ import '../theme.dart';
 import '../widgets/day_bands.dart';
 import 'log_screen.dart';
 
-/// The "Calendar" tab: a month grid with a rose ring on period days and a
-/// small dot on days with a pain entry. Tapping a day shows its full log
-/// below, the same way Home does for the selected day.
-///
-/// Predicted period and fertile-window rings aren't shown yet — those need
-/// cycle-length predictions, which come in a later step.
+/// The "Calendar" tab: a month grid with a rose ring on period days (solid
+/// for logged days, faded for the predicted window), a soft lavender ring
+/// on fertile days, and a small dot on days with a pain entry. Tapping a
+/// day shows its full log below, the same way Home does for the selected
+/// day.
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
 
@@ -29,6 +28,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   List<PainEntry> _selectedPainEntries = [];
   List<DoseLog> _selectedDoseLogs = [];
   Map<int, Medication> _medsById = {};
+  Prediction? _prediction;
   bool _loading = true;
   String? _error;
 
@@ -53,6 +53,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         client.pain.getPainRange(_selectedDate, _selectedDate),
         client.pain.getDoseRange(_selectedDate, _selectedDate),
         client.pain.myMeds(),
+        client.insight.getPrediction(),
       ]);
       final monthDayLogs = results[0] as List<DayLog>;
       final monthPainEntries = results[1] as List<PainEntry>;
@@ -72,6 +73,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _selectedPainEntries = results[2] as List<PainEntry>;
         _selectedDoseLogs = results[3] as List<DoseLog>;
         _medsById = {for (final med in meds) med.id!: med};
+        _prediction = results[5] as Prediction;
         _loading = false;
       });
     } catch (e) {
@@ -129,6 +131,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               selectedDate: _selectedDate,
               dayLogsByDate: _dayLogsByDate,
               datesWithPain: _datesWithPain,
+              prediction: _prediction,
               onSelect: _selectDate,
             ),
             const SizedBox(height: 12),
@@ -199,6 +202,7 @@ class _MonthGrid extends StatelessWidget {
   final DateTime selectedDate;
   final Map<DateTime, DayLog> dayLogsByDate;
   final Set<DateTime> datesWithPain;
+  final Prediction? prediction;
   final ValueChanged<DateTime> onSelect;
 
   const _MonthGrid({
@@ -206,6 +210,7 @@ class _MonthGrid extends StatelessWidget {
     required this.selectedDate,
     required this.dayLogsByDate,
     required this.datesWithPain,
+    required this.prediction,
     required this.onSelect,
   });
 
@@ -252,6 +257,14 @@ class _MonthGrid extends StatelessWidget {
                 hasPain: datesWithPain.contains(
                   gridStart.add(Duration(days: i)),
                 ),
+                isPredictedPeriod: _isPredictedPeriodDay(
+                  gridStart.add(Duration(days: i)),
+                  prediction,
+                ),
+                isFertile: _isFertileDay(
+                  gridStart.add(Duration(days: i)),
+                  prediction,
+                ),
                 onTap: () => onSelect(gridStart.add(Duration(days: i))),
               ),
           ],
@@ -261,6 +274,23 @@ class _MonthGrid extends StatelessWidget {
   }
 }
 
+/// Whether [date] falls within the predicted period (the predicted start
+/// date through the user's typical period length — see Me > Period length).
+bool _isPredictedPeriodDay(DateTime date, Prediction? prediction) {
+  final nextStart = prediction?.nextPeriodStart;
+  final periodEnd = prediction?.predictedPeriodEnd;
+  if (nextStart == null || periodEnd == null) return false;
+  return !date.isBefore(nextStart) && !date.isAfter(periodEnd);
+}
+
+/// Whether [date] falls within the predicted fertile window.
+bool _isFertileDay(DateTime date, Prediction? prediction) {
+  final start = prediction?.fertileWindowStart;
+  final end = prediction?.fertileWindowEnd;
+  if (start == null || end == null) return false;
+  return !date.isBefore(start) && !date.isAfter(end);
+}
+
 class _DayCell extends StatelessWidget {
   final DateTime date;
   final bool inCurrentMonth;
@@ -268,6 +298,8 @@ class _DayCell extends StatelessWidget {
   final bool isToday;
   final FlowLevel? flow;
   final bool hasPain;
+  final bool isPredictedPeriod;
+  final bool isFertile;
   final VoidCallback onTap;
 
   const _DayCell({
@@ -277,6 +309,8 @@ class _DayCell extends StatelessWidget {
     required this.isToday,
     required this.flow,
     required this.hasPain,
+    required this.isPredictedPeriod,
+    required this.isFertile,
     required this.onTap,
   });
 
@@ -286,6 +320,24 @@ class _DayCell extends StatelessWidget {
     final textColor = inCurrentMonth
         ? TidalColors.text
         : TidalColors.textSecondary;
+
+    // Logged period beats predicted period beats fertile window beats
+    // today — only one ring is drawn per day, in that priority order.
+    Border? ring;
+    if (!isSelected) {
+      if (isPeriod) {
+        ring = Border.all(color: TidalColors.rose, width: 2);
+      } else if (isPredictedPeriod) {
+        ring = Border.all(
+          color: TidalColors.rose.withValues(alpha: 0.45),
+          width: 2,
+        );
+      } else if (isFertile) {
+        ring = Border.all(color: TidalColors.lavenderRing, width: 2);
+      } else if (isToday) {
+        ring = Border.all(color: TidalColors.lavender, width: 2);
+      }
+    }
 
     return InkWell(
       onTap: onTap,
@@ -299,11 +351,7 @@ class _DayCell extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected ? TidalColors.lavenderCircle : null,
-                border: !isSelected && isPeriod
-                    ? Border.all(color: TidalColors.rose, width: 2)
-                    : (!isSelected && isToday
-                          ? Border.all(color: TidalColors.lavender, width: 2)
-                          : null),
+                border: ring,
               ),
               child: Padding(
                 padding: const EdgeInsets.all(8),
@@ -342,41 +390,52 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.bodyMedium;
     return Wrap(
       spacing: 16,
       runSpacing: 8,
+      children: const [
+        _LegendItem(ringColor: TidalColors.rose, label: 'Period'),
+        _LegendItem(
+          ringColor: Color(0x73B04A68), // rose at ~45% opacity
+          label: 'Predicted',
+        ),
+        _LegendItem(
+          ringColor: TidalColors.lavenderRing,
+          label: 'Fertile window',
+        ),
+        _LegendItem(dotColor: TidalColors.rose, label: 'Pain day'),
+      ],
+    );
+  }
+}
+
+/// One legend entry: either a ringed circle (period/predicted/fertile) or a
+/// small filled dot (pain day), followed by its label.
+class _LegendItem extends StatelessWidget {
+  final Color? ringColor;
+  final Color? dotColor;
+  final String label;
+
+  const _LegendItem({this.ringColor, this.dotColor, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 14,
-              height: 14,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: TidalColors.rose, width: 2),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text('Period', style: style),
-          ],
+        Container(
+          width: dotColor != null ? 8 : 14,
+          height: dotColor != null ? 8 : 14,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: dotColor,
+            border: ringColor != null
+                ? Border.all(color: ringColor!, width: 2)
+                : null,
+          ),
         ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: TidalColors.rose,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text('Pain day', style: style),
-          ],
-        ),
+        const SizedBox(width: 6),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }

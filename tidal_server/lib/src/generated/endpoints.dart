@@ -22,6 +22,7 @@ import 'package:tidal_server/src/generated/pain/pain_location.dart'
     as _iv8cvxsn;
 import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
+import '../insights/insight_endpoint.dart' as _irr87mt6;
 import '../log/log_endpoint.dart' as _iyqvybpl;
 import '../pain/pain_endpoint.dart' as _i9flen3s;
 export 'future_calls.dart' show ServerpodFutureCallsGetter;
@@ -40,6 +41,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'jwtRefresh',
+          null,
+        ),
+      'insight': _irr87mt6.InsightEndpoint()
+        ..initialize(
+          server,
+          'insight',
           null,
         ),
       'log': _iyqvybpl.LogEndpoint()
@@ -258,6 +265,129 @@ class Endpoints extends _is.EndpointDispatch {
                         session,
                         refreshToken: params['refreshToken'],
                       ),
+        ),
+      },
+    );
+    connectors['insight'] = _is.EndpointConnector(
+      name: 'insight',
+      endpoint: endpoints['insight']!,
+      methodConnectors: {
+        'getPrediction': _is.MethodConnector(
+          name: 'getPrediction',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .getPrediction(session),
+        ),
+        'hasCycleSettings': _is.MethodConnector(
+          name: 'hasCycleSettings',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .hasCycleSettings(session),
+        ),
+        'getBirthYear': _is.MethodConnector(
+          name: 'getBirthYear',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .getBirthYear(session),
+        ),
+        'saveBirthYear': _is.MethodConnector(
+          name: 'saveBirthYear',
+          params: {
+            'year': _is.ParameterDescription(
+              name: 'year',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .saveBirthYear(
+                    session,
+                    params['year'],
+                  ),
+        ),
+        'getAge': _is.MethodConnector(
+          name: 'getAge',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .getAge(session),
+        ),
+        'getCycleLength': _is.MethodConnector(
+          name: 'getCycleLength',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .getCycleLength(session),
+        ),
+        'saveCycleLength': _is.MethodConnector(
+          name: 'saveCycleLength',
+          params: {
+            'days': _is.ParameterDescription(
+              name: 'days',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .saveCycleLength(
+                    session,
+                    params['days'],
+                  ),
+        ),
+        'getPeriodLength': _is.MethodConnector(
+          name: 'getPeriodLength',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .getPeriodLength(session),
+        ),
+        'savePeriodLength': _is.MethodConnector(
+          name: 'savePeriodLength',
+          params: {
+            'days': _is.ParameterDescription(
+              name: 'days',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .savePeriodLength(
+                    session,
+                    params['days'],
+                  ),
         ),
       },
     );

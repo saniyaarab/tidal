@@ -17,6 +17,8 @@ import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
     as _iaic;
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
+import 'package:tidal_client/src/protocol/insights/prediction.dart'
+    as _iodim5iz;
 import 'package:tidal_client/src/protocol/log/day_log.dart' as _i91iyawq;
 import 'package:tidal_client/src/protocol/log/flow_level.dart' as _ieqssu4z;
 import 'package:tidal_client/src/protocol/log/mood.dart' as _io0y0e3q;
@@ -251,6 +253,100 @@ class EndpointJwtRefresh extends _iacc.EndpointRefreshJwtTokens {
       );
 }
 
+/// Turns the signed-in user's logged period flow into cycle predictions,
+/// and manages the `CycleSettings` collected at sign-up (cycle length,
+/// period length, birth year).
+///
+/// Predictions themselves are never persisted — every call re-derives
+/// period starts from `DayLog`, so correcting a past day's flow is
+/// reflected immediately with no separate record to keep in sync. Age is
+/// the same way: only birth year is stored, and age is always computed
+/// fresh from it, so it's never stale.
+/// {@category Endpoint}
+class EndpointInsight extends _isc.EndpointRef {
+  EndpointInsight(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'insight';
+
+  _ida.Future<_iodim5iz.Prediction> getPrediction() =>
+      caller.callServerEndpoint<_iodim5iz.Prediction>(
+        'insight',
+        'getPrediction',
+        {},
+      );
+
+  /// Whether the signed-in user has completed sign-up's cycle length /
+  /// period length / birth year step. Gates that one-time flow — it stays
+  /// false until birth year is saved, even if cycle/period length were
+  /// saved earlier (e.g. before this field existed).
+  _ida.Future<bool> hasCycleSettings() => caller.callServerEndpoint<bool>(
+    'insight',
+    'hasCycleSettings',
+    {},
+  );
+
+  /// The signed-in user's saved birth year, or null if they haven't set one.
+  _ida.Future<int?> getBirthYear() => caller.callServerEndpoint<int?>(
+    'insight',
+    'getBirthYear',
+    {},
+  );
+
+  /// Saves the signed-in user's birth year, used to compute [getAge]. Only
+  /// the year is ever asked for or stored — see `CycleSettings.birthYear`.
+  _ida.Future<void> saveBirthYear(int year) => caller.callServerEndpoint<void>(
+    'insight',
+    'saveBirthYear',
+    {'year': year},
+  );
+
+  /// The signed-in user's current age in years, computed from their saved
+  /// birth year. Null if they haven't set one. Since only the year is
+  /// known (never the month or day), this can be one year ahead of the
+  /// true age until their actual birthday passes each year.
+  _ida.Future<int?> getAge() => caller.callServerEndpoint<int?>(
+    'insight',
+    'getAge',
+    {},
+  );
+
+  /// Typical days between period starts. Defaults to 28 until the user sets
+  /// their own (at sign-up, or later from Me).
+  _ida.Future<int> getCycleLength() => caller.callServerEndpoint<int>(
+    'insight',
+    'getCycleLength',
+    {},
+  );
+
+  /// Saves how many days typically pass between period starts. Only used
+  /// to seed predictions before 2+ periods have been logged — once they
+  /// have, the real average of logged cycles takes over automatically.
+  _ida.Future<void> saveCycleLength(int days) =>
+      caller.callServerEndpoint<void>(
+        'insight',
+        'saveCycleLength',
+        {'days': days},
+      );
+
+  /// How many days the signed-in user's period usually lasts. Defaults to
+  /// 5 until they set their own.
+  _ida.Future<int> getPeriodLength() => caller.callServerEndpoint<int>(
+    'insight',
+    'getPeriodLength',
+    {},
+  );
+
+  /// Saves how many days the signed-in user's period usually lasts, used to
+  /// size the predicted-period window on the Calendar.
+  _ida.Future<void> savePeriodLength(int days) =>
+      caller.callServerEndpoint<void>(
+        'insight',
+        'savePeriodLength',
+        {'days': days},
+      );
+}
+
 /// Endpoint for logging day-to-day info: period flow, mood, and notes.
 ///
 /// Every method only ever reads or writes the signed-in user's own data.
@@ -473,6 +569,7 @@ class Client extends _isc.ServerpodClientShared {
        ) {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    insight = EndpointInsight(this);
     log = EndpointLog(this);
     pain = EndpointPain(this);
     modules = Modules(this);
@@ -481,6 +578,8 @@ class Client extends _isc.ServerpodClientShared {
   late final EndpointEmailIdp emailIdp;
 
   late final EndpointJwtRefresh jwtRefresh;
+
+  late final EndpointInsight insight;
 
   late final EndpointLog log;
 
@@ -492,6 +591,7 @@ class Client extends _isc.ServerpodClientShared {
   Map<String, _isc.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
+    'insight': insight,
     'log': log,
     'pain': pain,
   };

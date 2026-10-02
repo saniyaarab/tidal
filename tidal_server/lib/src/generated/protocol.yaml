@@ -9,6 +9,16 @@ emailIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
+insight:
+  - getPrediction:
+  - hasCycleSettings:
+  - getBirthYear:
+  - saveBirthYear:
+  - getAge:
+  - getCycleLength:
+  - saveCycleLength:
+  - getPeriodLength:
+  - savePeriodLength:
 log:
   - saveDay:
   - getRange:

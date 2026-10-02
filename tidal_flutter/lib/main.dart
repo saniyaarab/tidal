@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_shell.dart';
 import 'client.dart';
+import 'screens/cycle_setup_gate.dart';
 import 'screens/sign_in_screen.dart';
 import 'theme.dart';
 
@@ -20,7 +21,9 @@ class TidalApp extends StatelessWidget {
       title: 'Tidal',
       theme: buildTidalTheme(),
       home: const Scaffold(
-        body: SignInScreen(child: AppShell()),
+        body: SignInScreen(
+          child: CycleSetupGate(child: AppShell()),
+        ),
       ),
     );
   }

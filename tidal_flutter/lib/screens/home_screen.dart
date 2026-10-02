@@ -28,11 +28,27 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _loading = true;
   String? _error;
 
+  // Independent of _selectedDate: this always reflects where the user
+  // actually is in their cycle today, not whichever day the prev/next
+  // arrows are currently showing below it.
+  Prediction? _prediction;
+
   @override
   void initState() {
     super.initState();
     _loadDay();
+    _loadPrediction();
     _checkForPendingCheckIn();
+  }
+
+  Future<void> _loadPrediction() async {
+    try {
+      final prediction = await client.insight.getPrediction();
+      if (mounted) setState(() => _prediction = prediction);
+    } catch (_) {
+      // A failed prediction lookup shouldn't block the rest of Home; the
+      // header just won't show.
+    }
   }
 
   Future<void> _checkForPendingCheckIn() async {
@@ -123,6 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
           children: [
+            if (_prediction != null) _CycleHeader(prediction: _prediction!),
             _DayCircle(
               date: _selectedDate,
               flow: _dayLog?.flow ?? FlowLevel.none,
@@ -227,6 +244,46 @@ class _ArrowButton extends StatelessWidget {
           backgroundColor: TidalColors.card,
           side: const BorderSide(color: TidalColors.border),
         ),
+      ),
+    );
+  }
+}
+
+/// "Cycle day 5 · Next period in 23 days" header, from the latest
+/// [Prediction]. Always reflects today, regardless of which day the
+/// prev/next arrows are currently showing in the day circle below it.
+class _CycleHeader extends StatelessWidget {
+  final Prediction prediction;
+  const _CycleHeader({required this.prediction});
+
+  @override
+  Widget build(BuildContext context) {
+    final cycleDay = prediction.currentCycleDay;
+    if (cycleDay == null) return const SizedBox.shrink();
+
+    final nextStart = prediction.nextPeriodStart;
+    final daysUntilNext = nextStart?.difference(todayAsDateKey()).inDays;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        children: [
+          Text(
+            'Cycle day $cycleDay',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: TidalColors.lavender),
+          ),
+          if (daysUntilNext != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              daysUntilNext <= 0
+                  ? 'Next period expected any day now'
+                  : 'Next period in $daysUntilNext days (±${prediction.confidenceDays})',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ],
       ),
     );
   }

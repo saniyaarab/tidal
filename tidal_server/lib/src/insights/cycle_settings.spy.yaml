@@ -1,0 +1,31 @@
+### The user's own cycle estimates and birth year, collected at sign-up.
+### Cycle/period length seed predictions before enough history has been
+### logged to measure them directly, and size the predicted-period window
+### on the Calendar — neither can be derived from logged flow alone (a
+### light last day and a skipped log day look the same; a brand-new user
+### has no cycle history at all), so the user sets them directly. Birth
+### year lives here too since it's collected on the same sign-up screen,
+### even though it isn't cycle-specific — there's no separate profile
+### table yet.
+class: CycleSettings
+table: cycle_settings
+fields:
+  ### The user these settings belong to.
+  userId: UuidValue
+  ### Typical days between period starts. Seeds `Prediction.nextPeriodStart`
+  ### until 2+ periods have been logged, after which the real average of
+  ### logged cycles is used instead. Defaults to 28.
+  typicalCycleDays: int, default=28
+  ### Typical period length in days. Defaults to 5 until the user sets it.
+  typicalPeriodDays: int, default=5
+  ### Birth year only, never a full date — the month and day aren't needed
+  ### for anything the app does, so they're simply never asked for or
+  ### stored. Age is always computed from this on request (see
+  ### `InsightEndpoint.getAge`), never stored, so it's never stale. Age
+  ### from year alone is off by at most one year.
+  birthYear: int?
+
+indexes:
+  cycle_settings_user_idx:
+    fields: userId
+    unique: true
