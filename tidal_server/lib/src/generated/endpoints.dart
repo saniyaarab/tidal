@@ -29,6 +29,7 @@ import '../insights/insight_endpoint.dart' as _irr87mt6;
 import '../log/log_endpoint.dart' as _iyqvybpl;
 import '../pain/pain_endpoint.dart' as _i9flen3s;
 import '../period/period_endpoint.dart' as _ivapd1ri;
+import '../privacy/privacy_endpoint.dart' as _icoyrnl0;
 
 class Endpoints extends _is.EndpointDispatch {
   @override
@@ -68,6 +69,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'period',
+          null,
+        ),
+      'privacy': _icoyrnl0.PrivacyEndpoint()
+        ..initialize(
+          server,
+          'privacy',
           null,
         ),
     };
@@ -735,6 +742,22 @@ class Endpoints extends _is.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async => (endpoints['period'] as _ivapd1ri.PeriodEndpoint)
                   .getDefaultPeriodLength(session),
+        ),
+      },
+    );
+    connectors['privacy'] = _is.EndpointConnector(
+      name: 'privacy',
+      endpoint: endpoints['privacy']!,
+      methodConnectors: {
+        'deleteAllMyData': _is.MethodConnector(
+          name: 'deleteAllMyData',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['privacy'] as _icoyrnl0.PrivacyEndpoint)
+                  .deleteAllMyData(session),
         ),
       },
     );

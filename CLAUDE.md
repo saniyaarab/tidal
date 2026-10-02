@@ -21,11 +21,11 @@ Demo story: "My periods are painful and I take painkillers. My tracker couldn't 
 6. Calendar: period, predicted, and fertile days as rings, with a dot on pain days. Periods are started and ended by long-press (see "Period tracking" below).
 7. Predictions: average of the last 3–6 cycle lengths, ± spread. Period length learned from recorded periods (see "Period tracking").
 8. Insights (MVP): average cycle length and average period length, with a bar chart of recent cycles (see "Insights" below).
-9. Partner sharing: invite code; partner sees phase + a live "bad pain day" status via a Serverpod streaming endpoint; care nudges.
-10. Privacy screen + "delete all my data".
+9. Cut (Oct 2, 2026, developer's decision): partner sharing. Not part of the MVP.
+10. Privacy screen + "delete all my data" (agreed Oct 2, 2026): a "Privacy" row on Me opens a Privacy screen with exactly these three lines — "Only you can see your data.", "Tidal never shares or sells it.", "You can delete everything at any time." — and a red "Delete all my data" button. It asks "Delete all your data? This can't be undone." (Cancel / red Delete), then deletes everything tied to the user — day logs, periods, pain entries, medications, doses, sign-up answers, and the account itself — and signs them out. Nothing is kept.
 
 Stretch only if ahead: doctor summary PDF export, "pack your painkillers" reminder, offline sync.
-Future (not MVP, developer's ideas): log more of what affects symptoms — bowel movements/IBS (pain relief after a bowel movement), caffeine and water (breast pain), foods (bloating), sugar cravings — and find patterns in why some cycles hurt more than others, with healthier swaps for cravings; medication schedules and reminders; flag periods longer than 8 days as a possible menorrhagia anomaly and warn/track it; flag missed or unusually long cycles as anomalies; ask the user whether they're regular, irregular, or have PCOS/endometriosis and handle each case; reminders and events on future dates.
+Future (not MVP, developer's ideas): log more of what affects symptoms — bowel movements/IBS (pain relief after a bowel movement), caffeine and water (breast pain), foods (bloating), sugar cravings — and find patterns in why some cycles hurt more than others, with healthier swaps for cravings; medication schedules and reminders; anonymous research data to learn patterns across users (e.g. IBS and period pain) — consent model still to be decided by the developer (opt-in recommended for legal reasons: GDPR, Washington's My Health My Data Act); until then, delete removes everything; flag periods longer than 8 days as a possible menorrhagia anomaly and warn/track it; flag missed or unusually long cycles as anomalies; ask the user whether they're regular, irregular, or have PCOS/endometriosis and handle each case; reminders and events on future dates.
 Cut: pregnancy mode, community, wearables, ML.
 
 ## Period tracking (agreed with the developer, Oct 2, 2026)
@@ -97,4 +97,5 @@ Step 5 (check-in) was built and then removed at the developer's request. Step 6 
 Step 7 (predictions) is done: InsightEndpoint.getPrediction derives cycle starts from DayLog flow and averages the last 3-6 cycle lengths; Home shows "Cycle day N · Next period in Nd" and Calendar shows predicted-period and fertile-window rings. See AGENTS.md for what's built and where.
 Period tracking by long-press (see the section above) is done: `Period` table + PeriodEndpoint, predictions from periods, Calendar long-press with Undo, Home circle opens Calendar, notes-only future dates, read-only period length on Me.
 Medications (step 4 redesign), editable pain/medication times, and Insights MVP (step 8) are done. Me shows only Age (read-only) and sign out.
-Next: partner sharing (step 9), then privacy + delete all data (step 10).
+Step 10 (privacy + delete all data) is done. Step 9 (partner sharing) was cut; the Partner tab will become a self-care Journal (design pending from the developer).
+Next: Journal tab, then the demo video.
