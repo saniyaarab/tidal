@@ -98,4 +98,18 @@ Step 7 (predictions) is done: InsightEndpoint.getPrediction derives cycle starts
 Period tracking by long-press (see the section above) is done: `Period` table + PeriodEndpoint, predictions from periods, Calendar long-press with Undo, Home circle opens Calendar, notes-only future dates, read-only period length on Me.
 Medications (step 4 redesign), editable pain/medication times, and Insights MVP (step 8) are done. Me shows only Age (read-only) and sign out.
 Step 10 (privacy + delete all data) is done. Step 9 (partner sharing) was cut; the Partner tab will become a self-care Journal (design pending from the developer).
-Next: Journal tab, then the demo video.
+Next: see "Plan to the deadline" below.
+
+## Judging (from the hackathon page)
+- Does it work (30%): it runs, the core flow completes, nothing critical is faked.
+- Use of the Serverpod stack (25%): doing real work, not sitting behind a static page.
+- Craft and technical creativity (25%): rough is fine, careless is not.
+- Usefulness (20%): a clear user with a clear problem, and this helps.
+Also: "small and finished rather than huge and broken". Extra prizes: Most Valuable Feedback ($500 + Cloud credits) and Best Hackathon Post (Cloud credits). Deadline Oct 14, 2026; winners announced Oct 22 at the Full Stack Flutter conference.
+
+## Plan to the deadline (agreed Oct 2, 2026; own target Oct 12)
+1. Journal tab (replaces Partner): self-care journal — waiting on the developer's design screenshot; design it together before building.
+2. Medication reminders using Serverpod future calls (~1 day) — for "Use of the Serverpod stack". Design together before building.
+3. Deploy to Serverpod Cloud (~half a day) — a live link for "Does it work".
+4. Demo video (≤ 3 min) and project description (~2 days).
+5. Feedback write-up for the Serverpod team (e.g. `apply_migrations` returned "Future already completed" even though the migration applied) and a social post tagging Serverpod (~1 hour).
