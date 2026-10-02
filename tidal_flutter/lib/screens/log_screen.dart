@@ -81,15 +81,15 @@ class _LogScreenState extends State<LogScreen> {
   }
 
   Future<void> _logPain() async {
-    final saved = await showPainSheet(context);
+    final saved = await showPainSheet(context, date: widget.date);
     if (saved && mounted) {
       setState(() => _changed = true);
       Navigator.pop(context, true);
     }
   }
 
-  Future<void> _logPainkiller() async {
-    final saved = await showPainkillerSheet(context);
+  Future<void> _logMedication() async {
+    final saved = await showMedicationsSheet(context, date: widget.date);
     if (saved && mounted) {
       setState(() => _changed = true);
       Navigator.pop(context, true);
@@ -158,7 +158,7 @@ class _LogScreenState extends State<LogScreen> {
                 onTap: _unlessFuture('pain', _logPain),
               ),
               _LogTile(
-                label: 'Painkiller',
+                label: 'Medications',
                 icon: Icons.medication,
                 background: _isFuture
                     ? TidalColors.disabled
@@ -166,7 +166,7 @@ class _LogScreenState extends State<LogScreen> {
                 iconColor: _isFuture
                     ? TidalColors.disabledIcon
                     : TidalColors.lavender,
-                onTap: _unlessFuture('a painkiller', _logPainkiller),
+                onTap: _unlessFuture('medications', _logMedication),
               ),
               _LogTile(
                 label: 'Reminder',

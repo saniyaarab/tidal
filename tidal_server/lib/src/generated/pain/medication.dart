@@ -11,8 +11,11 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod/serverpod.dart' as _is;
+import '../pain/medication_type.dart' as _ib85fggv;
 
-/// An entry in the user's own "my meds" list. Tidal only ever records what
+/// An entry in the user's own medications list: anything they take, from
+/// painkillers to birth control or vitamins. Remembered so it's one tap to
+/// log next time (and, later, for reminders). Tidal only ever records what
 /// the user says they took; it never suggests doses.
 abstract class Medication
     implements _is.TableRow<int?>, _is.ProtocolSerialization {
@@ -21,6 +24,7 @@ abstract class Medication
     required this.userId,
     required this.name,
     required this.usualDose,
+    this.type,
   });
 
   factory Medication({
@@ -28,6 +32,7 @@ abstract class Medication
     required _is.UuidValue userId,
     required String name,
     required String usualDose,
+    _ib85fggv.MedicationType? type,
   }) = _MedicationImpl;
 
   factory Medication.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -36,6 +41,11 @@ abstract class Medication
       userId: _is.UuidValueJsonExtension.fromJson(jsonSerialization['userId']),
       name: jsonSerialization['name'] as String,
       usualDose: jsonSerialization['usualDose'] as String,
+      type: jsonSerialization['type'] == null
+          ? null
+          : _ib85fggv.MedicationType.fromJson(
+              (jsonSerialization['type'] as String),
+            ),
     );
   }
 
@@ -53,8 +63,11 @@ abstract class Medication
   String name;
 
   /// Free text, e.g. "400 mg". Shown next to the name and copied onto each
-  /// dose log unless the user says otherwise.
+  /// dose log.
   String usualDose;
+
+  /// What kind of medication it is, if the user said.
+  _ib85fggv.MedicationType? type;
 
   @override
   _is.Table<int?> get table => t;
@@ -67,6 +80,7 @@ abstract class Medication
     _is.UuidValue? userId,
     String? name,
     String? usualDose,
+    _ib85fggv.MedicationType? type,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -76,6 +90,7 @@ abstract class Medication
       'userId': userId.toJson(),
       'name': name,
       'usualDose': usualDose,
+      if (type != null) 'type': type?.toJson(),
     };
   }
 
@@ -87,6 +102,7 @@ abstract class Medication
       'userId': userId.toJson(),
       'name': name,
       'usualDose': usualDose,
+      if (type != null) 'type': type?.toJson(),
     };
   }
 
@@ -126,11 +142,13 @@ class _MedicationImpl extends Medication {
     required _is.UuidValue userId,
     required String name,
     required String usualDose,
+    _ib85fggv.MedicationType? type,
   }) : super._(
          id: id,
          userId: userId,
          name: name,
          usualDose: usualDose,
+         type: type,
        );
 
   /// Returns a shallow copy of this [Medication]
@@ -142,12 +160,14 @@ class _MedicationImpl extends Medication {
     _is.UuidValue? userId,
     String? name,
     String? usualDose,
+    Object? type = _Undefined,
   }) {
     return Medication(
       id: id is int? ? id : this.id,
       userId: userId ?? this.userId,
       name: name ?? this.name,
       usualDose: usualDose ?? this.usualDose,
+      type: type is _ib85fggv.MedicationType? ? type : this.type,
     );
   }
 }
@@ -170,6 +190,13 @@ class MedicationUpdateTable extends _is.UpdateTable<MedicationTable> {
     table.usualDose,
     value,
   );
+
+  _is.ColumnValue<_ib85fggv.MedicationType, _ib85fggv.MedicationType> type(
+    _ib85fggv.MedicationType? value,
+  ) => _is.ColumnValue(
+    table.type,
+    value,
+  );
 }
 
 class MedicationTable extends _is.Table<int?> {
@@ -187,6 +214,11 @@ class MedicationTable extends _is.Table<int?> {
       'usualDose',
       this,
     );
+    type = _is.ColumnEnum(
+      'type',
+      this,
+      _is.EnumSerialization.byName,
+    );
   }
 
   late final MedicationUpdateTable updateTable;
@@ -198,8 +230,11 @@ class MedicationTable extends _is.Table<int?> {
   late final _is.ColumnString name;
 
   /// Free text, e.g. "400 mg". Shown next to the name and copied onto each
-  /// dose log unless the user says otherwise.
+  /// dose log.
   late final _is.ColumnString usualDose;
+
+  /// What kind of medication it is, if the user said.
+  late final _is.ColumnEnum<_ib85fggv.MedicationType> type;
 
   @override
   List<_is.Column> get columns => [
@@ -207,6 +242,7 @@ class MedicationTable extends _is.Table<int?> {
     userId,
     name,
     usualDose,
+    type,
   ];
 }
 

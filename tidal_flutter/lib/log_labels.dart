@@ -47,3 +47,14 @@ extension PainLocationLabel on PainLocation {
 String formatPainLocations(List<PainLocation> locations) {
   return locations.map((l) => l.label.toLowerCase()).join(', ');
 }
+
+/// Display name for each [MedicationType], shown as chips when adding a
+/// medication.
+extension MedicationTypeLabel on MedicationType {
+  String get label => switch (this) {
+    MedicationType.painkiller => 'Painkiller',
+    MedicationType.birthControl => 'Birth control',
+    MedicationType.vitamin => 'Vitamin / supplement',
+    MedicationType.other => 'Other',
+  };
+}

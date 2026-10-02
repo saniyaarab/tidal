@@ -12,25 +12,27 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
 
-/// A single one-tap record of a medication dose being taken.
+/// A single one-tap record of a medication being taken.
 abstract class DoseLog
     implements _isc.SerializableModel, _isc.ProtocolSerialization {
   DoseLog._({
     this.id,
     required this.userId,
     required this.medicationId,
+    required this.date,
     required this.timestamp,
+    required this.loggedAt,
     required this.dose,
-    this.painBefore,
   });
 
   factory DoseLog({
     int? id,
     required _isc.UuidValue userId,
     required int medicationId,
+    required DateTime date,
     required DateTime timestamp,
+    required DateTime loggedAt,
     required String dose,
-    int? painBefore,
   }) = _DoseLogImpl;
 
   factory DoseLog.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -38,11 +40,14 @@ abstract class DoseLog
       id: jsonSerialization['id'] as int?,
       userId: _isc.UuidValueJsonExtension.fromJson(jsonSerialization['userId']),
       medicationId: jsonSerialization['medicationId'] as int,
+      date: _isc.DateTimeJsonExtension.fromJson(jsonSerialization['date']),
       timestamp: _isc.DateTimeJsonExtension.fromJson(
         jsonSerialization['timestamp'],
       ),
+      loggedAt: _isc.DateTimeJsonExtension.fromJson(
+        jsonSerialization['loggedAt'],
+      ),
       dose: jsonSerialization['dose'] as String,
-      painBefore: jsonSerialization['painBefore'] as int?,
     );
   }
 
@@ -57,15 +62,21 @@ abstract class DoseLog
   /// Which medication was taken.
   int medicationId;
 
-  /// When the dose was taken. Always "now" at the time of logging.
+  /// The calendar day this dose belongs to, stored as midnight UTC (the
+  /// same way `DayLog.date` is). Doses are grouped and looked up by this.
+  DateTime date;
+
+  /// When the medication was taken, as chosen by the user (defaults to the
+  /// time of logging). Never in the future.
   DateTime timestamp;
+
+  /// The exact moment the dose was saved, set by the server. Not shown in
+  /// the app.
+  DateTime loggedAt;
 
   /// Snapshot of the dose taken, e.g. "400 mg" (copied from the
   /// medication's usualDose at the time of logging).
   String dose;
-
-  /// Pain level right before taking the dose, if known.
-  int? painBefore;
 
   /// Returns a shallow copy of this [DoseLog]
   /// with some or all fields replaced by the given arguments.
@@ -74,9 +85,10 @@ abstract class DoseLog
     int? id,
     _isc.UuidValue? userId,
     int? medicationId,
+    DateTime? date,
     DateTime? timestamp,
+    DateTime? loggedAt,
     String? dose,
-    int? painBefore,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -85,9 +97,10 @@ abstract class DoseLog
       if (id != null) 'id': id,
       'userId': userId.toJson(),
       'medicationId': medicationId,
+      'date': date.toJson(),
       'timestamp': timestamp.toJson(),
+      'loggedAt': loggedAt.toJson(),
       'dose': dose,
-      if (painBefore != null) 'painBefore': painBefore,
     };
   }
 
@@ -98,9 +111,10 @@ abstract class DoseLog
       if (id != null) 'id': id,
       'userId': userId.toJson(),
       'medicationId': medicationId,
+      'date': date.toJson(),
       'timestamp': timestamp.toJson(),
+      'loggedAt': loggedAt.toJson(),
       'dose': dose,
-      if (painBefore != null) 'painBefore': painBefore,
     };
   }
 
@@ -117,16 +131,18 @@ class _DoseLogImpl extends DoseLog {
     int? id,
     required _isc.UuidValue userId,
     required int medicationId,
+    required DateTime date,
     required DateTime timestamp,
+    required DateTime loggedAt,
     required String dose,
-    int? painBefore,
   }) : super._(
          id: id,
          userId: userId,
          medicationId: medicationId,
+         date: date,
          timestamp: timestamp,
+         loggedAt: loggedAt,
          dose: dose,
-         painBefore: painBefore,
        );
 
   /// Returns a shallow copy of this [DoseLog]
@@ -137,17 +153,19 @@ class _DoseLogImpl extends DoseLog {
     Object? id = _Undefined,
     _isc.UuidValue? userId,
     int? medicationId,
+    DateTime? date,
     DateTime? timestamp,
+    DateTime? loggedAt,
     String? dose,
-    Object? painBefore = _Undefined,
   }) {
     return DoseLog(
       id: id is int? ? id : this.id,
       userId: userId ?? this.userId,
       medicationId: medicationId ?? this.medicationId,
+      date: date ?? this.date,
       timestamp: timestamp ?? this.timestamp,
+      loggedAt: loggedAt ?? this.loggedAt,
       dose: dose ?? this.dose,
-      painBefore: painBefore is int? ? painBefore : this.painBefore,
     );
   }
 }

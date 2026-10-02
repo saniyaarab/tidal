@@ -28,8 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // The period the selected day falls in, if any.
   PeriodSpan? _period;
   List<PainEntry> _painEntries = [];
-  List<DoseLog> _doseLogs = [];
-  Map<int, Medication> _medsById = {};
   bool _loading = true;
   String? _error;
 
@@ -64,19 +62,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final results = await Future.wait([
         client.log.getRange(_selectedDate, _selectedDate),
         client.pain.getPainRange(_selectedDate, _selectedDate),
-        client.pain.getDoseRange(_selectedDate, _selectedDate),
-        client.pain.myMeds(),
         client.period.getPeriods(_selectedDate, _selectedDate),
       ]);
       final dayLogs = results[0] as List<DayLog>;
-      final meds = results[3] as List<Medication>;
-      final periods = results[4] as List<PeriodSpan>;
+      final periods = results[2] as List<PeriodSpan>;
       setState(() {
         _dayLog = dayLogs.isEmpty ? null : dayLogs.first;
         _period = periods.isEmpty ? null : periods.first;
         _painEntries = results[1] as List<PainEntry>;
-        _doseLogs = results[2] as List<DoseLog>;
-        _medsById = {for (final med in meds) med.id!: med};
         _loading = false;
       });
     } catch (e) {
@@ -151,8 +144,6 @@ class _HomeScreenState extends State<HomeScreen> {
               DayBands(
                 dayLog: _dayLog,
                 painEntries: _painEntries,
-                doseLogs: _doseLogs,
-                medsById: _medsById,
               ),
           ],
         ),

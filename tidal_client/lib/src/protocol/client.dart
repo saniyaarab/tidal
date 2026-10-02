@@ -17,6 +17,8 @@ import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
     as _iaic;
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
+import 'package:tidal_client/src/protocol/insights/cycle_summary.dart'
+    as _iw3iju6d;
 import 'package:tidal_client/src/protocol/insights/prediction.dart'
     as _iodim5iz;
 import 'package:tidal_client/src/protocol/log/day_log.dart' as _i91iyawq;
@@ -24,6 +26,8 @@ import 'package:tidal_client/src/protocol/log/flow_level.dart' as _ieqssu4z;
 import 'package:tidal_client/src/protocol/log/mood.dart' as _io0y0e3q;
 import 'package:tidal_client/src/protocol/pain/dose_log.dart' as _i95dlci0;
 import 'package:tidal_client/src/protocol/pain/medication.dart' as _i2f8rdmx;
+import 'package:tidal_client/src/protocol/pain/medication_type.dart'
+    as _ij1j67ck;
 import 'package:tidal_client/src/protocol/pain/pain_entry.dart' as _imzr3ook;
 import 'package:tidal_client/src/protocol/pain/pain_location.dart' as _ivkbsfwn;
 import 'package:tidal_client/src/protocol/period/period_change.dart'
@@ -281,6 +285,15 @@ class EndpointInsight extends _isc.EndpointRef {
         {},
       );
 
+  /// Average cycle and period length, plus the recent cycles behind them,
+  /// for the Insights tab.
+  _ida.Future<_iw3iju6d.CycleSummary> getCycleSummary() =>
+      caller.callServerEndpoint<_iw3iju6d.CycleSummary>(
+        'insight',
+        'getCycleSummary',
+        {},
+      );
+
   /// Whether the signed-in user has completed sign-up's cycle length /
   /// period length / birth year step. Gates that one-time flow — it stays
   /// false until birth year is saved, even if cycle/period length were
@@ -300,6 +313,8 @@ class EndpointInsight extends _isc.EndpointRef {
 
   /// Saves the signed-in user's birth year, used to compute [getAge]. Only
   /// the year is ever asked for or stored — see `CycleSettings.birthYear`.
+  /// Asked once, at sign-up (saving it completes sign-up); it can't be
+  /// changed afterwards.
   _ida.Future<void> saveBirthYear(int year) => caller.callServerEndpoint<void>(
     'insight',
     'saveBirthYear',
@@ -324,9 +339,10 @@ class EndpointInsight extends _isc.EndpointRef {
     {},
   );
 
-  /// Saves how many days typically pass between period starts. Only used
-  /// to seed predictions before 2+ periods have been logged — once they
-  /// have, the real average of logged cycles takes over automatically.
+  /// Saves how many days typically pass between period starts. Only allowed
+  /// during sign-up (before birth year completes it), as the user's first
+  /// estimate — it seeds predictions until real cycles have been logged, and
+  /// the learned average is shown on Insights afterwards.
   _ida.Future<void> saveCycleLength(int days) =>
       caller.callServerEndpoint<void>(
         'insight',
@@ -408,8 +424,12 @@ class EndpointLog extends _isc.EndpointRef {
   );
 }
 
-/// Endpoint for pain and medication logging. Tidal only ever records what
-/// the user says they took; it never suggests doses.
+/// Endpoint for pain logging and the user's medications list. Tidal only
+/// ever records what the user says they took; it never suggests doses.
+///
+/// Pain entries and doses each store the day they belong to, the time they
+/// happened (chosen by the user, defaulting to now in the app), and the
+/// exact moment they were saved.
 ///
 /// Every method only ever reads or writes the signed-in user's own data.
 /// {@category Endpoint}
@@ -419,21 +439,26 @@ class EndpointPain extends _isc.EndpointRef {
   @override
   String get name => 'pain';
 
-  /// Logs a pain entry for right now.
+  /// Logs a pain entry for [date] (the calendar day it belongs to) that
+  /// happened at [timestamp].
   _ida.Future<_imzr3ook.PainEntry> logPain(
     int level,
     List<_ivkbsfwn.PainLocation> locations,
+    DateTime date,
+    DateTime timestamp,
   ) => caller.callServerEndpoint<_imzr3ook.PainEntry>(
     'pain',
     'logPain',
     {
       'level': level,
       'locations': locations,
+      'date': date,
+      'timestamp': timestamp,
     },
   );
 
-  /// Returns the pain entries logged between [start] and [end] (inclusive
-  /// days), ordered by time.
+  /// Returns the pain entries for the days [start] through [end]
+  /// (inclusive), ordered by time.
   _ida.Future<List<_imzr3ook.PainEntry>> getPainRange(
     DateTime start,
     DateTime end,
@@ -454,35 +479,38 @@ class EndpointPain extends _isc.EndpointRef {
         {},
       );
 
-  /// Adds a new medication to the signed-in user's "my meds" list.
+  /// Adds a new medication to the signed-in user's list. [type] is optional.
   _ida.Future<_i2f8rdmx.Medication> addMedication(
     String name,
-    String usualDose,
-  ) => caller.callServerEndpoint<_i2f8rdmx.Medication>(
+    String usualDose, {
+    _ij1j67ck.MedicationType? type,
+  }) => caller.callServerEndpoint<_i2f8rdmx.Medication>(
     'pain',
     'addMedication',
     {
       'name': name,
       'usualDose': usualDose,
+      'type': type,
     },
   );
 
-  /// One-tap dose logging: records that [medicationId] was taken right now,
-  /// using its usual dose. [painBefore] is optional context, e.g. the pain
-  /// level the user just logged in the same sheet.
+  /// One-tap logging: records that [medicationId] was taken at [timestamp],
+  /// on [date] (the calendar day it belongs to), using its usual dose.
   _ida.Future<_i95dlci0.DoseLog> logDose(
-    int medicationId, {
-    int? painBefore,
-  }) => caller.callServerEndpoint<_i95dlci0.DoseLog>(
+    int medicationId,
+    DateTime date,
+    DateTime timestamp,
+  ) => caller.callServerEndpoint<_i95dlci0.DoseLog>(
     'pain',
     'logDose',
     {
       'medicationId': medicationId,
-      'painBefore': painBefore,
+      'date': date,
+      'timestamp': timestamp,
     },
   );
 
-  /// Returns the dose logs between [start] and [end] (inclusive days),
+  /// Returns the dose logs for the days [start] through [end] (inclusive),
   /// ordered by time.
   _ida.Future<List<_i95dlci0.DoseLog>> getDoseRange(
     DateTime start,
@@ -496,12 +524,12 @@ class EndpointPain extends _isc.EndpointRef {
     },
   );
 
-  /// Returns the most recent dose log of any medication, or null if the
-  /// user hasn't logged one yet. Used to show "time since last dose".
-  _ida.Future<_i95dlci0.DoseLog?> getLastDose() =>
-      caller.callServerEndpoint<_i95dlci0.DoseLog?>(
+  /// The most recent dose of each medication the user has ever taken, so
+  /// the Medications sheet can show "last taken 3h ago" per medication.
+  _ida.Future<List<_i95dlci0.DoseLog>> getLastDosePerMedication() =>
+      caller.callServerEndpoint<List<_i95dlci0.DoseLog>>(
         'pain',
-        'getLastDose',
+        'getLastDosePerMedication',
         {},
       );
 }

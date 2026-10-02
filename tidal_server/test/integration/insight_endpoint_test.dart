@@ -138,6 +138,61 @@ void main() {
       );
     });
 
+    group('when a cycle is shorter than 18 days', () {
+      test('then it is reported but left out of the average', () async {
+        final start1 = today.subtract(const Duration(days: 80));
+        final start2 = start1.add(const Duration(days: 30));
+        final start3 = start2.add(const Duration(days: 12));
+        for (final date in [start1, start2, start3]) {
+          await startPeriod(asUserA, date);
+        }
+
+        final prediction = await endpoints.insight.getPrediction(asUserA);
+
+        expect(
+          prediction.nextPeriodStart,
+          start3.add(const Duration(days: 30)),
+        );
+        expect(
+          [for (final c in prediction.recentCycles!) c.excludedFromAverage],
+          [false, true],
+        );
+      });
+    });
+
+    group('when asking for the cycle summary', () {
+      test('then it averages cycles and periods for Insights', () async {
+        final start1 = today.subtract(const Duration(days: 110));
+        final start2 = start1.add(const Duration(days: 28));
+        final start3 = start2.add(const Duration(days: 53));
+        final start4 = start3.add(const Duration(days: 26));
+        for (final date in [start1, start2, start3, start4]) {
+          await startPeriod(asUserA, date);
+        }
+        // Confirm the first period as 4 days long.
+        await endpoints.period.longPress(
+          asUserA,
+          start1.add(const Duration(days: 3)),
+        );
+
+        final summary = await endpoints.insight.getCycleSummary(asUserA);
+
+        expect(summary.averageCycleDays, 27);
+        expect(summary.averagePeriodDays, 4);
+        expect(summary.periodFromPeriods, 1);
+        expect([for (final c in summary.cycles) c.days], [28, 53, 26]);
+        expect([for (final c in summary.cycles) c.periodDays], [4, 4, 4]);
+      });
+
+      test('then it falls back to the defaults with no cycles yet', () async {
+        final summary = await endpoints.insight.getCycleSummary(asUserA);
+
+        expect(summary.averageCycleDays, 28);
+        expect(summary.averagePeriodDays, 5);
+        expect(summary.cycles, isEmpty);
+      });
+    });
+
     group('when exactly one cycle is complete', () {
       test(
         'then the next period is predicted from that one length',
@@ -361,6 +416,28 @@ void main() {
         await endpoints.insight.saveCycleLength(asUserA, 32);
 
         expect(await endpoints.insight.getCycleLength(asUserB), 28);
+      });
+    });
+
+    group('when sign-up is complete', () {
+      test('then saveCycleLength throws', () async {
+        await endpoints.insight.saveBirthYear(asUserA, 1994);
+
+        await expectLater(
+          endpoints.insight.saveCycleLength(asUserA, 30),
+          throwsArgumentError,
+        );
+      });
+    });
+
+    group('when birth year was already saved at sign-up', () {
+      test('then saving it again throws', () async {
+        await endpoints.insight.saveBirthYear(asUserA, 1994);
+
+        await expectLater(
+          endpoints.insight.saveBirthYear(asUserA, 1990),
+          throwsArgumentError,
+        );
       });
     });
 

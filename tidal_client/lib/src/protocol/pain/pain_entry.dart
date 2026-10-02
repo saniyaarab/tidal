@@ -20,7 +20,9 @@ abstract class PainEntry
   PainEntry._({
     this.id,
     required this.userId,
+    required this.date,
     required this.timestamp,
+    required this.loggedAt,
     required this.level,
     required this.locations,
   });
@@ -28,7 +30,9 @@ abstract class PainEntry
   factory PainEntry({
     int? id,
     required _isc.UuidValue userId,
+    required DateTime date,
     required DateTime timestamp,
+    required DateTime loggedAt,
     required int level,
     required List<_inz2dpi1.PainLocation> locations,
   }) = _PainEntryImpl;
@@ -37,8 +41,12 @@ abstract class PainEntry
     return PainEntry(
       id: jsonSerialization['id'] as int?,
       userId: _isc.UuidValueJsonExtension.fromJson(jsonSerialization['userId']),
+      date: _isc.DateTimeJsonExtension.fromJson(jsonSerialization['date']),
       timestamp: _isc.DateTimeJsonExtension.fromJson(
         jsonSerialization['timestamp'],
+      ),
+      loggedAt: _isc.DateTimeJsonExtension.fromJson(
+        jsonSerialization['loggedAt'],
       ),
       level: jsonSerialization['level'] as int,
       locations: _ifh54y1n.Protocol().deserialize<List<_inz2dpi1.PainLocation>>(
@@ -55,8 +63,17 @@ abstract class PainEntry
   /// The user this entry belongs to.
   _isc.UuidValue userId;
 
-  /// When the pain was logged. Always "now" at the time of logging.
+  /// The calendar day this entry belongs to, stored as midnight UTC (the
+  /// same way `DayLog.date` is). Entries are grouped and looked up by this.
+  DateTime date;
+
+  /// When the pain happened, as chosen by the user (defaults to the time
+  /// of logging). Never in the future.
   DateTime timestamp;
+
+  /// The exact moment the entry was saved, set by the server. Not shown in
+  /// the app.
+  DateTime loggedAt;
 
   /// Pain level from 0 (no pain) to 10 (worst pain).
   int level;
@@ -70,7 +87,9 @@ abstract class PainEntry
   PainEntry copyWith({
     int? id,
     _isc.UuidValue? userId,
+    DateTime? date,
     DateTime? timestamp,
+    DateTime? loggedAt,
     int? level,
     List<_inz2dpi1.PainLocation>? locations,
   });
@@ -80,7 +99,9 @@ abstract class PainEntry
       '__className__': 'PainEntry',
       if (id != null) 'id': id,
       'userId': userId.toJson(),
+      'date': date.toJson(),
       'timestamp': timestamp.toJson(),
+      'loggedAt': loggedAt.toJson(),
       'level': level,
       'locations': locations.toJson(valueToJson: (v) => v.toJson()),
     };
@@ -92,7 +113,9 @@ abstract class PainEntry
       '__className__': 'PainEntry',
       if (id != null) 'id': id,
       'userId': userId.toJson(),
+      'date': date.toJson(),
       'timestamp': timestamp.toJson(),
+      'loggedAt': loggedAt.toJson(),
       'level': level,
       'locations': locations.toJson(valueToJson: (v) => v.toJson()),
     };
@@ -110,13 +133,17 @@ class _PainEntryImpl extends PainEntry {
   _PainEntryImpl({
     int? id,
     required _isc.UuidValue userId,
+    required DateTime date,
     required DateTime timestamp,
+    required DateTime loggedAt,
     required int level,
     required List<_inz2dpi1.PainLocation> locations,
   }) : super._(
          id: id,
          userId: userId,
+         date: date,
          timestamp: timestamp,
+         loggedAt: loggedAt,
          level: level,
          locations: locations,
        );
@@ -128,14 +155,18 @@ class _PainEntryImpl extends PainEntry {
   PainEntry copyWith({
     Object? id = _Undefined,
     _isc.UuidValue? userId,
+    DateTime? date,
     DateTime? timestamp,
+    DateTime? loggedAt,
     int? level,
     List<_inz2dpi1.PainLocation>? locations,
   }) {
     return PainEntry(
       id: id is int? ? id : this.id,
       userId: userId ?? this.userId,
+      date: date ?? this.date,
       timestamp: timestamp ?? this.timestamp,
+      loggedAt: loggedAt ?? this.loggedAt,
       level: level ?? this.level,
       locations: locations ?? this.locations.map((e0) => e0).toList(),
     );

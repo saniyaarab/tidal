@@ -43,10 +43,12 @@ DateTime addMonths(DateTime date, int months) =>
 bool isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
 
-/// Formats a timestamp's time of day in the user's local time, e.g. "7:40".
-String formatTimeOfDay(DateTime timestamp) {
+/// Formats a timestamp's time of day in the user's local time as 24-hour
+/// "HH:mm", e.g. "07:40".
+String formatClockTime(DateTime timestamp) {
   final local = timestamp.toLocal();
-  return '${local.hour}:${local.minute.toString().padLeft(2, '0')}';
+  return '${local.hour.toString().padLeft(2, '0')}:'
+      '${local.minute.toString().padLeft(2, '0')}';
 }
 
 /// Formats how long ago [timestamp] was, e.g. "2h ago", "5 min ago",

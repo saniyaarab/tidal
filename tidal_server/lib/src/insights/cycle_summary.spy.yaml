@@ -1,0 +1,15 @@
+### What the Insights tab shows: average cycle and period length, and the
+### recent cycles behind them. Computed on request, never stored.
+class: CycleSummary
+fields:
+  ### Average days between period starts, from the recent cycles that
+  ### count — or the sign-up estimate until there's at least one such cycle.
+  averageCycleDays: int
+  ### Average period length in days (rounded up), from confirmed periods —
+  ### or the sign-up estimate until any period has a confirmed end.
+  averagePeriodDays: int
+  ### How many confirmed periods averagePeriodDays came from (0 = sign-up
+  ### estimate).
+  periodFromPeriods: int
+  ### The most recent completed cycles (up to 6), oldest first.
+  cycles: List<CycleLength>

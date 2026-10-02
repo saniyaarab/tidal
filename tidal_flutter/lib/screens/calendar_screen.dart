@@ -32,8 +32,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Set<DateTime> _periodDates = {};
   Set<DateTime> _datesWithPain = {};
   List<PainEntry> _selectedPainEntries = [];
-  List<DoseLog> _selectedDoseLogs = [];
-  Map<int, Medication> _medsById = {};
   Prediction? _prediction;
   bool _loading = true;
   String? _error;
@@ -81,15 +79,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
         client.log.getRange(_month, _monthEnd),
         client.pain.getPainRange(_month, _monthEnd),
         client.pain.getPainRange(_selectedDate, _selectedDate),
-        client.pain.getDoseRange(_selectedDate, _selectedDate),
-        client.pain.myMeds(),
         client.insight.getPrediction(),
         client.period.getPeriods(_gridStart, _gridEnd),
       ]);
       final monthDayLogs = results[0] as List<DayLog>;
       final monthPainEntries = results[1] as List<PainEntry>;
-      final meds = results[4] as List<Medication>;
-      final periods = results[6] as List<PeriodSpan>;
+      final periods = results[4] as List<PeriodSpan>;
       setState(() {
         // Every day from each period's start through its (confirmed or
         // assumed) end.
@@ -105,18 +100,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _dayLogsByDate = {
           for (final log in monthDayLogs) log.date: log,
         };
-        _datesWithPain = {
-          for (final entry in monthPainEntries)
-            DateTime.utc(
-              entry.timestamp.year,
-              entry.timestamp.month,
-              entry.timestamp.day,
-            ),
-        };
+        _datesWithPain = {for (final entry in monthPainEntries) entry.date};
         _selectedPainEntries = results[2] as List<PainEntry>;
-        _selectedDoseLogs = results[3] as List<DoseLog>;
-        _medsById = {for (final med in meds) med.id!: med};
-        _prediction = results[5] as Prediction;
+        _prediction = results[3] as Prediction;
         _loading = false;
       });
     } catch (e) {
@@ -225,11 +211,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
             const SizedBox(height: 12),
             const _Legend(),
-            const SizedBox(height: 8),
-            Text(
-              'Long-press a day to start or end a period',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
             const SizedBox(height: 24),
             Text(
               formatDayLabel(_selectedDate),
@@ -247,8 +228,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
               DayBands(
                 dayLog: _dayLogsByDate[_selectedDate],
                 painEntries: _selectedPainEntries,
-                doseLogs: _selectedDoseLogs,
-                medsById: _medsById,
                 emptyMessage: 'Nothing logged for this day.',
               ),
           ],

@@ -1,4 +1,6 @@
-### An entry in the user's own "my meds" list. Tidal only ever records what
+### An entry in the user's own medications list: anything they take, from
+### painkillers to birth control or vitamins. Remembered so it's one tap to
+### log next time (and, later, for reminders). Tidal only ever records what
 ### the user says they took; it never suggests doses.
 class: Medication
 table: medication
@@ -8,5 +10,7 @@ fields:
   ### E.g. "Ibuprofen".
   name: String
   ### Free text, e.g. "400 mg". Shown next to the name and copied onto each
-  ### dose log unless the user says otherwise.
+  ### dose log.
   usualDose: String
+  ### What kind of medication it is, if the user said.
+  type: MedicationType?

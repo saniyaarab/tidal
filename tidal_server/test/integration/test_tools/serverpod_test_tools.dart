@@ -17,6 +17,8 @@ import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
 import 'package:serverpod_test/serverpod_test.dart' as _ist;
+import 'package:tidal_server/src/generated/insights/cycle_summary.dart'
+    as _i2sl7nzz;
 import 'package:tidal_server/src/generated/insights/prediction.dart'
     as _inmytcm7;
 import 'package:tidal_server/src/generated/log/day_log.dart' as _izjvvr32;
@@ -24,6 +26,8 @@ import 'package:tidal_server/src/generated/log/flow_level.dart' as _idptobfz;
 import 'package:tidal_server/src/generated/log/mood.dart' as _ij0gfvc4;
 import 'package:tidal_server/src/generated/pain/dose_log.dart' as _ixayhju8;
 import 'package:tidal_server/src/generated/pain/medication.dart' as _i1bzforx;
+import 'package:tidal_server/src/generated/pain/medication_type.dart'
+    as _i4gcwlpe;
 import 'package:tidal_server/src/generated/pain/pain_entry.dart' as _i0ft3vou;
 import 'package:tidal_server/src/generated/pain/pain_location.dart'
     as _iv8cvxsn;
@@ -566,6 +570,36 @@ class _InsightEndpoint {
     });
   }
 
+  _ida.Future<_i2sl7nzz.CycleSummary> getCycleSummary(
+    _ist.TestSessionBuilder sessionBuilder,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'insight',
+            method: 'getCycleSummary',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'insight',
+          methodName: 'getCycleSummary',
+          parameters: _ist.testObjectToJson({}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_i2sl7nzz.CycleSummary>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
   _ida.Future<bool> hasCycleSettings(
     _ist.TestSessionBuilder sessionBuilder,
   ) async {
@@ -933,6 +967,8 @@ class _PainEndpoint {
     _ist.TestSessionBuilder sessionBuilder,
     int level,
     List<_iv8cvxsn.PainLocation> locations,
+    DateTime date,
+    DateTime timestamp,
   ) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
@@ -948,6 +984,8 @@ class _PainEndpoint {
           parameters: _ist.testObjectToJson({
             'level': level,
             'locations': locations,
+            'date': date,
+            'timestamp': timestamp,
           }),
           serializationManager: _serializationManager,
         );
@@ -1032,8 +1070,9 @@ class _PainEndpoint {
   _ida.Future<_i1bzforx.Medication> addMedication(
     _ist.TestSessionBuilder sessionBuilder,
     String name,
-    String usualDose,
-  ) async {
+    String usualDose, {
+    _i4gcwlpe.MedicationType? type,
+  }) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
           (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
@@ -1048,6 +1087,7 @@ class _PainEndpoint {
           parameters: _ist.testObjectToJson({
             'name': name,
             'usualDose': usualDose,
+            'type': type,
           }),
           serializationManager: _serializationManager,
         );
@@ -1066,9 +1106,10 @@ class _PainEndpoint {
 
   _ida.Future<_ixayhju8.DoseLog> logDose(
     _ist.TestSessionBuilder sessionBuilder,
-    int medicationId, {
-    int? painBefore,
-  }) async {
+    int medicationId,
+    DateTime date,
+    DateTime timestamp,
+  ) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
           (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
@@ -1082,7 +1123,8 @@ class _PainEndpoint {
           methodName: 'logDose',
           parameters: _ist.testObjectToJson({
             'medicationId': medicationId,
-            'painBefore': painBefore,
+            'date': date,
+            'timestamp': timestamp,
           }),
           serializationManager: _serializationManager,
         );
@@ -1134,20 +1176,20 @@ class _PainEndpoint {
     });
   }
 
-  _ida.Future<_ixayhju8.DoseLog?> getLastDose(
+  _ida.Future<List<_ixayhju8.DoseLog>> getLastDosePerMedication(
     _ist.TestSessionBuilder sessionBuilder,
   ) async {
     return _ist.callAwaitableFunctionAndHandleExceptions(() async {
       var _localUniqueSession =
           (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
             endpoint: 'pain',
-            method: 'getLastDose',
+            method: 'getLastDosePerMedication',
           );
       try {
         var _localCallContext = await _endpointDispatch.getMethodCallContext(
           createSessionCallback: (_) => _localUniqueSession,
           endpointPath: 'pain',
-          methodName: 'getLastDose',
+          methodName: 'getLastDosePerMedication',
           parameters: _ist.testObjectToJson({}),
           serializationManager: _serializationManager,
         );
@@ -1156,7 +1198,7 @@ class _PainEndpoint {
                   _localUniqueSession,
                   _localCallContext.arguments,
                 )
-                as _ida.Future<_ixayhju8.DoseLog?>);
+                as _ida.Future<List<_ixayhju8.DoseLog>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

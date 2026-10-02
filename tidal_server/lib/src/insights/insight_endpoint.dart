@@ -36,10 +36,11 @@ class InsightEndpoint extends Endpoint {
   static const _minCycleLengthDays = 15;
   static const _maxCycleLengthDays = 45;
 
-  // Cycles longer than this (e.g. a forgotten or missed period) are still
-  // reported, but left out of the average so one gap doesn't push every
-  // future prediction late. Not flagged to the user yet — anomaly warnings
-  // are a future feature.
+  // Cycles outside this range (e.g. a forgotten or missed period) are still
+  // reported, but left out of the average so one gap doesn't throw every
+  // future prediction off. Same rule as Maya. Not flagged to the user yet —
+  // anomaly warnings are a future feature.
+  static const _minCycleDaysToAverage = 18;
   static const _maxCycleDaysToAverage = 45;
   static const _minPeriodLengthDays = 1;
   static const _maxPeriodLengthDays = 14;
@@ -56,44 +57,20 @@ class InsightEndpoint extends Endpoint {
 
   Future<Prediction> getPrediction(Session session) async {
     final userId = session.authenticated!.authUserId;
-
-    final periods = await Period.db.find(
-      session,
-      where: (t) => t.userId.equals(userId),
-      orderBy: (t) => t.startDate,
-    );
-    final periodStarts = [for (final period in periods) period.startDate];
-
-    if (periodStarts.isEmpty) {
+    final periods = await _periodsOf(session, userId);
+    if (periods.isEmpty) {
       return Prediction();
     }
 
-    final lastStart = periodStarts.last;
+    final lastStart = periods.last.startDate;
     final currentCycleDay = _todayAsDateKey().difference(lastStart).inDays + 1;
     final settings = await _getSettingsOrDefault(session);
     final periodLength = (await computeDefaultPeriodLength(
       session,
       userId,
     )).days;
-
-    // Every completed cycle, oldest first, then the most recent few of them.
-    final allCycles = [
-      for (var i = 1; i < periodStarts.length; i++)
-        CycleLength(
-          startDate: periodStarts[i - 1],
-          days: periodStarts[i].difference(periodStarts[i - 1]).inDays,
-          excludedFromAverage:
-              periodStarts[i].difference(periodStarts[i - 1]).inDays >
-              _maxCycleDaysToAverage,
-        ),
-    ];
-    final recentCycles = allCycles.length > _maxCyclesToAverage
-        ? allCycles.sublist(allCycles.length - _maxCyclesToAverage)
-        : allCycles;
-    final lengthsToAverage = [
-      for (final cycle in recentCycles)
-        if (!cycle.excludedFromAverage) cycle.days,
-    ];
+    final recentCycles = _recentCycles(periods, periodLength);
+    final lengthsToAverage = _lengthsToAverage(recentCycles);
 
     int nextCycleLength;
     int confidenceDays;
@@ -103,9 +80,7 @@ class InsightEndpoint extends Endpoint {
       nextCycleLength = settings.typicalCycleDays;
       confidenceDays = _seedConfidenceDays;
     } else {
-      final avgLength =
-          lengthsToAverage.reduce((a, b) => a + b) / lengthsToAverage.length;
-      nextCycleLength = avgLength.round();
+      nextCycleLength = _average(lengthsToAverage);
       confidenceDays = _spread(lengthsToAverage);
     }
 
@@ -128,6 +103,69 @@ class InsightEndpoint extends Endpoint {
     );
   }
 
+  /// Average cycle and period length, plus the recent cycles behind them,
+  /// for the Insights tab.
+  Future<CycleSummary> getCycleSummary(Session session) async {
+    final userId = session.authenticated!.authUserId;
+    final periods = await _periodsOf(session, userId);
+    final periodLength = await computeDefaultPeriodLength(session, userId);
+    final recentCycles = _recentCycles(periods, periodLength.days);
+    final lengthsToAverage = _lengthsToAverage(recentCycles);
+    final settings = await _getSettingsOrDefault(session);
+
+    return CycleSummary(
+      averageCycleDays: lengthsToAverage.isEmpty
+          ? settings.typicalCycleDays
+          : _average(lengthsToAverage),
+      averagePeriodDays: periodLength.days,
+      periodFromPeriods: periodLength.fromPeriods,
+      cycles: recentCycles,
+    );
+  }
+
+  Future<List<Period>> _periodsOf(Session session, UuidValue userId) =>
+      Period.db.find(
+        session,
+        where: (t) => t.userId.equals(userId),
+        orderBy: (t) => t.startDate,
+      );
+
+  /// The most recent completed cycles (up to [_maxCyclesToAverage]), oldest
+  /// first. Each runs from one period's start to the next one's.
+  List<CycleLength> _recentCycles(List<Period> periods, int periodLength) {
+    final cycles = [
+      for (var i = 1; i < periods.length; i++)
+        _cycle(periods[i - 1], periods[i].startDate, periodLength),
+    ];
+    return cycles.length > _maxCyclesToAverage
+        ? cycles.sublist(cycles.length - _maxCyclesToAverage)
+        : cycles;
+  }
+
+  CycleLength _cycle(Period period, DateTime nextStart, int periodLength) {
+    final days = nextStart.difference(period.startDate).inDays;
+    return CycleLength(
+      startDate: period.startDate,
+      days: days,
+      periodDays:
+          effectiveEndDate(
+            period,
+            periodLength,
+          ).difference(period.startDate).inDays +
+          1,
+      excludedFromAverage:
+          days < _minCycleDaysToAverage || days > _maxCycleDaysToAverage,
+    );
+  }
+
+  List<int> _lengthsToAverage(List<CycleLength> cycles) => [
+    for (final cycle in cycles)
+      if (!cycle.excludedFromAverage) cycle.days,
+  ];
+
+  int _average(List<int> lengths) =>
+      (lengths.reduce((a, b) => a + b) / lengths.length).round();
+
   /// Whether the signed-in user has completed sign-up's cycle length /
   /// period length / birth year step. Gates that one-time flow — it stays
   /// false until birth year is saved, even if cycle/period length were
@@ -148,7 +186,12 @@ class InsightEndpoint extends Endpoint {
 
   /// Saves the signed-in user's birth year, used to compute [getAge]. Only
   /// the year is ever asked for or stored — see `CycleSettings.birthYear`.
+  /// Asked once, at sign-up (saving it completes sign-up); it can't be
+  /// changed afterwards.
   Future<void> saveBirthYear(Session session, int year) async {
+    if (await hasCycleSettings(session)) {
+      throw ArgumentError('Birth year can only be set during sign-up.');
+    }
     final currentYear = _todayAsDateKey().year;
     if (year > currentYear) {
       throw ArgumentError('year cannot be in the future');
@@ -178,10 +221,14 @@ class InsightEndpoint extends Endpoint {
     return (await _getSettingsOrDefault(session)).typicalCycleDays;
   }
 
-  /// Saves how many days typically pass between period starts. Only used
-  /// to seed predictions before 2+ periods have been logged — once they
-  /// have, the real average of logged cycles takes over automatically.
+  /// Saves how many days typically pass between period starts. Only allowed
+  /// during sign-up (before birth year completes it), as the user's first
+  /// estimate — it seeds predictions until real cycles have been logged, and
+  /// the learned average is shown on Insights afterwards.
   Future<void> saveCycleLength(Session session, int days) async {
+    if (await hasCycleSettings(session)) {
+      throw ArgumentError('Cycle length can only be set during sign-up.');
+    }
     if (days < _minCycleLengthDays || days > _maxCycleLengthDays) {
       throw ArgumentError(
         'days must be between $_minCycleLengthDays and $_maxCycleLengthDays',

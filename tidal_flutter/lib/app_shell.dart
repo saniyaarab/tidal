@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'screens/calendar_screen.dart';
 import 'screens/coming_soon_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/insights_screen.dart';
 import 'screens/me_screen.dart';
 
 /// The app's shell: bottom navigation between Home, Calendar, Insights,
@@ -17,6 +18,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   static const _calendarTab = 1;
+  static const _insightsTab = 2;
 
   int _index = 0;
 
@@ -24,10 +26,19 @@ class _AppShellState extends State<AppShell> {
   // jumps to that date.
   final _calendarDate = ValueNotifier<DateTime?>(null);
 
-  late final List<Widget> _tabs = [
-    HomeScreen(onOpenCalendar: _openCalendar),
-    CalendarScreen(dateToShow: _calendarDate),
-    const ComingSoonScreen(title: 'Insights'),
+  // Bumped every time Insights is opened, so it's rebuilt and reloads with
+  // the latest periods instead of showing what it loaded at startup.
+  int _insightsVisits = 0;
+
+  late final HomeScreen _home = HomeScreen(onOpenCalendar: _openCalendar);
+  late final CalendarScreen _calendar = CalendarScreen(
+    dateToShow: _calendarDate,
+  );
+
+  List<Widget> get _tabs => [
+    _home,
+    _calendar,
+    InsightsScreen(key: ValueKey(_insightsVisits)),
     const ComingSoonScreen(title: 'Partner'),
     const MeScreen(),
   ];
@@ -49,7 +60,10 @@ class _AppShellState extends State<AppShell> {
       body: IndexedStack(index: _index, children: _tabs),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        onDestinationSelected: (i) => setState(() {
+          if (i == _insightsTab) _insightsVisits++;
+          _index = i;
+        }),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
           NavigationDestination(

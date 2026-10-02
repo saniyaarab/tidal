@@ -17,6 +17,8 @@ import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
 import 'package:tidal_server/src/generated/log/flow_level.dart' as _idptobfz;
 import 'package:tidal_server/src/generated/log/mood.dart' as _ij0gfvc4;
+import 'package:tidal_server/src/generated/pain/medication_type.dart'
+    as _i4gcwlpe;
 import 'package:tidal_server/src/generated/pain/pain_location.dart'
     as _iv8cvxsn;
 import 'package:tidal_server/src/generated/period/period_change.dart'
@@ -289,6 +291,16 @@ class Endpoints extends _is.EndpointDispatch {
               ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
                   .getPrediction(session),
         ),
+        'getCycleSummary': _is.MethodConnector(
+          name: 'getCycleSummary',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .getCycleSummary(session),
+        ),
         'hasCycleSettings': _is.MethodConnector(
           name: 'hasCycleSettings',
           params: {},
@@ -492,6 +504,16 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<List<_iv8cvxsn.PainLocation>>(),
               nullable: false,
             ),
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'timestamp': _is.ParameterDescription(
+              name: 'timestamp',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
           },
           call:
               (
@@ -501,6 +523,8 @@ class Endpoints extends _is.EndpointDispatch {
                 session,
                 params['level'],
                 params['locations'],
+                params['date'],
+                params['timestamp'],
               ),
         ),
         'getPainRange': _is.MethodConnector(
@@ -551,6 +575,11 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<String>(),
               nullable: false,
             ),
+            'type': _is.ParameterDescription(
+              name: 'type',
+              type: _is.getType<_i4gcwlpe.MedicationType?>(),
+              nullable: true,
+            ),
           },
           call:
               (
@@ -561,6 +590,7 @@ class Endpoints extends _is.EndpointDispatch {
                     session,
                     params['name'],
                     params['usualDose'],
+                    type: params['type'],
                   ),
         ),
         'logDose': _is.MethodConnector(
@@ -571,10 +601,15 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<int>(),
               nullable: false,
             ),
-            'painBefore': _is.ParameterDescription(
-              name: 'painBefore',
-              type: _is.getType<int?>(),
-              nullable: true,
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'timestamp': _is.ParameterDescription(
+              name: 'timestamp',
+              type: _is.getType<DateTime>(),
+              nullable: false,
             ),
           },
           call:
@@ -584,7 +619,8 @@ class Endpoints extends _is.EndpointDispatch {
               ) async => (endpoints['pain'] as _i9flen3s.PainEndpoint).logDose(
                 session,
                 params['medicationId'],
-                painBefore: params['painBefore'],
+                params['date'],
+                params['timestamp'],
               ),
         ),
         'getDoseRange': _is.MethodConnector(
@@ -612,15 +648,15 @@ class Endpoints extends _is.EndpointDispatch {
                     params['end'],
                   ),
         ),
-        'getLastDose': _is.MethodConnector(
-          name: 'getLastDose',
+        'getLastDosePerMedication': _is.MethodConnector(
+          name: 'getLastDosePerMedication',
           params: {},
           call:
               (
                 _is.Session session,
                 Map<String, dynamic> params,
               ) async => (endpoints['pain'] as _i9flen3s.PainEndpoint)
-                  .getLastDose(session),
+                  .getLastDosePerMedication(session),
         ),
       },
     );

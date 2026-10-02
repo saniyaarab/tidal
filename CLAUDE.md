@@ -9,23 +9,23 @@ The developer is a data engineer (Python, Java, cloud) who is new to Flutter/Dar
 Serverpod App Studio runs the project locally (full-stack hot reload, embedded Postgres).
 
 ## The hook
-Popular trackers (Flo, Clue, Maya, Tide) don't track pain properly. Tidal logs pain level and the painkiller taken, then shows how pain follows the cycle.
+Popular trackers (Flo, Clue, Maya, Tide) don't track pain properly. Tidal logs pain and the medications taken alongside the cycle, so patterns can be found later.
 Demo story: "My periods are painful and I take painkillers. My tracker couldn't log any of that, so I built Tidal."
 
 ## MVP scope (build in this order)
 1. Email auth (Serverpod built-in auth).
 2. Day log: flow, mood, note.
-3. Pain log: level 0–10, locations (cramps, lower back, head, legs, stomach), time.
-4. Medication log: user's "my meds" list (name + usual dose), one-tap dose logging, "time since last dose". Record only. Never suggest doses.
+3. Pain log: level 0–10, locations (cramps, lower back, head, legs, stomach). Pain only — no medication on the pain sheet.
+4. Medications: the user's list of anything they take (name, usual dose, optional type: painkiller, birth control, vitamin/supplement, other), one-tap "taken" logging, "last taken" per medication. Remembered for future reminders. Record only. Never suggest doses.
 5. Removed: the "did it help?" check-in after a dose was cut at the developer's request (Oct 2, 2026). Do not re-add it or any relief/painAfter tracking.
 6. Calendar: period, predicted, and fertile days as rings, with a dot on pain days. Periods are started and ended by long-press (see "Period tracking" below).
 7. Predictions: average of the last 3–6 cycle lengths, ± spread. Period length learned from recorded periods (see "Period tracking").
-8. Pain insights: average pain by cycle day.
+8. Insights (MVP): average cycle length and average period length, with a bar chart of recent cycles (see "Insights" below).
 9. Partner sharing: invite code; partner sees phase + a live "bad pain day" status via a Serverpod streaming endpoint; care nudges.
 10. Privacy screen + "delete all my data".
 
 Stretch only if ahead: doctor summary PDF export, "pack your painkillers" reminder, offline sync.
-Future (not MVP, developer's ideas): flag periods longer than 8 days as a possible menorrhagia anomaly and warn/track it; flag missed or unusually long cycles as anomalies; ask the user whether they're regular, irregular, or have PCOS/endometriosis and handle each case; reminders and events on future dates.
+Future (not MVP, developer's ideas): log more of what affects symptoms — bowel movements/IBS (pain relief after a bowel movement), caffeine and water (breast pain), foods (bloating), sugar cravings — and find patterns in why some cycles hurt more than others, with healthier swaps for cravings; medication schedules and reminders; flag periods longer than 8 days as a possible menorrhagia anomaly and warn/track it; flag missed or unusually long cycles as anomalies; ask the user whether they're regular, irregular, or have PCOS/endometriosis and handle each case; reminders and events on future dates.
 Cut: pregnancy mode, community, wearables, ML.
 
 ## Period tracking (agreed with the developer, Oct 2, 2026)
@@ -38,11 +38,10 @@ A period is defined by its start and end dates, which the user sets by long-pres
 - **Anywhere else:** starts a new period on that date. Until an end is set, the period is assumed to last the user's default period length (e.g. start + 4 more days for a 5-day default), and those days show as period days like any other.
 - **On a future date:** does nothing except show a message that periods can't be logged for future dates.
 - After every long-press, show a short message that disappears by itself, with Undo, e.g. "Period started · assumed 5 days · Undo" or "Period ended · 4 days · Undo".
-- One-line hint under the calendar: "Long-press a day to start or end a period".
 
-**Default period length:** the average of the user's confirmed period lengths, **always rounded up** (e.g. 4, 5, 4 → 4.33 → 5). Before any period has a confirmed end, use the period length entered at sign-up (`CycleSettings.typicalPeriodDays`, default 5). Assumed (unconfirmed) periods never count toward the average. Period length can only be entered at sign-up; afterwards Me shows the current default (learned or from sign-up) read-only, e.g. "5 days · from your last 3 periods".
+**Default period length:** the average of the user's confirmed period lengths, **always rounded up** (e.g. 4, 5, 4 → 4.33 → 5). Before any period has a confirmed end, use the period length entered at sign-up (`CycleSettings.typicalPeriodDays`, default 5). Assumed (unconfirmed) periods never count toward the average. Cycle length, period length and birth year can only be entered at sign-up (period/cycle length as the user's first estimate). Me shows only the age computed from birth year, read-only, labelled "Age". Afterwards they don't appear on Me at all; the learned averages are shown on Insights.
 
-**Cycle length** (start of one period to the start of the next) works as before: the average of the last 3–6 cycles, now measured from `Period.startDate` instead of being derived from flow. Cycles longer than 45 days (e.g. a forgotten or missed period) are still recorded and shown with an asterisk (e.g. "53*") but left out of the average, with no warning for now.
+**Cycle length** (start of one period to the start of the next) works as before: the average of the last 3–6 cycles, now measured from `Period.startDate` instead of being derived from flow. Cycles shorter than 18 days or longer than 45 days (e.g. a forgotten or missed period; same rule as Maya) are still recorded and shown with an asterisk (e.g. "53*") but left out of the average, with no warning for now.
 
 **Flow** (light/medium/heavy) is optional and recorded per day. It never creates, ends or splits a period.
 
@@ -52,11 +51,17 @@ A period is defined by its start and end dates, which the user sets by long-pres
 
 **Existing data:** every period start found by the old flow-based rule (a flow day whose previous day has no flow) becomes a `Period` starting on that date with no confirmed end, so it shows with the default length.
 
+## Pain and medication times (agreed Oct 2, 2026)
+Pain entries and medications taken store the day they belong to, the time they happened, and (server-only) the exact moment they were saved. The Pain and Medications sheets show "<day> · <time>", defaulting to the day being logged and the current time; the user can change both, but not to the future. The app groups entries by day. Wherever a logged pain entry or medication is shown (pain bands on Home/Calendar, the Medications sheet), it shows time since, not the clock time — e.g. "3h ago", "Last taken 3h ago" — so the user can tell when a dose is due (e.g. every 4 hours).
+
+## Insights (MVP, agreed Oct 2, 2026)
+The Insights tab shows "Avg cycle: N days" and "Avg period: N days", then a bar chart with one bar per recent cycle (up to 6): bar height is the cycle length, the bottom part shaded rose for its period days, a dashed line at the average cycle length. Cycles left out of the average are drawn faded and labelled with an asterisk ("53*"). Chart library: fl_chart.
+
 ## Data models (.spy.yaml)
 - DayLog: userId, date, flow (none/light/medium/heavy), mood, note
-- PainEntry: userId, timestamp, level, locations
-- Medication: userId, name, usualDose
-- DoseLog: userId, medicationId, timestamp, dose, painBefore
+- PainEntry: userId, date, timestamp, loggedAt, level, locations
+- Medication: userId, name, usualDose, type (optional)
+- DoseLog: userId, medicationId, date, timestamp, loggedAt, dose
 - Period: userId, startDate, endDate (nullable; null = not confirmed yet, so the end is assumed from the default period length)
 - Prediction: userId, nextStart, confidenceDays
 - PartnerLink: ownerId, partnerId, inviteCode, sharesPhase, sharesPainStatus
@@ -80,7 +85,7 @@ Every endpoint only returns the signed-in user's own data.
 
 ## Screens (wireframes exist; layout inspired by the Maya app, look is Tidal's own)
 - Bottom nav: Home, Calendar, Insights, Partner, Me. Yellow round "+" button on Home and Calendar.
-- Home ("Today"): cycle day + next period at the top; a large lavender day circle (date, "Day 1", "Period · heavy") with prev/next arrows; below it, full-width pastel bands per logged item (pain = rose, painkiller = lavender, mood = yellow); a "your pattern" tip row.
+- Home ("Today"): cycle day + next period at the top; a large lavender day circle (date, "Day 1", "Period · heavy") with prev/next arrows; below it, full-width pastel bands per logged item (pain = rose, mood = yellow, note = lavender; medications are not shown on Home or Calendar, only in the Medications sheet); a "your pattern" tip row.
 - Log menu (+): two big tiles, Pain (rose) and Painkiller (lavender), then round pastel buttons: Flow, Mood, Symptoms, Note, Share, Reminder.
 - Log pain sheet: 0–10 circles (rose ramp), location chips, one-tap "my meds" list, "Save".
 - Calendar, Insights (Pain/Cycle/History tabs), Partner view as described in the MVP.
@@ -91,4 +96,5 @@ Steps 3-4 (pain + medication logging) are done: PainEntry/Medication/DoseLog + P
 Step 5 (check-in) was built and then removed at the developer's request. Step 6 (calendar) is done: CalendarScreen with a month grid (period rings, pain dots, tap-to-select day detail).
 Step 7 (predictions) is done: InsightEndpoint.getPrediction derives cycle starts from DayLog flow and averages the last 3-6 cycle lengths; Home shows "Cycle day N · Next period in Nd" and Calendar shows predicted-period and fertile-window rings. See AGENTS.md for what's built and where.
 Period tracking by long-press (see the section above) is done: `Period` table + PeriodEndpoint, predictions from periods, Calendar long-press with Undo, Home circle opens Calendar, notes-only future dates, read-only period length on Me.
-Next: pain insights (step 8).
+Medications (step 4 redesign), editable pain/medication times, and Insights MVP (step 8) are done. Me shows only Age (read-only) and sign out.
+Next: partner sharing (step 9), then privacy + delete all data (step 10).

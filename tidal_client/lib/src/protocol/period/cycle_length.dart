@@ -18,12 +18,14 @@ abstract class CycleLength
   CycleLength._({
     required this.startDate,
     required this.days,
+    required this.periodDays,
     required this.excludedFromAverage,
   });
 
   factory CycleLength({
     required DateTime startDate,
     required int days,
+    required int periodDays,
     required bool excludedFromAverage,
   }) = _CycleLengthImpl;
 
@@ -33,6 +35,7 @@ abstract class CycleLength
         jsonSerialization['startDate'],
       ),
       days: jsonSerialization['days'] as int,
+      periodDays: jsonSerialization['periodDays'] as int,
       excludedFromAverage: _isc.BoolJsonExtension.fromJson(
         jsonSerialization['excludedFromAverage'],
       ),
@@ -45,9 +48,13 @@ abstract class CycleLength
   /// Days until the next period started.
   int days;
 
-  /// True for cycles too long to be a normal cycle (e.g. a forgotten or
-  /// missed period). They're still shown, with an asterisk ("53*"), but
-  /// left out of the average.
+  /// How many days that period lasted (its confirmed length, or the
+  /// default period length if its end was never confirmed).
+  int periodDays;
+
+  /// True for cycles shorter than 18 or longer than 45 days (e.g. a
+  /// forgotten or missed period). They're still shown, with an asterisk
+  /// ("53*"), but left out of the average.
   bool excludedFromAverage;
 
   /// Returns a shallow copy of this [CycleLength]
@@ -56,6 +63,7 @@ abstract class CycleLength
   CycleLength copyWith({
     DateTime? startDate,
     int? days,
+    int? periodDays,
     bool? excludedFromAverage,
   });
   @override
@@ -64,6 +72,7 @@ abstract class CycleLength
       '__className__': 'CycleLength',
       'startDate': startDate.toJson(),
       'days': days,
+      'periodDays': periodDays,
       'excludedFromAverage': excludedFromAverage,
     };
   }
@@ -74,6 +83,7 @@ abstract class CycleLength
       '__className__': 'CycleLength',
       'startDate': startDate.toJson(),
       'days': days,
+      'periodDays': periodDays,
       'excludedFromAverage': excludedFromAverage,
     };
   }
@@ -88,10 +98,12 @@ class _CycleLengthImpl extends CycleLength {
   _CycleLengthImpl({
     required DateTime startDate,
     required int days,
+    required int periodDays,
     required bool excludedFromAverage,
   }) : super._(
          startDate: startDate,
          days: days,
+         periodDays: periodDays,
          excludedFromAverage: excludedFromAverage,
        );
 
@@ -102,11 +114,13 @@ class _CycleLengthImpl extends CycleLength {
   CycleLength copyWith({
     DateTime? startDate,
     int? days,
+    int? periodDays,
     bool? excludedFromAverage,
   }) {
     return CycleLength(
       startDate: startDate ?? this.startDate,
       days: days ?? this.days,
+      periodDays: periodDays ?? this.periodDays,
       excludedFromAverage: excludedFromAverage ?? this.excludedFromAverage,
     );
   }

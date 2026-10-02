@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../client.dart';
 import '../theme.dart';
 
 /// Shows a year-only picker, constrained to a plausible birth-year range
@@ -43,23 +42,4 @@ Future<int?> pickBirthYear(BuildContext context, {int? initial}) {
       );
     },
   );
-}
-
-/// Picks a birth year and saves it right away. Returns true if a year was
-/// chosen and saved.
-Future<bool> pickAndSaveBirthYear(BuildContext context, {int? initial}) async {
-  final picked = await pickBirthYear(context, initial: initial);
-  if (picked == null) return false;
-
-  try {
-    await client.insight.saveBirthYear(picked);
-    return true;
-  } catch (e) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not save: $e')));
-    }
-    return false;
-  }
 }

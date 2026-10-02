@@ -5,7 +5,10 @@ fields:
   startDate: DateTime
   ### Days until the next period started.
   days: int
-  ### True for cycles too long to be a normal cycle (e.g. a forgotten or
-  ### missed period). They're still shown, with an asterisk ("53*"), but
-  ### left out of the average.
+  ### How many days that period lasted (its confirmed length, or the
+  ### default period length if its end was never confirmed).
+  periodDays: int
+  ### True for cycles shorter than 18 or longer than 45 days (e.g. a
+  ### forgotten or missed period). They're still shown, with an asterisk
+  ### ("53*"), but left out of the average.
   excludedFromAverage: bool
