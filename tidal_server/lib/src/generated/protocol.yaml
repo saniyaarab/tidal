@@ -31,3 +31,8 @@ pain:
   - logDose:
   - getDoseRange:
   - getLastDose:
+period:
+  - longPress:
+  - undo:
+  - getPeriods:
+  - getDefaultPeriodLength:

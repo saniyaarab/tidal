@@ -11,10 +11,12 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod/serverpod.dart' as _is;
+import 'package:tidal_server/src/generated/protocol.dart' as _i79c4sn7;
+import '../period/cycle_length.dart' as _ingj5vp3;
 
 /// A snapshot of where the signed-in user is in their cycle, and where
 /// their next period is predicted to start. Not persisted — recomputed from
-/// `DayLog` flow entries on every request, so edits to past days are always
+/// the user's `Period` rows on every request, so changes are always
 /// reflected immediately.
 abstract class Prediction
     implements _is.SerializableModel, _is.ProtocolSerialization {
@@ -26,6 +28,7 @@ abstract class Prediction
     this.predictedPeriodEnd,
     this.fertileWindowStart,
     this.fertileWindowEnd,
+    this.recentCycles,
   }) : confidenceDays = confidenceDays ?? 0;
 
   factory Prediction({
@@ -36,6 +39,7 @@ abstract class Prediction
     DateTime? predictedPeriodEnd,
     DateTime? fertileWindowStart,
     DateTime? fertileWindowEnd,
+    List<_ingj5vp3.CycleLength>? recentCycles,
   }) = _PredictionImpl;
 
   factory Prediction.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -67,11 +71,16 @@ abstract class Prediction
           : _is.DateTimeJsonExtension.fromJson(
               jsonSerialization['fertileWindowEnd'],
             ),
+      recentCycles: jsonSerialization['recentCycles'] == null
+          ? null
+          : _i79c4sn7.Protocol().deserialize<List<_ingj5vp3.CycleLength>>(
+              jsonSerialization['recentCycles'],
+            ),
     );
   }
 
-  /// The most recent day flow changed from none to light/medium/heavy.
-  /// Null if no period has ever been logged.
+  /// Start date of the most recent period. Null if no period has ever
+  /// been logged.
   DateTime? lastPeriodStart;
 
   /// 1-based day count since lastPeriodStart. Null if lastPeriodStart is null.
@@ -86,8 +95,8 @@ abstract class Prediction
   /// cycle lengths. 0 whenever nextPeriodStart is null.
   int confidenceDays;
 
-  /// Last day of the predicted period, from the user's CycleSettings
-  /// (defaults to 5 days). Null whenever nextPeriodStart is null.
+  /// Last day of the predicted period, from the user's default period
+  /// length (learned from confirmed periods, else the sign-up value). Null whenever nextPeriodStart is null.
   DateTime? predictedPeriodEnd;
 
   /// Estimated fertile window (ovulation around 14 days before the next
@@ -96,6 +105,10 @@ abstract class Prediction
   DateTime? fertileWindowStart;
 
   DateTime? fertileWindowEnd;
+
+  /// The most recent completed cycles (up to 6), oldest first, including
+  /// any left out of the average for being over 45 days long.
+  List<_ingj5vp3.CycleLength>? recentCycles;
 
   /// Returns a shallow copy of this [Prediction]
   /// with some or all fields replaced by the given arguments.
@@ -108,6 +121,7 @@ abstract class Prediction
     DateTime? predictedPeriodEnd,
     DateTime? fertileWindowStart,
     DateTime? fertileWindowEnd,
+    List<_ingj5vp3.CycleLength>? recentCycles,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -123,6 +137,8 @@ abstract class Prediction
         'fertileWindowStart': fertileWindowStart?.toJson(),
       if (fertileWindowEnd != null)
         'fertileWindowEnd': fertileWindowEnd?.toJson(),
+      if (recentCycles != null)
+        'recentCycles': recentCycles?.toJson(valueToJson: (v) => v.toJson()),
     };
   }
 
@@ -140,6 +156,10 @@ abstract class Prediction
         'fertileWindowStart': fertileWindowStart?.toJson(),
       if (fertileWindowEnd != null)
         'fertileWindowEnd': fertileWindowEnd?.toJson(),
+      if (recentCycles != null)
+        'recentCycles': recentCycles?.toJson(
+          valueToJson: (v) => v.toJsonForProtocol(),
+        ),
     };
   }
 
@@ -160,6 +180,7 @@ class _PredictionImpl extends Prediction {
     DateTime? predictedPeriodEnd,
     DateTime? fertileWindowStart,
     DateTime? fertileWindowEnd,
+    List<_ingj5vp3.CycleLength>? recentCycles,
   }) : super._(
          lastPeriodStart: lastPeriodStart,
          currentCycleDay: currentCycleDay,
@@ -168,6 +189,7 @@ class _PredictionImpl extends Prediction {
          predictedPeriodEnd: predictedPeriodEnd,
          fertileWindowStart: fertileWindowStart,
          fertileWindowEnd: fertileWindowEnd,
+         recentCycles: recentCycles,
        );
 
   /// Returns a shallow copy of this [Prediction]
@@ -182,6 +204,7 @@ class _PredictionImpl extends Prediction {
     Object? predictedPeriodEnd = _Undefined,
     Object? fertileWindowStart = _Undefined,
     Object? fertileWindowEnd = _Undefined,
+    Object? recentCycles = _Undefined,
   }) {
     return Prediction(
       lastPeriodStart: lastPeriodStart is DateTime?
@@ -203,6 +226,9 @@ class _PredictionImpl extends Prediction {
       fertileWindowEnd: fertileWindowEnd is DateTime?
           ? fertileWindowEnd
           : this.fertileWindowEnd,
+      recentCycles: recentCycles is List<_ingj5vp3.CycleLength>?
+          ? recentCycles
+          : this.recentCycles?.map((e0) => e0.copyWith()).toList(),
     );
   }
 }

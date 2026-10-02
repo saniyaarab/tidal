@@ -1,0 +1,21 @@
+### One period: the days from its start date through its end date.
+### The user sets both by long-pressing days on the Calendar (see
+### `PeriodEndpoint.longPress`). Flow level is recorded separately on
+### `DayLog` and never decides where a period starts or ends.
+class: Period
+table: period
+fields:
+  ### The user this period belongs to.
+  userId: UuidValue
+  ### First day of the period, stored as midnight UTC of that day.
+  startDate: DateTime
+  ### Last day of the period, once the user has confirmed it by
+  ### long-pressing it. Null means "not confirmed yet": the period is then
+  ### assumed to last the user's default period length (see
+  ### `computeDefaultPeriodLength`).
+  endDate: DateTime?
+
+indexes:
+  period_user_start_idx:
+    fields: userId, startDate
+    unique: true

@@ -8,11 +8,15 @@ import '../theme.dart';
 import '../widgets/day_bands.dart';
 import 'log_screen.dart';
 
-/// The "Today" tab: a big circle showing the selected day's period flow,
-/// with prev/next arrows to look at other days, and bands below it showing
-/// that day's mood and note (if logged).
+/// The "Today" tab: a big circle showing whether the selected day is a
+/// period day (and its flow, if logged), with prev/next arrows to look at
+/// other days, and bands below it showing that day's log. Tapping the
+/// circle opens the Calendar on that day.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  /// Switches to the Calendar tab with the given date selected.
+  final ValueChanged<DateTime> onOpenCalendar;
+
+  const HomeScreen({super.key, required this.onOpenCalendar});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -21,6 +25,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late DateTime _selectedDate = todayAsDateKey();
   DayLog? _dayLog;
+  // The period the selected day falls in, if any.
+  PeriodSpan? _period;
   List<PainEntry> _painEntries = [];
   List<DoseLog> _doseLogs = [];
   Map<int, Medication> _medsById = {};
@@ -60,11 +66,14 @@ class _HomeScreenState extends State<HomeScreen> {
         client.pain.getPainRange(_selectedDate, _selectedDate),
         client.pain.getDoseRange(_selectedDate, _selectedDate),
         client.pain.myMeds(),
+        client.period.getPeriods(_selectedDate, _selectedDate),
       ]);
       final dayLogs = results[0] as List<DayLog>;
       final meds = results[3] as List<Medication>;
+      final periods = results[4] as List<PeriodSpan>;
       setState(() {
         _dayLog = dayLogs.isEmpty ? null : dayLogs.first;
+        _period = periods.isEmpty ? null : periods.first;
         _painEntries = results[1] as List<PainEntry>;
         _doseLogs = results[2] as List<DoseLog>;
         _medsById = {for (final med in meds) med.id!: med};
@@ -76,6 +85,20 @@ class _HomeScreenState extends State<HomeScreen> {
         _loading = false;
       });
     }
+  }
+
+  /// The text inside the day circle, e.g. "Period · Day 2 · Heavy",
+  /// "Light flow" (flow logged outside a period), or "No period".
+  String _dayStatus() {
+    final flow = _dayLog?.flow ?? FlowLevel.none;
+    final period = _period;
+    if (period != null) {
+      final day = _selectedDate.difference(period.startDate).inDays + 1;
+      return flow == FlowLevel.none
+          ? 'Period · Day $day'
+          : 'Period · Day $day\n${flow.label}';
+    }
+    return flow == FlowLevel.none ? 'No period' : '${flow.label} flow';
   }
 
   void _changeDay(int deltaDays) {
@@ -111,7 +134,8 @@ class _HomeScreenState extends State<HomeScreen> {
             if (_prediction != null) _CycleHeader(prediction: _prediction!),
             _DayCircle(
               date: _selectedDate,
-              flow: _dayLog?.flow ?? FlowLevel.none,
+              status: _dayStatus(),
+              onTap: () => widget.onOpenCalendar(_selectedDate),
               onPrevious: () => _changeDay(-1),
               onNext: () => _changeDay(1),
             ),
@@ -137,16 +161,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// The big lavender circle: the date, prev/next arrows, and the flow status.
+/// The big lavender circle: the date, prev/next arrows, and the period
+/// status. Tapping the circle opens the Calendar on that date.
 class _DayCircle extends StatelessWidget {
   final DateTime date;
-  final FlowLevel flow;
+  final String status;
+  final VoidCallback onTap;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
 
   const _DayCircle({
     required this.date,
-    required this.flow,
+    required this.status,
+    required this.onTap,
     required this.onPrevious,
     required this.onNext,
   });
@@ -158,34 +185,37 @@ class _DayCircle extends StatelessWidget {
       children: [
         _ArrowButton(icon: Icons.chevron_left, onPressed: onPrevious),
         const SizedBox(width: 12),
-        Container(
-          width: 200,
-          height: 200,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: TidalColors.lavenderCircle,
-            border: Border.fromBorderSide(
-              BorderSide(color: TidalColors.lavenderRing, width: 8),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: 200,
+            height: 200,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: TidalColors.lavenderCircle,
+              border: Border.fromBorderSide(
+                BorderSide(color: TidalColors.lavenderRing, width: 8),
+              ),
             ),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  formatDayLabel(date),
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  flow.label,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontSize: 18,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    formatDayLabel(date),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    status,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

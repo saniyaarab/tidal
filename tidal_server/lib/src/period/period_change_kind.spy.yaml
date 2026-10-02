@@ -1,0 +1,12 @@
+### What a long-press on the Calendar did.
+enum: PeriodChangeKind
+serialized: byName
+values:
+  ### A new period was started on the pressed day.
+  - started
+  ### The pressed day became the end of the current period.
+  - ended
+  ### An existing period's start was moved earlier to the pressed day.
+  - moved
+  ### The period starting on the pressed day was removed.
+  - removed

@@ -8,12 +8,17 @@ import '../widgets/day_bands.dart';
 import 'log_screen.dart';
 
 /// The "Calendar" tab: a month grid with a rose ring on period days (solid
-/// for logged days, faded for the predicted window), a soft lavender ring
+/// for logged periods, faded for the predicted window), a soft lavender ring
 /// on fertile days, and a small dot on days with a pain entry. Tapping a
 /// day shows its full log below, the same way Home does for the selected
-/// day.
+/// day. Long-pressing a day starts, ends, or removes a period (see "Period
+/// tracking" in CLAUDE.md; the rules live in `PeriodEndpoint.longPress`).
 class CalendarScreen extends StatefulWidget {
-  const CalendarScreen({super.key});
+  /// Set by Home when its day circle is tapped: the Calendar jumps to that
+  /// date and selects it.
+  final ValueNotifier<DateTime?> dateToShow;
+
+  const CalendarScreen({super.key, required this.dateToShow});
 
   @override
   State<CalendarScreen> createState() => _CalendarScreenState();
@@ -24,6 +29,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   late DateTime _selectedDate = todayAsDateKey();
 
   Map<DateTime, DayLog> _dayLogsByDate = {};
+  Set<DateTime> _periodDates = {};
   Set<DateTime> _datesWithPain = {};
   List<PainEntry> _selectedPainEntries = [];
   List<DoseLog> _selectedDoseLogs = [];
@@ -35,11 +41,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   void initState() {
     super.initState();
+    widget.dateToShow.addListener(_showRequestedDate);
+    _load();
+  }
+
+  @override
+  void dispose() {
+    widget.dateToShow.removeListener(_showRequestedDate);
+    super.dispose();
+  }
+
+  /// Jumps to the date Home asked for (see [CalendarScreen.dateToShow]).
+  void _showRequestedDate() {
+    final date = widget.dateToShow.value;
+    if (date == null) return;
+    setState(() {
+      _month = firstOfMonth(date);
+      _selectedDate = date;
+    });
     _load();
   }
 
   DateTime get _monthEnd =>
       DateTime.utc(_month.year, _month.month + 1, 0); // last day of month
+
+  // The grid also shows a few days of the previous and next months, so
+  // periods are fetched for a slightly wider range than the month itself.
+  DateTime get _gridStart =>
+      _month.subtract(Duration(days: _month.weekday % 7));
+  DateTime get _gridEnd => _gridStart.add(const Duration(days: 41));
 
   Future<void> _load() async {
     setState(() {
@@ -54,11 +84,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
         client.pain.getDoseRange(_selectedDate, _selectedDate),
         client.pain.myMeds(),
         client.insight.getPrediction(),
+        client.period.getPeriods(_gridStart, _gridEnd),
       ]);
       final monthDayLogs = results[0] as List<DayLog>;
       final monthPainEntries = results[1] as List<PainEntry>;
       final meds = results[4] as List<Medication>;
+      final periods = results[6] as List<PeriodSpan>;
       setState(() {
+        // Every day from each period's start through its (confirmed or
+        // assumed) end.
+        _periodDates = {
+          for (final period in periods)
+            for (
+              var day = period.startDate;
+              !day.isAfter(period.endDate);
+              day = day.add(const Duration(days: 1))
+            )
+              day,
+        };
         _dayLogsByDate = {
           for (final log in monthDayLogs) log.date: log,
         };
@@ -93,6 +136,51 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() => _selectedDate = date);
     _load();
   }
+
+  /// Long-press on a day: starts, ends, moves, or removes a period, then
+  /// says what happened in a message with an Undo button.
+  Future<void> _longPress(DateTime date) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    if (date.isAfter(todayAsDateKey())) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text("Periods can't be logged for future dates."),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final change = await client.period.longPress(date);
+      setState(() => _selectedDate = date);
+      await _load();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(_describe(change)),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () async {
+              await client.period.undo(change);
+              await _load();
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not update the period: $e')),
+      );
+    }
+  }
+
+  String _describe(PeriodChange change) => switch (change.kind) {
+    PeriodChangeKind.started =>
+      'Period started · assumed ${change.lengthDays} days',
+    PeriodChangeKind.ended => 'Period ended · ${change.lengthDays} days',
+    PeriodChangeKind.moved => 'Period start moved · ${change.lengthDays} days',
+    PeriodChangeKind.removed => 'Period removed',
+  };
 
   Future<void> _openLogMenu() async {
     final changed = await Navigator.of(context).push<bool>(
@@ -129,13 +217,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
             _MonthGrid(
               month: _month,
               selectedDate: _selectedDate,
-              dayLogsByDate: _dayLogsByDate,
+              periodDates: _periodDates,
               datesWithPain: _datesWithPain,
               prediction: _prediction,
               onSelect: _selectDate,
+              onLongPress: _longPress,
             ),
             const SizedBox(height: 12),
             const _Legend(),
+            const SizedBox(height: 8),
+            Text(
+              'Long-press a day to start or end a period',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: 24),
             Text(
               formatDayLabel(_selectedDate),
@@ -200,18 +294,20 @@ class _MonthHeader extends StatelessWidget {
 class _MonthGrid extends StatelessWidget {
   final DateTime month;
   final DateTime selectedDate;
-  final Map<DateTime, DayLog> dayLogsByDate;
+  final Set<DateTime> periodDates;
   final Set<DateTime> datesWithPain;
   final Prediction? prediction;
   final ValueChanged<DateTime> onSelect;
+  final ValueChanged<DateTime> onLongPress;
 
   const _MonthGrid({
     required this.month,
     required this.selectedDate,
-    required this.dayLogsByDate,
+    required this.periodDates,
     required this.datesWithPain,
     required this.prediction,
     required this.onSelect,
+    required this.onLongPress,
   });
 
   @override
@@ -253,7 +349,9 @@ class _MonthGrid extends StatelessWidget {
                   selectedDate,
                 ),
                 isToday: isSameDay(gridStart.add(Duration(days: i)), today),
-                flow: dayLogsByDate[gridStart.add(Duration(days: i))]?.flow,
+                isPeriod: periodDates.contains(
+                  gridStart.add(Duration(days: i)),
+                ),
                 hasPain: datesWithPain.contains(
                   gridStart.add(Duration(days: i)),
                 ),
@@ -266,6 +364,8 @@ class _MonthGrid extends StatelessWidget {
                   prediction,
                 ),
                 onTap: () => onSelect(gridStart.add(Duration(days: i))),
+                onLongPress: () =>
+                    onLongPress(gridStart.add(Duration(days: i))),
               ),
           ],
         ),
@@ -296,27 +396,28 @@ class _DayCell extends StatelessWidget {
   final bool inCurrentMonth;
   final bool isSelected;
   final bool isToday;
-  final FlowLevel? flow;
+  final bool isPeriod;
   final bool hasPain;
   final bool isPredictedPeriod;
   final bool isFertile;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
   const _DayCell({
     required this.date,
     required this.inCurrentMonth,
     required this.isSelected,
     required this.isToday,
-    required this.flow,
+    required this.isPeriod,
     required this.hasPain,
     required this.isPredictedPeriod,
     required this.isFertile,
     required this.onTap,
+    required this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isPeriod = flow != null && flow != FlowLevel.none;
     final textColor = inCurrentMonth
         ? TidalColors.text
         : TidalColors.textSecondary;
@@ -341,6 +442,7 @@ class _DayCell extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
+      onLongPress: onLongPress,
       customBorder: const CircleBorder(),
       child: Padding(
         padding: const EdgeInsets.all(4),

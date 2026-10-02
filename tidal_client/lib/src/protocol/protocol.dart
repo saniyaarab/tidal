@@ -21,6 +21,7 @@ import 'package:tidal_client/src/protocol/pain/dose_log.dart' as _i95dlci0;
 import 'package:tidal_client/src/protocol/pain/medication.dart' as _i2f8rdmx;
 import 'package:tidal_client/src/protocol/pain/pain_entry.dart' as _imzr3ook;
 import 'package:tidal_client/src/protocol/pain/pain_location.dart' as _ivkbsfwn;
+import 'package:tidal_client/src/protocol/period/period_span.dart' as _idzkd17y;
 import 'insights/cycle_settings.dart' as _irypdw9c;
 import 'insights/prediction.dart' as _itygu37j;
 import 'log/day_log.dart' as _ig2h1g4e;
@@ -30,6 +31,12 @@ import 'pain/dose_log.dart' as _ijd9wd5s;
 import 'pain/medication.dart' as _ifw90bis;
 import 'pain/pain_entry.dart' as _irsb51xy;
 import 'pain/pain_location.dart' as _i9r8gfuz;
+import 'period/cycle_length.dart' as _i850u96d;
+import 'period/period.dart' as _imkg8d7f;
+import 'period/period_change.dart' as _i1jla7k1;
+import 'period/period_change_kind.dart' as _ik4fqf6t;
+import 'period/period_length_info.dart' as _iq6fzgrr;
+import 'period/period_span.dart' as _i2feo9ly;
 export 'insights/cycle_settings.dart';
 export 'insights/prediction.dart';
 export 'log/day_log.dart';
@@ -39,6 +46,12 @@ export 'pain/dose_log.dart';
 export 'pain/medication.dart';
 export 'pain/pain_entry.dart';
 export 'pain/pain_location.dart';
+export 'period/cycle_length.dart';
+export 'period/period.dart';
+export 'period/period_change.dart';
+export 'period/period_change_kind.dart';
+export 'period/period_length_info.dart';
+export 'period/period_span.dart';
 export 'client.dart';
 
 class Protocol extends _isc.SerializationManager {
@@ -102,6 +115,24 @@ class Protocol extends _isc.SerializationManager {
     if (t == _i9r8gfuz.PainLocation) {
       return _i9r8gfuz.PainLocation.fromJson(data) as T;
     }
+    if (t == _i850u96d.CycleLength) {
+      return _i850u96d.CycleLength.fromJson(data) as T;
+    }
+    if (t == _imkg8d7f.Period) {
+      return _imkg8d7f.Period.fromJson(data) as T;
+    }
+    if (t == _i1jla7k1.PeriodChange) {
+      return _i1jla7k1.PeriodChange.fromJson(data) as T;
+    }
+    if (t == _ik4fqf6t.PeriodChangeKind) {
+      return _ik4fqf6t.PeriodChangeKind.fromJson(data) as T;
+    }
+    if (t == _iq6fzgrr.PeriodLengthInfo) {
+      return _iq6fzgrr.PeriodLengthInfo.fromJson(data) as T;
+    }
+    if (t == _i2feo9ly.PeriodSpan) {
+      return _i2feo9ly.PeriodSpan.fromJson(data) as T;
+    }
     if (t == _isc.getType<_irypdw9c.CycleSettings?>()) {
       return (data != null ? _irypdw9c.CycleSettings.fromJson(data) : null)
           as T;
@@ -129,6 +160,40 @@ class Protocol extends _isc.SerializationManager {
     }
     if (t == _isc.getType<_i9r8gfuz.PainLocation?>()) {
       return (data != null ? _i9r8gfuz.PainLocation.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_i850u96d.CycleLength?>()) {
+      return (data != null ? _i850u96d.CycleLength.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_imkg8d7f.Period?>()) {
+      return (data != null ? _imkg8d7f.Period.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_i1jla7k1.PeriodChange?>()) {
+      return (data != null ? _i1jla7k1.PeriodChange.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ik4fqf6t.PeriodChangeKind?>()) {
+      return (data != null ? _ik4fqf6t.PeriodChangeKind.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_iq6fzgrr.PeriodLengthInfo?>()) {
+      return (data != null ? _iq6fzgrr.PeriodLengthInfo.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_i2feo9ly.PeriodSpan?>()) {
+      return (data != null ? _i2feo9ly.PeriodSpan.fromJson(data) : null) as T;
+    }
+    if (t == List<_i850u96d.CycleLength>) {
+      return (data as List)
+              .map((e) => deserialize<_i850u96d.CycleLength>(e))
+              .toList()
+          as T;
+    }
+    if (t == _isc.getType<List<_i850u96d.CycleLength>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_i850u96d.CycleLength>(e))
+                    .toList()
+              : null)
+          as T;
     }
     if (t == List<_i9r8gfuz.PainLocation>) {
       return (data as List)
@@ -166,6 +231,12 @@ class Protocol extends _isc.SerializationManager {
               .toList()
           as T;
     }
+    if (t == List<_idzkd17y.PeriodSpan>) {
+      return (data as List)
+              .map((e) => deserialize<_idzkd17y.PeriodSpan>(e))
+              .toList()
+          as T;
+    }
     try {
       return _iaic.Protocol().deserialize<T>(data, t);
     } on _isc.DeserializationTypeNotFoundException catch (_) {}
@@ -186,6 +257,12 @@ class Protocol extends _isc.SerializationManager {
       _ifw90bis.Medication => 'Medication',
       _irsb51xy.PainEntry => 'PainEntry',
       _i9r8gfuz.PainLocation => 'PainLocation',
+      _i850u96d.CycleLength => 'CycleLength',
+      _imkg8d7f.Period => 'Period',
+      _i1jla7k1.PeriodChange => 'PeriodChange',
+      _ik4fqf6t.PeriodChangeKind => 'PeriodChangeKind',
+      _iq6fzgrr.PeriodLengthInfo => 'PeriodLengthInfo',
+      _i2feo9ly.PeriodSpan => 'PeriodSpan',
       _ => null,
     };
   }
@@ -218,6 +295,18 @@ class Protocol extends _isc.SerializationManager {
         return 'PainEntry';
       case _i9r8gfuz.PainLocation():
         return 'PainLocation';
+      case _i850u96d.CycleLength():
+        return 'CycleLength';
+      case _imkg8d7f.Period():
+        return 'Period';
+      case _i1jla7k1.PeriodChange():
+        return 'PeriodChange';
+      case _ik4fqf6t.PeriodChangeKind():
+        return 'PeriodChangeKind';
+      case _iq6fzgrr.PeriodLengthInfo():
+        return 'PeriodLengthInfo';
+      case _i2feo9ly.PeriodSpan():
+        return 'PeriodSpan';
     }
     className = _iaic.Protocol().getClassNameForObject(data);
     if (className != null) {
@@ -266,6 +355,24 @@ class Protocol extends _isc.SerializationManager {
     }
     if (dataClassName == 'PainLocation') {
       return deserialize<_i9r8gfuz.PainLocation>(data['data']);
+    }
+    if (dataClassName == 'CycleLength') {
+      return deserialize<_i850u96d.CycleLength>(data['data']);
+    }
+    if (dataClassName == 'Period') {
+      return deserialize<_imkg8d7f.Period>(data['data']);
+    }
+    if (dataClassName == 'PeriodChange') {
+      return deserialize<_i1jla7k1.PeriodChange>(data['data']);
+    }
+    if (dataClassName == 'PeriodChangeKind') {
+      return deserialize<_ik4fqf6t.PeriodChangeKind>(data['data']);
+    }
+    if (dataClassName == 'PeriodLengthInfo') {
+      return deserialize<_iq6fzgrr.PeriodLengthInfo>(data['data']);
+    }
+    if (dataClassName == 'PeriodSpan') {
+      return deserialize<_i2feo9ly.PeriodSpan>(data['data']);
     }
     if (dataClassName.startsWith('serverpod_auth_idp.')) {
       data['className'] = dataClassName.substring(19);

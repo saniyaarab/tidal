@@ -27,6 +27,12 @@ import 'package:tidal_server/src/generated/pain/medication.dart' as _i1bzforx;
 import 'package:tidal_server/src/generated/pain/pain_entry.dart' as _i0ft3vou;
 import 'package:tidal_server/src/generated/pain/pain_location.dart'
     as _iv8cvxsn;
+import 'package:tidal_server/src/generated/period/period_change.dart'
+    as _iwmr2amj;
+import 'package:tidal_server/src/generated/period/period_length_info.dart'
+    as _inr0c2n2;
+import 'package:tidal_server/src/generated/period/period_span.dart'
+    as _iiatq07z;
 import 'package:tidal_server/src/generated/protocol.dart';
 import 'package:tidal_server/src/generated/endpoints.dart';
 export 'package:serverpod_test/serverpod_test_public_exports.dart';
@@ -164,6 +170,8 @@ class TestEndpoints {
   late final _LogEndpoint log;
 
   late final _PainEndpoint pain;
+
+  late final _PeriodEndpoint period;
 }
 
 class _InternalTestEndpoints extends TestEndpoints
@@ -190,6 +198,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     pain = _PainEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    period = _PeriodEndpoint(
       endpoints,
       serializationManager,
     );
@@ -1145,6 +1157,144 @@ class _PainEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<_ixayhju8.DoseLog?>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
+class _PeriodEndpoint {
+  _PeriodEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Future<_iwmr2amj.PeriodChange> longPress(
+    _ist.TestSessionBuilder sessionBuilder,
+    DateTime date,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'period',
+            method: 'longPress',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'period',
+          methodName: 'longPress',
+          parameters: _ist.testObjectToJson({'date': date}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_iwmr2amj.PeriodChange>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<void> undo(
+    _ist.TestSessionBuilder sessionBuilder,
+    _iwmr2amj.PeriodChange change,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'period',
+            method: 'undo',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'period',
+          methodName: 'undo',
+          parameters: _ist.testObjectToJson({'change': change}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<List<_iiatq07z.PeriodSpan>> getPeriods(
+    _ist.TestSessionBuilder sessionBuilder,
+    DateTime start,
+    DateTime end,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'period',
+            method: 'getPeriods',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'period',
+          methodName: 'getPeriods',
+          parameters: _ist.testObjectToJson({
+            'start': start,
+            'end': end,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<List<_iiatq07z.PeriodSpan>>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_inr0c2n2.PeriodLengthInfo> getDefaultPeriodLength(
+    _ist.TestSessionBuilder sessionBuilder,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'period',
+            method: 'getDefaultPeriodLength',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'period',
+          methodName: 'getDefaultPeriodLength',
+          parameters: _ist.testObjectToJson({}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_inr0c2n2.PeriodLengthInfo>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

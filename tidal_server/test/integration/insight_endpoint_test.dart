@@ -30,10 +30,10 @@ void main() {
       DateTime.now().toUtc().day,
     );
 
-    // Logs a day of period flow, the same way the Pain log sheet's "Flow"
-    // tile would.
-    Future<void> logFlowDay(TestSessionBuilder session, DateTime date) =>
-        endpoints.log.saveDay(session, date, flow: FlowLevel.heavy);
+    // Starts a period on [date], the same way a long-press on the Calendar
+    // would.
+    Future<void> startPeriod(TestSessionBuilder session, DateTime date) =>
+        endpoints.period.longPress(session, date);
 
     group('when not signed in', () {
       test('then getPrediction throws', () async {
@@ -44,7 +44,7 @@ void main() {
       });
     });
 
-    group('when no flow has ever been logged', () {
+    group('when no period has ever been started', () {
       test('then the prediction is empty', () async {
         final prediction = await endpoints.insight.getPrediction(asUserA);
 
@@ -60,7 +60,7 @@ void main() {
         'then the next period is seeded from the default cycle length',
         () async {
           final start = today.subtract(const Duration(days: 4));
-          await logFlowDay(asUserA, start);
+          await startPeriod(asUserA, start);
 
           final prediction = await endpoints.insight.getPrediction(asUserA);
 
@@ -82,7 +82,7 @@ void main() {
 
       test('then a saved cycle length seeds it instead of 28', () async {
         final start = today.subtract(const Duration(days: 4));
-        await logFlowDay(asUserA, start);
+        await startPeriod(asUserA, start);
         await endpoints.insight.saveCycleLength(asUserA, 32);
 
         final prediction = await endpoints.insight.getPrediction(asUserA);
@@ -94,21 +94,48 @@ void main() {
       });
     });
 
-    group('when a period spans several days', () {
-      test('then only its first day counts as the period start', () async {
-        final start = today.subtract(const Duration(days: 4));
-        await logFlowDay(asUserA, start);
-        await logFlowDay(asUserA, start.add(const Duration(days: 1)));
-        await logFlowDay(asUserA, start.add(const Duration(days: 2)));
+    group('when flow is logged but no period was started', () {
+      test('then the prediction is empty', () async {
+        // Flow is just a per-day detail now; it never creates a period.
+        await endpoints.log.saveDay(
+          asUserA,
+          today.subtract(const Duration(days: 2)),
+          flow: FlowLevel.heavy,
+        );
 
         final prediction = await endpoints.insight.getPrediction(asUserA);
 
-        expect(prediction.lastPeriodStart, start);
-        expect(
-          prediction.nextPeriodStart,
-          start.add(const Duration(days: 28)),
-        );
+        expect(prediction.lastPeriodStart, isNull);
       });
+    });
+
+    group('when a cycle is longer than 45 days', () {
+      test(
+        'then it is reported but left out of the average',
+        () async {
+          final start1 = today.subtract(const Duration(days: 110));
+          final start2 = start1.add(const Duration(days: 28));
+          final start3 = start2.add(const Duration(days: 53));
+          final start4 = start3.add(const Duration(days: 26));
+          for (final date in [start1, start2, start3, start4]) {
+            await startPeriod(asUserA, date);
+          }
+
+          final prediction = await endpoints.insight.getPrediction(asUserA);
+
+          // 28 and 26 average to 27; the 53-day gap doesn't count.
+          expect(
+            prediction.nextPeriodStart,
+            start4.add(const Duration(days: 27)),
+          );
+          final cycles = prediction.recentCycles!;
+          expect([for (final c in cycles) c.days], [28, 53, 26]);
+          expect(
+            [for (final c in cycles) c.excludedFromAverage],
+            [false, true, false],
+          );
+        },
+      );
     });
 
     group('when exactly one cycle is complete', () {
@@ -117,8 +144,8 @@ void main() {
         () async {
           final firstStart = today.subtract(const Duration(days: 58));
           final secondStart = firstStart.add(const Duration(days: 30));
-          await logFlowDay(asUserA, firstStart);
-          await logFlowDay(asUserA, secondStart);
+          await startPeriod(asUserA, firstStart);
+          await startPeriod(asUserA, secondStart);
 
           final prediction = await endpoints.insight.getPrediction(asUserA);
 
@@ -146,7 +173,7 @@ void main() {
         final start3 = start2.add(const Duration(days: 30));
         final start4 = start3.add(const Duration(days: 26));
         for (final date in [start1, start2, start3, start4]) {
-          await logFlowDay(asUserA, date);
+          await startPeriod(asUserA, date);
         }
 
         final prediction = await endpoints.insight.getPrediction(asUserA);
@@ -170,7 +197,7 @@ void main() {
           starts.add(starts.last.add(const Duration(days: 30)));
         }
         for (final date in starts) {
-          await logFlowDay(asUserA, date);
+          await startPeriod(asUserA, date);
         }
 
         final prediction = await endpoints.insight.getPrediction(asUserA);
@@ -191,13 +218,13 @@ void main() {
         () async {
           final userAStart1 = today.subtract(const Duration(days: 58));
           final userAStart2 = userAStart1.add(const Duration(days: 30));
-          await logFlowDay(asUserA, userAStart1);
-          await logFlowDay(asUserA, userAStart2);
+          await startPeriod(asUserA, userAStart1);
+          await startPeriod(asUserA, userAStart2);
 
           // User B's periods are a totally different length and position in
           // time; if they leaked in, they'd change A's prediction.
-          await logFlowDay(asUserB, today.subtract(const Duration(days: 10)));
-          await logFlowDay(asUserB, today.subtract(const Duration(days: 5)));
+          await startPeriod(asUserB, today.subtract(const Duration(days: 30)));
+          await startPeriod(asUserB, today.subtract(const Duration(days: 5)));
 
           final prediction = await endpoints.insight.getPrediction(asUserA);
 
@@ -247,11 +274,47 @@ void main() {
         expect(await endpoints.insight.getPeriodLength(asUserB), 5);
       });
 
+      test('then it throws once sign-up is complete', () async {
+        await endpoints.insight.saveBirthYear(asUserA, 1994);
+
+        await expectLater(
+          endpoints.insight.savePeriodLength(asUserA, 7),
+          throwsArgumentError,
+        );
+      });
+
+      test(
+        'then confirmed periods override it, averaged and rounded up',
+        () async {
+          await endpoints.insight.savePeriodLength(asUserA, 7);
+          // Two periods with confirmed ends: 4 days and 5 days -> 4.5 -> 5.
+          final first = today.subtract(const Duration(days: 60));
+          final second = first.add(const Duration(days: 30));
+          await startPeriod(asUserA, first);
+          await endpoints.period.longPress(
+            asUserA,
+            first.add(const Duration(days: 3)),
+          );
+          await startPeriod(asUserA, second);
+          await endpoints.period.longPress(
+            asUserA,
+            second.add(const Duration(days: 4)),
+          );
+
+          final prediction = await endpoints.insight.getPrediction(asUserA);
+
+          expect(
+            prediction.predictedPeriodEnd,
+            second.add(const Duration(days: 30 + 4)),
+          );
+        },
+      );
+
       test('then it sizes the predicted period window', () async {
         final firstStart = today.subtract(const Duration(days: 58));
         final secondStart = firstStart.add(const Duration(days: 30));
-        await logFlowDay(asUserA, firstStart);
-        await logFlowDay(asUserA, secondStart);
+        await startPeriod(asUserA, firstStart);
+        await startPeriod(asUserA, secondStart);
         await endpoints.insight.savePeriodLength(asUserA, 7);
 
         final prediction = await endpoints.insight.getPrediction(asUserA);

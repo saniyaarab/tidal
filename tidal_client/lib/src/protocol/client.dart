@@ -26,6 +26,11 @@ import 'package:tidal_client/src/protocol/pain/dose_log.dart' as _i95dlci0;
 import 'package:tidal_client/src/protocol/pain/medication.dart' as _i2f8rdmx;
 import 'package:tidal_client/src/protocol/pain/pain_entry.dart' as _imzr3ook;
 import 'package:tidal_client/src/protocol/pain/pain_location.dart' as _ivkbsfwn;
+import 'package:tidal_client/src/protocol/period/period_change.dart'
+    as _i992737b;
+import 'package:tidal_client/src/protocol/period/period_length_info.dart'
+    as _im0wuj63;
+import 'package:tidal_client/src/protocol/period/period_span.dart' as _idzkd17y;
 import 'protocol.dart' as _il2as5qe;
 
 /// By extending [EmailIdpBaseEndpoint], the email identity provider endpoints
@@ -253,13 +258,13 @@ class EndpointJwtRefresh extends _iacc.EndpointRefreshJwtTokens {
       );
 }
 
-/// Turns the signed-in user's logged period flow into cycle predictions,
-/// and manages the `CycleSettings` collected at sign-up (cycle length,
-/// period length, birth year).
+/// Turns the signed-in user's periods into cycle predictions, and manages
+/// the `CycleSettings` collected at sign-up (cycle length, period length,
+/// birth year).
 ///
-/// Predictions themselves are never persisted — every call re-derives
-/// period starts from `DayLog`, so correcting a past day's flow is
-/// reflected immediately with no separate record to keep in sync. Age is
+/// Predictions themselves are never persisted — every call recomputes them
+/// from the user's `Period` rows, so starting, ending, or removing a period
+/// is reflected immediately with no separate record to keep in sync. Age is
 /// the same way: only birth year is stored, and age is always computed
 /// fresh from it, so it's never stale.
 /// {@category Endpoint}
@@ -337,8 +342,10 @@ class EndpointInsight extends _isc.EndpointRef {
     {},
   );
 
-  /// Saves how many days the signed-in user's period usually lasts, used to
-  /// size the predicted-period window on the Calendar.
+  /// Saves how many days the signed-in user's period usually lasts. Only
+  /// allowed during sign-up (before birth year completes it) — afterwards
+  /// the default comes from the user's own recorded periods instead (see
+  /// `computeDefaultPeriodLength`), and Me only shows it.
   _ida.Future<void> savePeriodLength(int days) =>
       caller.callServerEndpoint<void>(
         'insight',
@@ -499,6 +506,69 @@ class EndpointPain extends _isc.EndpointRef {
       );
 }
 
+/// Starting, ending, and removing periods by long-pressing Calendar days,
+/// plus reading them back for the Calendar. See "Period tracking" in
+/// CLAUDE.md for the rules.
+///
+/// Every method only ever reads or writes the signed-in user's own data.
+/// {@category Endpoint}
+class EndpointPeriod extends _isc.EndpointRef {
+  EndpointPeriod(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'period';
+
+  /// Applies a long-press on [date] and returns what happened, so the app
+  /// can describe it and offer Undo. In order:
+  ///
+  /// 1. On a period's start date: removes that period.
+  /// 2. Up to the 10th day of the latest period that started before it (or
+  ///    anywhere inside that period's assumed days): sets it as the end.
+  /// 3. Up to 9 days before the next period's start: moves that start
+  ///    earlier to [date], rather than creating an overlapping period.
+  /// 4. Otherwise: starts a new period on [date], with an assumed end.
+  ///
+  /// Throws for future dates — periods can only be logged for today or
+  /// earlier.
+  _ida.Future<_i992737b.PeriodChange> longPress(DateTime date) =>
+      caller.callServerEndpoint<_i992737b.PeriodChange>(
+        'period',
+        'longPress',
+        {'date': date},
+      );
+
+  /// Reverses a change returned by [longPress] (the "Undo" button).
+  _ida.Future<void> undo(_i992737b.PeriodChange change) =>
+      caller.callServerEndpoint<void>(
+        'period',
+        'undo',
+        {'change': change},
+      );
+
+  /// Every period overlapping [start]..[end] (inclusive days), with
+  /// assumed end dates filled in, ordered by start date.
+  _ida.Future<List<_idzkd17y.PeriodSpan>> getPeriods(
+    DateTime start,
+    DateTime end,
+  ) => caller.callServerEndpoint<List<_idzkd17y.PeriodSpan>>(
+    'period',
+    'getPeriods',
+    {
+      'start': start,
+      'end': end,
+    },
+  );
+
+  /// The signed-in user's default period length and where it comes from
+  /// (shown read-only on Me).
+  _ida.Future<_im0wuj63.PeriodLengthInfo> getDefaultPeriodLength() =>
+      caller.callServerEndpoint<_im0wuj63.PeriodLengthInfo>(
+        'period',
+        'getDefaultPeriodLength',
+        {},
+      );
+}
+
 class Modules {
   Modules(Client client) {
     serverpod_auth_idp = _iaic.Caller(client);
@@ -542,6 +612,7 @@ class Client extends _isc.ServerpodClientShared {
     insight = EndpointInsight(this);
     log = EndpointLog(this);
     pain = EndpointPain(this);
+    period = EndpointPeriod(this);
     modules = Modules(this);
   }
 
@@ -555,6 +626,8 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointPain pain;
 
+  late final EndpointPeriod period;
+
   late final Modules modules;
 
   @override
@@ -564,6 +637,7 @@ class Client extends _isc.ServerpodClientShared {
     'insight': insight,
     'log': log,
     'pain': pain,
+    'period': period,
   };
 
   @override

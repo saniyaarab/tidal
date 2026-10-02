@@ -19,11 +19,14 @@ import 'package:tidal_server/src/generated/log/flow_level.dart' as _idptobfz;
 import 'package:tidal_server/src/generated/log/mood.dart' as _ij0gfvc4;
 import 'package:tidal_server/src/generated/pain/pain_location.dart'
     as _iv8cvxsn;
+import 'package:tidal_server/src/generated/period/period_change.dart'
+    as _iwmr2amj;
 import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../insights/insight_endpoint.dart' as _irr87mt6;
 import '../log/log_endpoint.dart' as _iyqvybpl;
 import '../pain/pain_endpoint.dart' as _i9flen3s;
+import '../period/period_endpoint.dart' as _ivapd1ri;
 
 class Endpoints extends _is.EndpointDispatch {
   @override
@@ -57,6 +60,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'pain',
+          null,
+        ),
+      'period': _ivapd1ri.PeriodEndpoint()
+        ..initialize(
+          server,
+          'period',
           null,
         ),
     };
@@ -612,6 +621,84 @@ class Endpoints extends _is.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async => (endpoints['pain'] as _i9flen3s.PainEndpoint)
                   .getLastDose(session),
+        ),
+      },
+    );
+    connectors['period'] = _is.EndpointConnector(
+      name: 'period',
+      endpoint: endpoints['period']!,
+      methodConnectors: {
+        'longPress': _is.MethodConnector(
+          name: 'longPress',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['period'] as _ivapd1ri.PeriodEndpoint).longPress(
+                    session,
+                    params['date'],
+                  ),
+        ),
+        'undo': _is.MethodConnector(
+          name: 'undo',
+          params: {
+            'change': _is.ParameterDescription(
+              name: 'change',
+              type: _is.getType<_iwmr2amj.PeriodChange>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['period'] as _ivapd1ri.PeriodEndpoint).undo(
+                session,
+                params['change'],
+              ),
+        ),
+        'getPeriods': _is.MethodConnector(
+          name: 'getPeriods',
+          params: {
+            'start': _is.ParameterDescription(
+              name: 'start',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'end': _is.ParameterDescription(
+              name: 'end',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['period'] as _ivapd1ri.PeriodEndpoint).getPeriods(
+                    session,
+                    params['start'],
+                    params['end'],
+                  ),
+        ),
+        'getDefaultPeriodLength': _is.MethodConnector(
+          name: 'getDefaultPeriodLength',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['period'] as _ivapd1ri.PeriodEndpoint)
+                  .getDefaultPeriodLength(session),
         ),
       },
     );

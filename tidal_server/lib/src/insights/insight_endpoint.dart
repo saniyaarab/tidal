@@ -4,14 +4,15 @@ import 'package:serverpod/serverpod.dart';
 import 'package:serverpod_auth_idp_server/core.dart';
 
 import '../generated/protocol.dart';
+import '../period/period_lengths.dart';
 
-/// Turns the signed-in user's logged period flow into cycle predictions,
-/// and manages the `CycleSettings` collected at sign-up (cycle length,
-/// period length, birth year).
+/// Turns the signed-in user's periods into cycle predictions, and manages
+/// the `CycleSettings` collected at sign-up (cycle length, period length,
+/// birth year).
 ///
-/// Predictions themselves are never persisted — every call re-derives
-/// period starts from `DayLog`, so correcting a past day's flow is
-/// reflected immediately with no separate record to keep in sync. Age is
+/// Predictions themselves are never persisted — every call recomputes them
+/// from the user's `Period` rows, so starting, ending, or removing a period
+/// is reflected immediately with no separate record to keep in sync. Age is
 /// the same way: only birth year is stored, and age is always computed
 /// fresh from it, so it's never stale.
 class InsightEndpoint extends Endpoint {
@@ -34,6 +35,12 @@ class InsightEndpoint extends Endpoint {
 
   static const _minCycleLengthDays = 15;
   static const _maxCycleLengthDays = 45;
+
+  // Cycles longer than this (e.g. a forgotten or missed period) are still
+  // reported, but left out of the average so one gap doesn't push every
+  // future prediction late. Not flagged to the user yet — anomaly warnings
+  // are a future feature.
+  static const _maxCycleDaysToAverage = 45;
   static const _minPeriodLengthDays = 1;
   static const _maxPeriodLengthDays = 14;
 
@@ -50,12 +57,12 @@ class InsightEndpoint extends Endpoint {
   Future<Prediction> getPrediction(Session session) async {
     final userId = session.authenticated!.authUserId;
 
-    final allDays = await DayLog.db.find(
+    final periods = await Period.db.find(
       session,
       where: (t) => t.userId.equals(userId),
-      orderBy: (t) => t.date,
+      orderBy: (t) => t.startDate,
     );
-    final periodStarts = _findPeriodStarts(allDays);
+    final periodStarts = [for (final period in periods) period.startDate];
 
     if (periodStarts.isEmpty) {
       return Prediction();
@@ -64,26 +71,42 @@ class InsightEndpoint extends Endpoint {
     final lastStart = periodStarts.last;
     final currentCycleDay = _todayAsDateKey().difference(lastStart).inDays + 1;
     final settings = await _getSettingsOrDefault(session);
+    final periodLength = (await computeDefaultPeriodLength(
+      session,
+      userId,
+    )).days;
+
+    // Every completed cycle, oldest first, then the most recent few of them.
+    final allCycles = [
+      for (var i = 1; i < periodStarts.length; i++)
+        CycleLength(
+          startDate: periodStarts[i - 1],
+          days: periodStarts[i].difference(periodStarts[i - 1]).inDays,
+          excludedFromAverage:
+              periodStarts[i].difference(periodStarts[i - 1]).inDays >
+              _maxCycleDaysToAverage,
+        ),
+    ];
+    final recentCycles = allCycles.length > _maxCyclesToAverage
+        ? allCycles.sublist(allCycles.length - _maxCyclesToAverage)
+        : allCycles;
+    final lengthsToAverage = [
+      for (final cycle in recentCycles)
+        if (!cycle.excludedFromAverage) cycle.days,
+    ];
 
     int nextCycleLength;
     int confidenceDays;
-    if (periodStarts.length < 2) {
-      // No completed cycle yet — seed from what the user told us at
+    if (lengthsToAverage.isEmpty) {
+      // No usable completed cycle yet — seed from what the user told us at
       // sign-up, until there's real history to measure instead.
       nextCycleLength = settings.typicalCycleDays;
       confidenceDays = _seedConfidenceDays;
     } else {
-      final lengths = [
-        for (var i = 1; i < periodStarts.length; i++)
-          periodStarts[i].difference(periodStarts[i - 1]).inDays,
-      ];
-      final recentLengths = lengths.length > _maxCyclesToAverage
-          ? lengths.sublist(lengths.length - _maxCyclesToAverage)
-          : lengths;
       final avgLength =
-          recentLengths.reduce((a, b) => a + b) / recentLengths.length;
+          lengthsToAverage.reduce((a, b) => a + b) / lengthsToAverage.length;
       nextCycleLength = avgLength.round();
-      confidenceDays = _spread(recentLengths);
+      confidenceDays = _spread(lengthsToAverage);
     }
 
     final nextStart = lastStart.add(Duration(days: nextCycleLength));
@@ -96,13 +119,12 @@ class InsightEndpoint extends Endpoint {
       currentCycleDay: currentCycleDay,
       nextPeriodStart: nextStart,
       confidenceDays: confidenceDays,
-      predictedPeriodEnd: nextStart.add(
-        Duration(days: settings.typicalPeriodDays - 1),
-      ),
+      predictedPeriodEnd: nextStart.add(Duration(days: periodLength - 1)),
       fertileWindowStart: ovulationDay.subtract(
         const Duration(days: _fertileWindowLeadDays),
       ),
       fertileWindowEnd: ovulationDay,
+      recentCycles: recentCycles,
     );
   }
 
@@ -174,9 +196,14 @@ class InsightEndpoint extends Endpoint {
     return (await _getSettingsOrDefault(session)).typicalPeriodDays;
   }
 
-  /// Saves how many days the signed-in user's period usually lasts, used to
-  /// size the predicted-period window on the Calendar.
+  /// Saves how many days the signed-in user's period usually lasts. Only
+  /// allowed during sign-up (before birth year completes it) — afterwards
+  /// the default comes from the user's own recorded periods instead (see
+  /// `computeDefaultPeriodLength`), and Me only shows it.
   Future<void> savePeriodLength(Session session, int days) async {
+    if (await hasCycleSettings(session)) {
+      throw ArgumentError('Period length can only be set during sign-up.');
+    }
     if (days < _minPeriodLengthDays || days > _maxPeriodLengthDays) {
       throw ArgumentError(
         'days must be between $_minPeriodLengthDays and $_maxPeriodLengthDays',
@@ -217,25 +244,6 @@ class InsightEndpoint extends Endpoint {
     } else {
       await CycleSettings.db.updateRow(session, update(existing));
     }
-  }
-
-  /// A day is a period start if flow was logged that day and the day
-  /// before either has no log at all or was logged as `FlowLevel.none`.
-  List<DateTime> _findPeriodStarts(List<DayLog> allDaysAscending) {
-    final flowByDate = {
-      for (final day in allDaysAscending) day.date: day.flow,
-    };
-
-    final starts = <DateTime>[];
-    for (final day in allDaysAscending) {
-      if (day.flow == FlowLevel.none) continue;
-      final previousDay = day.date.subtract(const Duration(days: 1));
-      final previousFlow = flowByDate[previousDay];
-      if (previousFlow == null || previousFlow == FlowLevel.none) {
-        starts.add(day.date);
-      }
-    }
-    return starts;
   }
 
   /// "± spread" around the average: half the gap between the shortest and

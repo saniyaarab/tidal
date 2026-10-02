@@ -1,0 +1,8 @@
+### The user's current default period length, and where it comes from.
+class: PeriodLengthInfo
+fields:
+  ### Default period length in days.
+  days: int
+  ### How many confirmed periods it was averaged from. 0 means none have
+  ### a confirmed end yet, so it's the length entered at sign-up.
+  fromPeriods: int

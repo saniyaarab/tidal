@@ -16,15 +16,32 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
+  static const _calendarTab = 1;
+
   int _index = 0;
 
-  static const _tabs = [
-    HomeScreen(),
-    CalendarScreen(),
-    ComingSoonScreen(title: 'Insights'),
-    ComingSoonScreen(title: 'Partner'),
-    MeScreen(),
+  // Home sets this when its day circle is tapped; the Calendar listens and
+  // jumps to that date.
+  final _calendarDate = ValueNotifier<DateTime?>(null);
+
+  late final List<Widget> _tabs = [
+    HomeScreen(onOpenCalendar: _openCalendar),
+    CalendarScreen(dateToShow: _calendarDate),
+    const ComingSoonScreen(title: 'Insights'),
+    const ComingSoonScreen(title: 'Partner'),
+    const MeScreen(),
   ];
+
+  void _openCalendar(DateTime date) {
+    _calendarDate.value = date;
+    setState(() => _index = _calendarTab);
+  }
+
+  @override
+  void dispose() {
+    _calendarDate.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

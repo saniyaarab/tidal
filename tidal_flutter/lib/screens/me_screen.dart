@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
+import 'package:tidal_client/tidal_client.dart';
 
 import '../client.dart';
 import '../theme.dart';
 import '../widgets/birth_year_picker.dart';
 import '../widgets/cycle_length_sheet.dart';
-import '../widgets/period_length_sheet.dart';
 
 /// The "Me" tab. Shows who's signed in, cycle settings, and a way to sign
 /// out. Privacy controls (like "delete all my data") are added in a later
@@ -20,7 +20,8 @@ class MeScreen extends StatefulWidget {
 class _MeScreenState extends State<MeScreen> {
   String? _email;
   int? _cycleLength;
-  int? _periodLength;
+  PeriodLengthInfo? _periodLength;
+  List<CycleLength> _recentCycles = [];
   int? _birthYear;
   int? _age;
   // Separate from _birthYear/_age being null, which also means "not set
@@ -34,6 +35,7 @@ class _MeScreenState extends State<MeScreen> {
     _loadProfile();
     _loadCycleLength();
     _loadPeriodLength();
+    _loadRecentCycles();
     _loadBirthYear();
   }
 
@@ -49,8 +51,28 @@ class _MeScreenState extends State<MeScreen> {
   }
 
   Future<void> _loadPeriodLength() async {
-    final days = await client.insight.getPeriodLength();
-    if (mounted) setState(() => _periodLength = days);
+    final info = await client.period.getDefaultPeriodLength();
+    if (mounted) setState(() => _periodLength = info);
+  }
+
+  Future<void> _loadRecentCycles() async {
+    final prediction = await client.insight.getPrediction();
+    if (mounted) {
+      setState(() => _recentCycles = prediction.recentCycles ?? []);
+    }
+  }
+
+  /// "5 days · from your last 3 periods", or "· from sign-up" until any
+  /// period has a confirmed end.
+  String? _periodLengthText() {
+    final info = _periodLength;
+    if (info == null) return null;
+    final source = info.fromPeriods == 0
+        ? 'from sign-up'
+        : info.fromPeriods == 1
+        ? 'from your last period'
+        : 'from your last ${info.fromPeriods} periods';
+    return '${info.days} days · $source';
   }
 
   Future<void> _loadBirthYear() async {
@@ -72,13 +94,6 @@ class _MeScreenState extends State<MeScreen> {
     if (current == null) return;
     final saved = await showCycleLengthSheet(context, current: current);
     if (saved) _loadCycleLength();
-  }
-
-  Future<void> _editPeriodLength() async {
-    final current = _periodLength;
-    if (current == null) return;
-    final saved = await showPeriodLengthSheet(context, current: current);
-    if (saved) _loadPeriodLength();
   }
 
   Future<void> _editBirthYear() async {
@@ -122,12 +137,21 @@ class _MeScreenState extends State<MeScreen> {
               value: _cycleLength == null ? null : '$_cycleLength days',
               onTap: _cycleLength == null ? null : _editCycleLength,
             ),
+            if (_recentCycles.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  'Recent cycles: ${_recentCycles.map((c) => c.excludedFromAverage ? '${c.days}*' : '${c.days}').join(', ')}'
+                  '${_recentCycles.any((c) => c.excludedFromAverage) ? '\n* over 45 days, not counted in predictions' : ''}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
-            _SettingsRow(
-              label: 'Period length',
-              value: _periodLength == null ? null : '$_periodLength days',
-              onTap: _periodLength == null ? null : _editPeriodLength,
-            ),
+            // Read-only: period length is only entered at sign-up, then
+            // learned from the periods the user records.
+            _SettingsRow(label: 'Period length', value: _periodLengthText()),
             const SizedBox(height: 32),
             OutlinedButton(
               onPressed: () => client.auth.signOutDevice(),
@@ -148,8 +172,8 @@ class _MeScreenState extends State<MeScreen> {
   }
 }
 
-/// One tappable settings row: a label on the left, the current value and a
-/// chevron on the right. Used for both cycle length and period length.
+/// One settings row: a label on the left, the current value on the right,
+/// plus a chevron when it's tappable (period length is read-only).
 class _SettingsRow extends StatelessWidget {
   final String label;
   final String? value;
@@ -175,8 +199,13 @@ class _SettingsRow extends StatelessWidget {
               child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
             ),
             Text(value ?? '…', style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(width: 4),
-            const Icon(Icons.chevron_right, color: TidalColors.textSecondary),
+            if (onTap != null) ...[
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.chevron_right,
+                color: TidalColors.textSecondary,
+              ),
+            ],
           ],
         ),
       ),
