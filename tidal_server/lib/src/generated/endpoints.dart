@@ -15,10 +15,19 @@ import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
 import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
+import 'package:tidal_server/src/generated/future_calls.dart' as _i0nkkjyq;
+import 'package:tidal_server/src/generated/insights/temperature_unit.dart'
+    as _ixj5uu5w;
+import 'package:tidal_server/src/generated/insights/weight_unit.dart'
+    as _igx9991w;
 import 'package:tidal_server/src/generated/journal/self_care_activity.dart'
     as _iq27cpnk;
+import 'package:tidal_server/src/generated/log/drink_type.dart' as _iunt34pp;
 import 'package:tidal_server/src/generated/log/flow_level.dart' as _idptobfz;
+import 'package:tidal_server/src/generated/log/love_type.dart' as _i495j52x;
 import 'package:tidal_server/src/generated/log/mood.dart' as _ij0gfvc4;
+import 'package:tidal_server/src/generated/log/mucus_type.dart' as _iilodfy8;
+import 'package:tidal_server/src/generated/log/severity.dart' as _inu6v1qs;
 import 'package:tidal_server/src/generated/pain/medication_type.dart'
     as _i4gcwlpe;
 import 'package:tidal_server/src/generated/pain/pain_location.dart'
@@ -27,12 +36,14 @@ import 'package:tidal_server/src/generated/period/period_change.dart'
     as _iwmr2amj;
 import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
+import '../digestion/digestion_endpoint.dart' as _i635llya;
 import '../insights/insight_endpoint.dart' as _irr87mt6;
 import '../journal/journal_endpoint.dart' as _iz3uglki;
 import '../log/log_endpoint.dart' as _iyqvybpl;
 import '../pain/pain_endpoint.dart' as _i9flen3s;
 import '../period/period_endpoint.dart' as _ivapd1ri;
 import '../privacy/privacy_endpoint.dart' as _icoyrnl0;
+export 'future_calls.dart' show ServerpodFutureCallsGetter;
 
 class Endpoints extends _is.EndpointDispatch {
   @override
@@ -48,6 +59,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'jwtRefresh',
+          null,
+        ),
+      'digestion': _i635llya.DigestionEndpoint()
+        ..initialize(
+          server,
+          'digestion',
           null,
         ),
       'insight': _irr87mt6.InsightEndpoint()
@@ -293,6 +310,68 @@ class Endpoints extends _is.EndpointDispatch {
         ),
       },
     );
+    connectors['digestion'] = _is.EndpointConnector(
+      name: 'digestion',
+      endpoint: endpoints['digestion']!,
+      methodConnectors: {
+        'logBowelMovement': _is.MethodConnector(
+          name: 'logBowelMovement',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'timestamp': _is.ParameterDescription(
+              name: 'timestamp',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'bristolType': _is.ParameterDescription(
+              name: 'bristolType',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['digestion'] as _i635llya.DigestionEndpoint)
+                  .logBowelMovement(
+                    session,
+                    params['date'],
+                    params['timestamp'],
+                    params['bristolType'],
+                  ),
+        ),
+        'getBowelMovementRange': _is.MethodConnector(
+          name: 'getBowelMovementRange',
+          params: {
+            'start': _is.ParameterDescription(
+              name: 'start',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'end': _is.ParameterDescription(
+              name: 'end',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['digestion'] as _i635llya.DigestionEndpoint)
+                  .getBowelMovementRange(
+                    session,
+                    params['start'],
+                    params['end'],
+                  ),
+        ),
+      },
+    );
     connectors['insight'] = _is.EndpointConnector(
       name: 'insight',
       endpoint: endpoints['insight']!,
@@ -424,6 +503,54 @@ class Endpoints extends _is.EndpointDispatch {
                     params['days'],
                   ),
         ),
+        'getUnitPreferences': _is.MethodConnector(
+          name: 'getUnitPreferences',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .getUnitPreferences(session),
+        ),
+        'saveWeightUnit': _is.MethodConnector(
+          name: 'saveWeightUnit',
+          params: {
+            'unit': _is.ParameterDescription(
+              name: 'unit',
+              type: _is.getType<_igx9991w.WeightUnit>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .saveWeightUnit(
+                    session,
+                    params['unit'],
+                  ),
+        ),
+        'saveTemperatureUnit': _is.MethodConnector(
+          name: 'saveTemperatureUnit',
+          params: {
+            'unit': _is.ParameterDescription(
+              name: 'unit',
+              type: _is.getType<_ixj5uu5w.TemperatureUnit>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['insight'] as _irr87mt6.InsightEndpoint)
+                  .saveTemperatureUnit(
+                    session,
+                    params['unit'],
+                  ),
+        ),
       },
     );
     connectors['journal'] = _is.EndpointConnector(
@@ -520,6 +647,195 @@ class Endpoints extends _is.EndpointDispatch {
                 flow: params['flow'],
                 mood: params['mood'],
                 note: params['note'],
+              ),
+        ),
+        'saveDrinkCount': _is.MethodConnector(
+          name: 'saveDrinkCount',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'drink': _is.ParameterDescription(
+              name: 'drink',
+              type: _is.getType<_iunt34pp.DrinkType>(),
+              nullable: false,
+            ),
+            'count': _is.ParameterDescription(
+              name: 'count',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['log'] as _iyqvybpl.LogEndpoint).saveDrinkCount(
+                    session,
+                    params['date'],
+                    params['drink'],
+                    params['count'],
+                  ),
+        ),
+        'saveSleep': _is.MethodConnector(
+          name: 'saveSleep',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'quality': _is.ParameterDescription(
+              name: 'quality',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
+            'hours': _is.ParameterDescription(
+              name: 'hours',
+              type: _is.getType<double?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['log'] as _iyqvybpl.LogEndpoint).saveSleep(
+                session,
+                params['date'],
+                params['quality'],
+                params['hours'],
+              ),
+        ),
+        'saveDigestionDay': _is.MethodConnector(
+          name: 'saveDigestionDay',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'bloating': _is.ParameterDescription(
+              name: 'bloating',
+              type: _is.getType<_inu6v1qs.Severity?>(),
+              nullable: true,
+            ),
+            'acidReflux': _is.ParameterDescription(
+              name: 'acidReflux',
+              type: _is.getType<_inu6v1qs.Severity?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['log'] as _iyqvybpl.LogEndpoint).saveDigestionDay(
+                    session,
+                    params['date'],
+                    params['bloating'],
+                    params['acidReflux'],
+                  ),
+        ),
+        'saveWeight': _is.MethodConnector(
+          name: 'saveWeight',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'kg': _is.ParameterDescription(
+              name: 'kg',
+              type: _is.getType<double?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['log'] as _iyqvybpl.LogEndpoint).saveWeight(
+                session,
+                params['date'],
+                params['kg'],
+              ),
+        ),
+        'saveTemperature': _is.MethodConnector(
+          name: 'saveTemperature',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'celsius': _is.ParameterDescription(
+              name: 'celsius',
+              type: _is.getType<double?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['log'] as _iyqvybpl.LogEndpoint).saveTemperature(
+                    session,
+                    params['date'],
+                    params['celsius'],
+                  ),
+        ),
+        'saveMucus': _is.MethodConnector(
+          name: 'saveMucus',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'mucus': _is.ParameterDescription(
+              name: 'mucus',
+              type: _is.getType<_iilodfy8.MucusType?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['log'] as _iyqvybpl.LogEndpoint).saveMucus(
+                session,
+                params['date'],
+                params['mucus'],
+              ),
+        ),
+        'saveLove': _is.MethodConnector(
+          name: 'saveLove',
+          params: {
+            'date': _is.ParameterDescription(
+              name: 'date',
+              type: _is.getType<DateTime>(),
+              nullable: false,
+            ),
+            'love': _is.ParameterDescription(
+              name: 'love',
+              type: _is.getType<_i495j52x.LoveType?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['log'] as _iyqvybpl.LogEndpoint).saveLove(
+                session,
+                params['date'],
+                params['love'],
               ),
         ),
         'getRange': _is.MethodConnector(
@@ -652,6 +968,11 @@ class Endpoints extends _is.EndpointDispatch {
               type: _is.getType<_i4gcwlpe.MedicationType?>(),
               nullable: true,
             ),
+            'reminderEveryHours': _is.ParameterDescription(
+              name: 'reminderEveryHours',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
           },
           call:
               (
@@ -663,6 +984,61 @@ class Endpoints extends _is.EndpointDispatch {
                     params['name'],
                     params['usualDose'],
                     type: params['type'],
+                    reminderEveryHours: params['reminderEveryHours'],
+                  ),
+        ),
+        'setReminder': _is.MethodConnector(
+          name: 'setReminder',
+          params: {
+            'medicationId': _is.ParameterDescription(
+              name: 'medicationId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'hours': _is.ParameterDescription(
+              name: 'hours',
+              type: _is.getType<int?>(),
+              nullable: true,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['pain'] as _i9flen3s.PainEndpoint).setReminder(
+                    session,
+                    params['medicationId'],
+                    params['hours'],
+                  ),
+        ),
+        'getReminders': _is.MethodConnector(
+          name: 'getReminders',
+          params: {},
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['pain'] as _i9flen3s.PainEndpoint)
+                  .getReminders(session),
+        ),
+        'dismissReminder': _is.MethodConnector(
+          name: 'dismissReminder',
+          params: {
+            'reminderId': _is.ParameterDescription(
+              name: 'reminderId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['pain'] as _i9flen3s.PainEndpoint).dismissReminder(
+                    session,
+                    params['reminderId'],
                   ),
         ),
         'logDose': _is.MethodConnector(
@@ -830,5 +1206,10 @@ class Endpoints extends _is.EndpointDispatch {
       ..initializeEndpoints(server);
     modules['serverpod_auth_core'] = _iacs.Endpoints()
       ..initializeEndpoints(server);
+  }
+
+  @override
+  _is.FutureCallDispatch? get futureCalls {
+    return _i0nkkjyq.FutureCalls();
   }
 }

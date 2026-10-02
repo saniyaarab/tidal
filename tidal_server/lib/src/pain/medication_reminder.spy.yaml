@@ -1,0 +1,21 @@
+### The next reminder for one medication: set when a dose is logged (if the
+### medication has `reminderEveryHours`), and marked due by
+### `MedicationReminderFutureCall` when that time comes. Home shows due
+### reminders as a banner. One per medication.
+class: MedicationReminder
+table: medication_reminder
+fields:
+  ### The user this reminder belongs to.
+  userId: UuidValue
+  ### Which medication it's for.
+  medicationId: int, relation(parent=medication)
+  ### When the next dose is due.
+  dueAt: DateTime
+  ### True once dueAt has passed (set by the future call), until the user
+  ### logs a dose or dismisses it.
+  isDue: bool, default=false
+
+indexes:
+  medication_reminder_medication_idx:
+    fields: medicationId
+    unique: true

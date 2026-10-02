@@ -24,6 +24,10 @@ fields:
   ### `InsightEndpoint.getAge`), never stored, so it's never stale. Age
   ### from year alone is off by at most one year.
   birthYear: int?
+  ### Unit for showing weights (remembered from the Weight sheet's switch).
+  weightUnit: WeightUnit, default=kg
+  ### Unit for showing temperatures (remembered from the Temperature sheet).
+  temperatureUnit: TemperatureUnit, default=celsius
 
 indexes:
   cycle_settings_user_idx:

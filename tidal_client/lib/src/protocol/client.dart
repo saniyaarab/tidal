@@ -17,19 +17,33 @@ import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
     as _iaic;
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
+import 'package:tidal_client/src/protocol/digestion/bowel_movement.dart'
+    as _ityqtzed;
 import 'package:tidal_client/src/protocol/insights/cycle_summary.dart'
     as _iw3iju6d;
 import 'package:tidal_client/src/protocol/insights/prediction.dart'
     as _iodim5iz;
+import 'package:tidal_client/src/protocol/insights/temperature_unit.dart'
+    as _ifsjx49a;
+import 'package:tidal_client/src/protocol/insights/unit_preferences.dart'
+    as _ivrk9skz;
+import 'package:tidal_client/src/protocol/insights/weight_unit.dart'
+    as _ik2pescd;
 import 'package:tidal_client/src/protocol/journal/journal_entry.dart'
     as _iz8exxuw;
 import 'package:tidal_client/src/protocol/journal/self_care_activity.dart'
     as _ifegaqrf;
 import 'package:tidal_client/src/protocol/log/day_log.dart' as _i91iyawq;
+import 'package:tidal_client/src/protocol/log/drink_type.dart' as _ichrm4bp;
 import 'package:tidal_client/src/protocol/log/flow_level.dart' as _ieqssu4z;
+import 'package:tidal_client/src/protocol/log/love_type.dart' as _i7m2q027;
 import 'package:tidal_client/src/protocol/log/mood.dart' as _io0y0e3q;
+import 'package:tidal_client/src/protocol/log/mucus_type.dart' as _invrrvnl;
+import 'package:tidal_client/src/protocol/log/severity.dart' as _if6z4up7;
 import 'package:tidal_client/src/protocol/pain/dose_log.dart' as _i95dlci0;
 import 'package:tidal_client/src/protocol/pain/medication.dart' as _i2f8rdmx;
+import 'package:tidal_client/src/protocol/pain/medication_reminder.dart'
+    as _in2oittr;
 import 'package:tidal_client/src/protocol/pain/medication_type.dart'
     as _ij1j67ck;
 import 'package:tidal_client/src/protocol/pain/pain_entry.dart' as _imzr3ook;
@@ -266,6 +280,46 @@ class EndpointJwtRefresh extends _iacc.EndpointRefreshJwtTokens {
       );
 }
 
+/// Bowel movements (Bristol Stool Scale). Bloating and acid reflux are
+/// once-a-day fields on `DayLog`, saved through `LogEndpoint`.
+///
+/// Every method only ever reads or writes the signed-in user's own data.
+/// {@category Endpoint}
+class EndpointDigestion extends _isc.EndpointRef {
+  EndpointDigestion(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'digestion';
+
+  /// Logs a bowel movement of [bristolType] (1–7) on [date] at [timestamp].
+  _ida.Future<_ityqtzed.BowelMovement> logBowelMovement(
+    DateTime date,
+    DateTime timestamp,
+    int bristolType,
+  ) => caller.callServerEndpoint<_ityqtzed.BowelMovement>(
+    'digestion',
+    'logBowelMovement',
+    {
+      'date': date,
+      'timestamp': timestamp,
+      'bristolType': bristolType,
+    },
+  );
+
+  /// Bowel movements for the days [start] through [end], ordered by time.
+  _ida.Future<List<_ityqtzed.BowelMovement>> getBowelMovementRange(
+    DateTime start,
+    DateTime end,
+  ) => caller.callServerEndpoint<List<_ityqtzed.BowelMovement>>(
+    'digestion',
+    'getBowelMovementRange',
+    {
+      'start': start,
+      'end': end,
+    },
+  );
+}
+
 /// Turns the signed-in user's periods into cycle predictions, and manages
 /// the `CycleSettings` collected at sign-up (cycle length, period length,
 /// birth year).
@@ -372,6 +426,31 @@ class EndpointInsight extends _isc.EndpointRef {
         'savePeriodLength',
         {'days': days},
       );
+
+  /// The units the user last chose in the Weight and Temperature sheets
+  /// (kg and °C until they switch).
+  _ida.Future<_ivrk9skz.UnitPreferences> getUnitPreferences() =>
+      caller.callServerEndpoint<_ivrk9skz.UnitPreferences>(
+        'insight',
+        'getUnitPreferences',
+        {},
+      );
+
+  /// Remembers the unit chosen with the Weight sheet's switch.
+  _ida.Future<void> saveWeightUnit(_ik2pescd.WeightUnit unit) =>
+      caller.callServerEndpoint<void>(
+        'insight',
+        'saveWeightUnit',
+        {'unit': unit},
+      );
+
+  /// Remembers the unit chosen with the Temperature sheet's switch.
+  _ida.Future<void> saveTemperatureUnit(_ifsjx49a.TemperatureUnit unit) =>
+      caller.callServerEndpoint<void>(
+        'insight',
+        'saveTemperatureUnit',
+        {'unit': unit},
+      );
 }
 
 /// The daily self-care journal: which activities the user did each day and
@@ -410,7 +489,8 @@ class EndpointJournal extends _isc.EndpointRef {
   );
 }
 
-/// Endpoint for logging day-to-day info: period flow, mood, and notes.
+/// Endpoint for logging day-to-day info: flow, mood, notes, and the other
+/// once-a-day details (drinks, sleep, digestion, body, love).
 ///
 /// Every method only ever reads or writes the signed-in user's own data.
 /// {@category Endpoint}
@@ -438,6 +518,104 @@ class EndpointLog extends _isc.EndpointRef {
       'flow': flow,
       'mood': mood,
       'note': note,
+    },
+  );
+
+  /// Sets how many of [drink] were had on [date] (0 to clear).
+  _ida.Future<_i91iyawq.DayLog> saveDrinkCount(
+    DateTime date,
+    _ichrm4bp.DrinkType drink,
+    int count,
+  ) => caller.callServerEndpoint<_i91iyawq.DayLog>(
+    'log',
+    'saveDrinkCount',
+    {
+      'date': date,
+      'drink': drink,
+      'count': count,
+    },
+  );
+
+  /// Sets last night's sleep for [date]: [quality] 1–5 and optional
+  /// [hours]. Null clears.
+  _ida.Future<_i91iyawq.DayLog> saveSleep(
+    DateTime date,
+    int? quality,
+    double? hours,
+  ) => caller.callServerEndpoint<_i91iyawq.DayLog>(
+    'log',
+    'saveSleep',
+    {
+      'date': date,
+      'quality': quality,
+      'hours': hours,
+    },
+  );
+
+  /// Sets the day's bloating and acid reflux. Null clears.
+  _ida.Future<_i91iyawq.DayLog> saveDigestionDay(
+    DateTime date,
+    _if6z4up7.Severity? bloating,
+    _if6z4up7.Severity? acidReflux,
+  ) => caller.callServerEndpoint<_i91iyawq.DayLog>(
+    'log',
+    'saveDigestionDay',
+    {
+      'date': date,
+      'bloating': bloating,
+      'acidReflux': acidReflux,
+    },
+  );
+
+  /// Sets the day's weight in kg. Null clears.
+  _ida.Future<_i91iyawq.DayLog> saveWeight(
+    DateTime date,
+    double? kg,
+  ) => caller.callServerEndpoint<_i91iyawq.DayLog>(
+    'log',
+    'saveWeight',
+    {
+      'date': date,
+      'kg': kg,
+    },
+  );
+
+  /// Sets the day's basal body temperature in °C. Null clears.
+  _ida.Future<_i91iyawq.DayLog> saveTemperature(
+    DateTime date,
+    double? celsius,
+  ) => caller.callServerEndpoint<_i91iyawq.DayLog>(
+    'log',
+    'saveTemperature',
+    {
+      'date': date,
+      'celsius': celsius,
+    },
+  );
+
+  /// Sets the day's cervical mucus. Null clears.
+  _ida.Future<_i91iyawq.DayLog> saveMucus(
+    DateTime date,
+    _invrrvnl.MucusType? mucus,
+  ) => caller.callServerEndpoint<_i91iyawq.DayLog>(
+    'log',
+    'saveMucus',
+    {
+      'date': date,
+      'mucus': mucus,
+    },
+  );
+
+  /// Sets whether the user had sex that day, and how. Null clears.
+  _ida.Future<_i91iyawq.DayLog> saveLove(
+    DateTime date,
+    _i7m2q027.LoveType? love,
+  ) => caller.callServerEndpoint<_i91iyawq.DayLog>(
+    'log',
+    'saveLove',
+    {
+      'date': date,
+      'love': love,
     },
   );
 
@@ -519,11 +697,13 @@ class EndpointPain extends _isc.EndpointRef {
         {},
       );
 
-  /// Adds a new medication to the signed-in user's list. [type] is optional.
+  /// Adds a new medication to the signed-in user's list. [type] and
+  /// [reminderEveryHours] are optional.
   _ida.Future<_i2f8rdmx.Medication> addMedication(
     String name,
     String usualDose, {
     _ij1j67ck.MedicationType? type,
+    int? reminderEveryHours,
   }) => caller.callServerEndpoint<_i2f8rdmx.Medication>(
     'pain',
     'addMedication',
@@ -531,8 +711,39 @@ class EndpointPain extends _isc.EndpointRef {
       'name': name,
       'usualDose': usualDose,
       'type': type,
+      'reminderEveryHours': reminderEveryHours,
     },
   );
+
+  /// Turns the reminder for [medicationId] on ("every [hours] hours after a
+  /// dose") or off (null). Turning it off also clears any pending reminder.
+  _ida.Future<_i2f8rdmx.Medication> setReminder(
+    int medicationId,
+    int? hours,
+  ) => caller.callServerEndpoint<_i2f8rdmx.Medication>(
+    'pain',
+    'setReminder',
+    {
+      'medicationId': medicationId,
+      'hours': hours,
+    },
+  );
+
+  /// Every reminder the user has (due or upcoming), for "next in 2h".
+  _ida.Future<List<_in2oittr.MedicationReminder>> getReminders() =>
+      caller.callServerEndpoint<List<_in2oittr.MedicationReminder>>(
+        'pain',
+        'getReminders',
+        {},
+      );
+
+  /// Hides a due reminder until the next dose is logged.
+  _ida.Future<void> dismissReminder(int reminderId) =>
+      caller.callServerEndpoint<void>(
+        'pain',
+        'dismissReminder',
+        {'reminderId': reminderId},
+      );
 
   /// One-tap logging: records that [medicationId] was taken at [timestamp],
   /// on [date] (the calendar day it belongs to), using its usual dose.
@@ -646,9 +857,10 @@ class EndpointPrivacy extends _isc.EndpointRef {
   String get name => 'privacy';
 
   /// Permanently deletes everything tied to the signed-in user — day logs,
-  /// periods, pain entries, medications and doses, journal entries, sign-up
-  /// answers — and then their account itself, signing them out everywhere.
-  /// Nothing is kept, not even anonymously.
+  /// periods, pain entries, bowel movements, medications, doses and
+  /// reminders, journal entries, sign-up answers — and then their account
+  /// itself, signing them out everywhere. Nothing is kept, not even
+  /// anonymously.
   ///
   /// Runs in one transaction, so either everything is deleted or nothing is.
   _ida.Future<void> deleteAllMyData() => caller.callServerEndpoint<void>(
@@ -698,6 +910,7 @@ class Client extends _isc.ServerpodClientShared {
        ) {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    digestion = EndpointDigestion(this);
     insight = EndpointInsight(this);
     journal = EndpointJournal(this);
     log = EndpointLog(this);
@@ -710,6 +923,8 @@ class Client extends _isc.ServerpodClientShared {
   late final EndpointEmailIdp emailIdp;
 
   late final EndpointJwtRefresh jwtRefresh;
+
+  late final EndpointDigestion digestion;
 
   late final EndpointInsight insight;
 
@@ -729,6 +944,7 @@ class Client extends _isc.ServerpodClientShared {
   Map<String, _isc.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
+    'digestion': digestion,
     'insight': insight,
     'journal': journal,
     'log': log,

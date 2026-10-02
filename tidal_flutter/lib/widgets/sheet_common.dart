@@ -60,7 +60,9 @@ class SheetScaffold extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context, false),
+                // Returns nothing, which every sheet treats as "closed
+                // without saving" (whatever type its result is).
+                onPressed: () => Navigator.pop(context),
               ),
             ],
           ),

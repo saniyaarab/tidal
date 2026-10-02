@@ -9,9 +9,10 @@ class PrivacyEndpoint extends Endpoint {
   bool get requireLogin => true;
 
   /// Permanently deletes everything tied to the signed-in user — day logs,
-  /// periods, pain entries, medications and doses, journal entries, sign-up
-  /// answers — and then their account itself, signing them out everywhere.
-  /// Nothing is kept, not even anonymously.
+  /// periods, pain entries, bowel movements, medications, doses and
+  /// reminders, journal entries, sign-up answers — and then their account
+  /// itself, signing them out everywhere. Nothing is kept, not even
+  /// anonymously.
   ///
   /// Runs in one transaction, so either everything is deleted or nothing is.
   Future<void> deleteAllMyData(Session session) async {
@@ -33,7 +34,17 @@ class PrivacyEndpoint extends Endpoint {
         where: (t) => t.userId.equals(userId),
         transaction: transaction,
       );
-      // Doses point at medications, so they go first.
+      await BowelMovement.db.deleteWhere(
+        session,
+        where: (t) => t.userId.equals(userId),
+        transaction: transaction,
+      );
+      // Doses and reminders point at medications, so they go first.
+      await MedicationReminder.db.deleteWhere(
+        session,
+        where: (t) => t.userId.equals(userId),
+        transaction: transaction,
+      );
       await DoseLog.db.deleteWhere(
         session,
         where: (t) => t.userId.equals(userId),

@@ -1,0 +1,6 @@
+### The unit the user sees temperatures in. Stored values are always °C.
+enum: TemperatureUnit
+serialized: byName
+values:
+  - celsius
+  - fahrenheit

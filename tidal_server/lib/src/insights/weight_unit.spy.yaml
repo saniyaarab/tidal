@@ -1,0 +1,6 @@
+### The unit the user sees weights in. Stored values are always kg.
+enum: WeightUnit
+serialized: byName
+values:
+  - kg
+  - lb

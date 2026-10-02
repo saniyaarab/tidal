@@ -71,20 +71,68 @@ class PainEndpoint extends Endpoint {
     );
   }
 
-  /// Adds a new medication to the signed-in user's list. [type] is optional.
+  /// Adds a new medication to the signed-in user's list. [type] and
+  /// [reminderEveryHours] are optional.
   Future<Medication> addMedication(
     Session session,
     String name,
     String usualDose, {
     MedicationType? type,
+    int? reminderEveryHours,
   }) async {
+    _checkReminderHours(reminderEveryHours);
     final medication = Medication(
       userId: session.authenticated!.authUserId,
       name: name,
       usualDose: usualDose,
       type: type,
+      reminderEveryHours: reminderEveryHours,
     );
     return Medication.db.insertRow(session, medication);
+  }
+
+  /// Turns the reminder for [medicationId] on ("every [hours] hours after a
+  /// dose") or off (null). Turning it off also clears any pending reminder.
+  Future<Medication> setReminder(
+    Session session,
+    int medicationId,
+    int? hours,
+  ) async {
+    _checkReminderHours(hours);
+    final medication = await _ownMedication(session, medicationId);
+    if (hours == null) {
+      await MedicationReminder.db.deleteWhere(
+        session,
+        where: (t) => t.medicationId.equals(medicationId),
+      );
+    }
+    return Medication.db.updateRow(
+      session,
+      medication.copyWith(reminderEveryHours: hours),
+    );
+  }
+
+  /// Every reminder the user has (due or upcoming), for "next in 2h".
+  Future<List<MedicationReminder>> getReminders(Session session) {
+    final userId = session.authenticated!.authUserId;
+    return MedicationReminder.db.find(
+      session,
+      where: (t) => t.userId.equals(userId),
+      orderBy: (t) => t.dueAt,
+    );
+  }
+
+  /// Hides a due reminder until the next dose is logged.
+  Future<void> dismissReminder(Session session, int reminderId) async {
+    final userId = session.authenticated!.authUserId;
+    final reminder = await MedicationReminder.db.findById(session, reminderId);
+    if (reminder == null || reminder.userId != userId) {
+      throw ArgumentError('Reminder not found.');
+    }
+    await MedicationReminder.db.updateRow(
+      session,
+      reminder.copyWith(isDue: false),
+    );
   }
 
   /// One-tap logging: records that [medicationId] was taken at [timestamp],
@@ -96,10 +144,7 @@ class PainEndpoint extends Endpoint {
     DateTime timestamp,
   ) async {
     final userId = session.authenticated!.authUserId;
-    final medication = await Medication.db.findById(session, medicationId);
-    if (medication == null || medication.userId != userId) {
-      throw ArgumentError('Medication not found.');
-    }
+    final medication = await _ownMedication(session, medicationId);
     _checkNotFuture(date, timestamp);
 
     final dose = DoseLog(
@@ -110,7 +155,72 @@ class PainEndpoint extends Endpoint {
       loggedAt: DateTime.now().toUtc(),
       dose: medication.usualDose,
     );
-    return DoseLog.db.insertRow(session, dose);
+    final saved = await DoseLog.db.insertRow(session, dose);
+    await _scheduleReminder(session, medication, saved.timestamp);
+    return saved;
+  }
+
+  /// If [medication] has a reminder, sets its next due time to [takenAt]
+  /// plus its interval, and schedules [MedicationReminderFutureCall] to mark
+  /// it due then. A dose logged after the fact may already be overdue.
+  Future<void> _scheduleReminder(
+    Session session,
+    Medication medication,
+    DateTime takenAt,
+  ) async {
+    final hours = medication.reminderEveryHours;
+    if (hours == null) return;
+
+    final dueAt = takenAt.add(Duration(hours: hours));
+    final now = DateTime.now().toUtc();
+    // An older dose logged after the fact mustn't push back a reminder set
+    // by a more recent dose.
+    final existing = await MedicationReminder.db.findFirstRow(
+      session,
+      where: (t) => t.medicationId.equals(medication.id!),
+    );
+    if (existing != null && existing.dueAt.isAfter(dueAt)) return;
+
+    final reminder = existing == null
+        ? await MedicationReminder.db.insertRow(
+            session,
+            MedicationReminder(
+              userId: medication.userId,
+              medicationId: medication.id!,
+              dueAt: dueAt,
+              isDue: !dueAt.isAfter(now),
+            ),
+          )
+        : await MedicationReminder.db.updateRow(
+            session,
+            existing.copyWith(dueAt: dueAt, isDue: !dueAt.isAfter(now)),
+          );
+
+    if (dueAt.isAfter(now)) {
+      await session.serverpod.futureCalls
+          .callWithDelay(
+            dueAt.difference(now),
+            identifier:
+                'med-reminder-${reminder.id}-${dueAt.toIso8601String()}',
+          )
+          .medicationReminder
+          .markDue(reminder.id!);
+    }
+  }
+
+  Future<Medication> _ownMedication(Session session, int medicationId) async {
+    final medication = await Medication.db.findById(session, medicationId);
+    if (medication == null ||
+        medication.userId != session.authenticated!.authUserId) {
+      throw ArgumentError('Medication not found.');
+    }
+    return medication;
+  }
+
+  void _checkReminderHours(int? hours) {
+    if (hours != null && (hours < 1 || hours > 48)) {
+      throw ArgumentError('reminder hours must be between 1 and 48');
+    }
   }
 
   /// Returns the dose logs for the days [start] through [end] (inclusive),

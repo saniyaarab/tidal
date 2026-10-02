@@ -12,9 +12,13 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod/serverpod.dart' as _is;
 import '../log/flow_level.dart' as _iewtcc21;
+import '../log/love_type.dart' as _i32gka0x;
 import '../log/mood.dart' as _i64v955q;
+import '../log/mucus_type.dart' as _irc759lm;
+import '../log/severity.dart' as _iqyt4ohq;
 
-/// One user's log for a single calendar day: period flow, mood, and a note.
+/// One user's log for a single calendar day: flow, mood, note, and the
+/// other once-a-day details (drinks, sleep, digestion, body, love).
 /// There is at most one DayLog per user per date (see the unique index below).
 abstract class DayLog implements _is.TableRow<int?>, _is.ProtocolSerialization {
   DayLog._({
@@ -24,7 +28,21 @@ abstract class DayLog implements _is.TableRow<int?>, _is.ProtocolSerialization {
     _iewtcc21.FlowLevel? flow,
     this.mood,
     this.note,
-  }) : flow = flow ?? _iewtcc21.FlowLevel.none;
+    int? waterGlasses,
+    int? caffeineDrinks,
+    int? alcoholDrinks,
+    this.sleepQuality,
+    this.sleepHours,
+    this.bloating,
+    this.acidReflux,
+    this.weightKg,
+    this.temperatureC,
+    this.mucus,
+    this.love,
+  }) : flow = flow ?? _iewtcc21.FlowLevel.none,
+       waterGlasses = waterGlasses ?? 0,
+       caffeineDrinks = caffeineDrinks ?? 0,
+       alcoholDrinks = alcoholDrinks ?? 0;
 
   factory DayLog({
     int? id,
@@ -33,6 +51,17 @@ abstract class DayLog implements _is.TableRow<int?>, _is.ProtocolSerialization {
     _iewtcc21.FlowLevel? flow,
     _i64v955q.Mood? mood,
     String? note,
+    int? waterGlasses,
+    int? caffeineDrinks,
+    int? alcoholDrinks,
+    int? sleepQuality,
+    double? sleepHours,
+    _iqyt4ohq.Severity? bloating,
+    _iqyt4ohq.Severity? acidReflux,
+    double? weightKg,
+    double? temperatureC,
+    _irc759lm.MucusType? mucus,
+    _i32gka0x.LoveType? love,
   }) = _DayLogImpl;
 
   factory DayLog.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -47,6 +76,31 @@ abstract class DayLog implements _is.TableRow<int?>, _is.ProtocolSerialization {
           ? null
           : _i64v955q.Mood.fromJson((jsonSerialization['mood'] as String)),
       note: jsonSerialization['note'] as String?,
+      waterGlasses: jsonSerialization['waterGlasses'] as int?,
+      caffeineDrinks: jsonSerialization['caffeineDrinks'] as int?,
+      alcoholDrinks: jsonSerialization['alcoholDrinks'] as int?,
+      sleepQuality: jsonSerialization['sleepQuality'] as int?,
+      sleepHours: (jsonSerialization['sleepHours'] as num?)?.toDouble(),
+      bloating: jsonSerialization['bloating'] == null
+          ? null
+          : _iqyt4ohq.Severity.fromJson(
+              (jsonSerialization['bloating'] as String),
+            ),
+      acidReflux: jsonSerialization['acidReflux'] == null
+          ? null
+          : _iqyt4ohq.Severity.fromJson(
+              (jsonSerialization['acidReflux'] as String),
+            ),
+      weightKg: (jsonSerialization['weightKg'] as num?)?.toDouble(),
+      temperatureC: (jsonSerialization['temperatureC'] as num?)?.toDouble(),
+      mucus: jsonSerialization['mucus'] == null
+          ? null
+          : _irc759lm.MucusType.fromJson(
+              (jsonSerialization['mucus'] as String),
+            ),
+      love: jsonSerialization['love'] == null
+          ? null
+          : _i32gka0x.LoveType.fromJson((jsonSerialization['love'] as String)),
     );
   }
 
@@ -72,6 +126,39 @@ abstract class DayLog implements _is.TableRow<int?>, _is.ProtocolSerialization {
   /// Freeform note, if the user wrote one.
   String? note;
 
+  /// Glasses of water (250 ml each). 0 when not logged.
+  int waterGlasses;
+
+  /// Caffeinated drinks (coffee, tea, energy drinks). 0 when not logged.
+  int caffeineDrinks;
+
+  /// Alcoholic drinks. 0 when not logged.
+  int alcoholDrinks;
+
+  /// Sleep quality for the night before, 1 (poor) to 5 (great), if logged.
+  int? sleepQuality;
+
+  /// Hours slept the night before, if logged.
+  double? sleepHours;
+
+  /// How bloated the user felt, if logged.
+  _iqyt4ohq.Severity? bloating;
+
+  /// How bad acid reflux was, if logged.
+  _iqyt4ohq.Severity? acidReflux;
+
+  /// Weight in kilograms, if logged (shown in the user's chosen unit).
+  double? weightKg;
+
+  /// Basal body temperature in °C, if logged (shown in the user's unit).
+  double? temperatureC;
+
+  /// Cervical mucus, if logged.
+  _irc759lm.MucusType? mucus;
+
+  /// Sex, if logged.
+  _i32gka0x.LoveType? love;
+
   @override
   _is.Table<int?> get table => t;
 
@@ -85,6 +172,17 @@ abstract class DayLog implements _is.TableRow<int?>, _is.ProtocolSerialization {
     _iewtcc21.FlowLevel? flow,
     _i64v955q.Mood? mood,
     String? note,
+    int? waterGlasses,
+    int? caffeineDrinks,
+    int? alcoholDrinks,
+    int? sleepQuality,
+    double? sleepHours,
+    _iqyt4ohq.Severity? bloating,
+    _iqyt4ohq.Severity? acidReflux,
+    double? weightKg,
+    double? temperatureC,
+    _irc759lm.MucusType? mucus,
+    _i32gka0x.LoveType? love,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -96,6 +194,17 @@ abstract class DayLog implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'flow': flow.toJson(),
       if (mood != null) 'mood': mood?.toJson(),
       if (note != null) 'note': note,
+      'waterGlasses': waterGlasses,
+      'caffeineDrinks': caffeineDrinks,
+      'alcoholDrinks': alcoholDrinks,
+      if (sleepQuality != null) 'sleepQuality': sleepQuality,
+      if (sleepHours != null) 'sleepHours': sleepHours,
+      if (bloating != null) 'bloating': bloating?.toJson(),
+      if (acidReflux != null) 'acidReflux': acidReflux?.toJson(),
+      if (weightKg != null) 'weightKg': weightKg,
+      if (temperatureC != null) 'temperatureC': temperatureC,
+      if (mucus != null) 'mucus': mucus?.toJson(),
+      if (love != null) 'love': love?.toJson(),
     };
   }
 
@@ -109,6 +218,17 @@ abstract class DayLog implements _is.TableRow<int?>, _is.ProtocolSerialization {
       'flow': flow.toJson(),
       if (mood != null) 'mood': mood?.toJson(),
       if (note != null) 'note': note,
+      'waterGlasses': waterGlasses,
+      'caffeineDrinks': caffeineDrinks,
+      'alcoholDrinks': alcoholDrinks,
+      if (sleepQuality != null) 'sleepQuality': sleepQuality,
+      if (sleepHours != null) 'sleepHours': sleepHours,
+      if (bloating != null) 'bloating': bloating?.toJson(),
+      if (acidReflux != null) 'acidReflux': acidReflux?.toJson(),
+      if (weightKg != null) 'weightKg': weightKg,
+      if (temperatureC != null) 'temperatureC': temperatureC,
+      if (mucus != null) 'mucus': mucus?.toJson(),
+      if (love != null) 'love': love?.toJson(),
     };
   }
 
@@ -150,6 +270,17 @@ class _DayLogImpl extends DayLog {
     _iewtcc21.FlowLevel? flow,
     _i64v955q.Mood? mood,
     String? note,
+    int? waterGlasses,
+    int? caffeineDrinks,
+    int? alcoholDrinks,
+    int? sleepQuality,
+    double? sleepHours,
+    _iqyt4ohq.Severity? bloating,
+    _iqyt4ohq.Severity? acidReflux,
+    double? weightKg,
+    double? temperatureC,
+    _irc759lm.MucusType? mucus,
+    _i32gka0x.LoveType? love,
   }) : super._(
          id: id,
          userId: userId,
@@ -157,6 +288,17 @@ class _DayLogImpl extends DayLog {
          flow: flow,
          mood: mood,
          note: note,
+         waterGlasses: waterGlasses,
+         caffeineDrinks: caffeineDrinks,
+         alcoholDrinks: alcoholDrinks,
+         sleepQuality: sleepQuality,
+         sleepHours: sleepHours,
+         bloating: bloating,
+         acidReflux: acidReflux,
+         weightKg: weightKg,
+         temperatureC: temperatureC,
+         mucus: mucus,
+         love: love,
        );
 
   /// Returns a shallow copy of this [DayLog]
@@ -170,6 +312,17 @@ class _DayLogImpl extends DayLog {
     _iewtcc21.FlowLevel? flow,
     Object? mood = _Undefined,
     Object? note = _Undefined,
+    int? waterGlasses,
+    int? caffeineDrinks,
+    int? alcoholDrinks,
+    Object? sleepQuality = _Undefined,
+    Object? sleepHours = _Undefined,
+    Object? bloating = _Undefined,
+    Object? acidReflux = _Undefined,
+    Object? weightKg = _Undefined,
+    Object? temperatureC = _Undefined,
+    Object? mucus = _Undefined,
+    Object? love = _Undefined,
   }) {
     return DayLog(
       id: id is int? ? id : this.id,
@@ -178,6 +331,19 @@ class _DayLogImpl extends DayLog {
       flow: flow ?? this.flow,
       mood: mood is _i64v955q.Mood? ? mood : this.mood,
       note: note is String? ? note : this.note,
+      waterGlasses: waterGlasses ?? this.waterGlasses,
+      caffeineDrinks: caffeineDrinks ?? this.caffeineDrinks,
+      alcoholDrinks: alcoholDrinks ?? this.alcoholDrinks,
+      sleepQuality: sleepQuality is int? ? sleepQuality : this.sleepQuality,
+      sleepHours: sleepHours is double? ? sleepHours : this.sleepHours,
+      bloating: bloating is _iqyt4ohq.Severity? ? bloating : this.bloating,
+      acidReflux: acidReflux is _iqyt4ohq.Severity?
+          ? acidReflux
+          : this.acidReflux,
+      weightKg: weightKg is double? ? weightKg : this.weightKg,
+      temperatureC: temperatureC is double? ? temperatureC : this.temperatureC,
+      mucus: mucus is _irc759lm.MucusType? ? mucus : this.mucus,
+      love: love is _i32gka0x.LoveType? ? love : this.love,
     );
   }
 }
@@ -213,6 +379,70 @@ class DayLogUpdateTable extends _is.UpdateTable<DayLogTable> {
     table.note,
     value,
   );
+
+  _is.ColumnValue<int, int> waterGlasses(int value) => _is.ColumnValue(
+    table.waterGlasses,
+    value,
+  );
+
+  _is.ColumnValue<int, int> caffeineDrinks(int value) => _is.ColumnValue(
+    table.caffeineDrinks,
+    value,
+  );
+
+  _is.ColumnValue<int, int> alcoholDrinks(int value) => _is.ColumnValue(
+    table.alcoholDrinks,
+    value,
+  );
+
+  _is.ColumnValue<int, int> sleepQuality(int? value) => _is.ColumnValue(
+    table.sleepQuality,
+    value,
+  );
+
+  _is.ColumnValue<double, double> sleepHours(double? value) => _is.ColumnValue(
+    table.sleepHours,
+    value,
+  );
+
+  _is.ColumnValue<_iqyt4ohq.Severity, _iqyt4ohq.Severity> bloating(
+    _iqyt4ohq.Severity? value,
+  ) => _is.ColumnValue(
+    table.bloating,
+    value,
+  );
+
+  _is.ColumnValue<_iqyt4ohq.Severity, _iqyt4ohq.Severity> acidReflux(
+    _iqyt4ohq.Severity? value,
+  ) => _is.ColumnValue(
+    table.acidReflux,
+    value,
+  );
+
+  _is.ColumnValue<double, double> weightKg(double? value) => _is.ColumnValue(
+    table.weightKg,
+    value,
+  );
+
+  _is.ColumnValue<double, double> temperatureC(double? value) =>
+      _is.ColumnValue(
+        table.temperatureC,
+        value,
+      );
+
+  _is.ColumnValue<_irc759lm.MucusType, _irc759lm.MucusType> mucus(
+    _irc759lm.MucusType? value,
+  ) => _is.ColumnValue(
+    table.mucus,
+    value,
+  );
+
+  _is.ColumnValue<_i32gka0x.LoveType, _i32gka0x.LoveType> love(
+    _i32gka0x.LoveType? value,
+  ) => _is.ColumnValue(
+    table.love,
+    value,
+  );
 }
 
 class DayLogTable extends _is.Table<int?> {
@@ -241,6 +471,57 @@ class DayLogTable extends _is.Table<int?> {
       'note',
       this,
     );
+    waterGlasses = _is.ColumnInt(
+      'waterGlasses',
+      this,
+      hasDefault: true,
+    );
+    caffeineDrinks = _is.ColumnInt(
+      'caffeineDrinks',
+      this,
+      hasDefault: true,
+    );
+    alcoholDrinks = _is.ColumnInt(
+      'alcoholDrinks',
+      this,
+      hasDefault: true,
+    );
+    sleepQuality = _is.ColumnInt(
+      'sleepQuality',
+      this,
+    );
+    sleepHours = _is.ColumnDouble(
+      'sleepHours',
+      this,
+    );
+    bloating = _is.ColumnEnum(
+      'bloating',
+      this,
+      _is.EnumSerialization.byName,
+    );
+    acidReflux = _is.ColumnEnum(
+      'acidReflux',
+      this,
+      _is.EnumSerialization.byName,
+    );
+    weightKg = _is.ColumnDouble(
+      'weightKg',
+      this,
+    );
+    temperatureC = _is.ColumnDouble(
+      'temperatureC',
+      this,
+    );
+    mucus = _is.ColumnEnum(
+      'mucus',
+      this,
+      _is.EnumSerialization.byName,
+    );
+    love = _is.ColumnEnum(
+      'love',
+      this,
+      _is.EnumSerialization.byName,
+    );
   }
 
   late final DayLogUpdateTable updateTable;
@@ -260,6 +541,39 @@ class DayLogTable extends _is.Table<int?> {
   /// Freeform note, if the user wrote one.
   late final _is.ColumnString note;
 
+  /// Glasses of water (250 ml each). 0 when not logged.
+  late final _is.ColumnInt waterGlasses;
+
+  /// Caffeinated drinks (coffee, tea, energy drinks). 0 when not logged.
+  late final _is.ColumnInt caffeineDrinks;
+
+  /// Alcoholic drinks. 0 when not logged.
+  late final _is.ColumnInt alcoholDrinks;
+
+  /// Sleep quality for the night before, 1 (poor) to 5 (great), if logged.
+  late final _is.ColumnInt sleepQuality;
+
+  /// Hours slept the night before, if logged.
+  late final _is.ColumnDouble sleepHours;
+
+  /// How bloated the user felt, if logged.
+  late final _is.ColumnEnum<_iqyt4ohq.Severity> bloating;
+
+  /// How bad acid reflux was, if logged.
+  late final _is.ColumnEnum<_iqyt4ohq.Severity> acidReflux;
+
+  /// Weight in kilograms, if logged (shown in the user's chosen unit).
+  late final _is.ColumnDouble weightKg;
+
+  /// Basal body temperature in °C, if logged (shown in the user's unit).
+  late final _is.ColumnDouble temperatureC;
+
+  /// Cervical mucus, if logged.
+  late final _is.ColumnEnum<_irc759lm.MucusType> mucus;
+
+  /// Sex, if logged.
+  late final _is.ColumnEnum<_i32gka0x.LoveType> love;
+
   @override
   List<_is.Column> get columns => [
     id,
@@ -268,6 +582,17 @@ class DayLogTable extends _is.Table<int?> {
     flow,
     mood,
     note,
+    waterGlasses,
+    caffeineDrinks,
+    alcoholDrinks,
+    sleepQuality,
+    sleepHours,
+    bloating,
+    acidReflux,
+    weightKg,
+    temperatureC,
+    mucus,
+    love,
   ];
 }
 

@@ -1,0 +1,8 @@
+### How bad a symptom was (bloating, acid reflux).
+enum: Severity
+serialized: byName
+values:
+  - none
+  - mild
+  - moderate
+  - severe

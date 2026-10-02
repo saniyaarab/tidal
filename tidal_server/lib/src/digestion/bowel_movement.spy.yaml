@@ -1,0 +1,19 @@
+### One bowel movement, typed on the Bristol Stool Scale. A day can have
+### several.
+class: BowelMovement
+table: bowel_movement
+fields:
+  ### The user this entry belongs to.
+  userId: UuidValue
+  ### The calendar day it belongs to, stored as midnight UTC.
+  date: DateTime
+  ### When it happened, as chosen by the user. Never in the future.
+  timestamp: DateTime
+  ### The exact moment the entry was saved, set by the server.
+  loggedAt: DateTime
+  ### Bristol Stool Scale type, 1 (hard lumps) to 7 (watery).
+  bristolType: int
+
+indexes:
+  bowel_movement_user_date_idx:
+    fields: userId, date

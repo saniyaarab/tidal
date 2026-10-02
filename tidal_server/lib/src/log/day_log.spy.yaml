@@ -1,4 +1,5 @@
-### One user's log for a single calendar day: period flow, mood, and a note.
+### One user's log for a single calendar day: flow, mood, note, and the
+### other once-a-day details (drinks, sleep, digestion, body, love).
 ### There is at most one DayLog per user per date (see the unique index below).
 class: DayLog
 table: day_log
@@ -13,6 +14,28 @@ fields:
   mood: Mood?
   ### Freeform note, if the user wrote one.
   note: String?
+  ### Glasses of water (250 ml each). 0 when not logged.
+  waterGlasses: int, default=0
+  ### Caffeinated drinks (coffee, tea, energy drinks). 0 when not logged.
+  caffeineDrinks: int, default=0
+  ### Alcoholic drinks. 0 when not logged.
+  alcoholDrinks: int, default=0
+  ### Sleep quality for the night before, 1 (poor) to 5 (great), if logged.
+  sleepQuality: int?
+  ### Hours slept the night before, if logged.
+  sleepHours: double?
+  ### How bloated the user felt, if logged.
+  bloating: Severity?
+  ### How bad acid reflux was, if logged.
+  acidReflux: Severity?
+  ### Weight in kilograms, if logged (shown in the user's chosen unit).
+  weightKg: double?
+  ### Basal body temperature in °C, if logged (shown in the user's unit).
+  temperatureC: double?
+  ### Cervical mucus, if logged.
+  mucus: MucusType?
+  ### Sex, if logged.
+  love: LoveType?
 
 indexes:
   day_log_user_date_idx:

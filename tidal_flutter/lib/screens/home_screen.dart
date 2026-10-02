@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tidal_client/tidal_client.dart';
 
@@ -28,6 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // The period the selected day falls in, if any.
   PeriodSpan? _period;
   List<PainEntry> _painEntries = [];
+  List<BowelMovement> _bowelMovements = [];
+  UnitPreferences? _units;
   bool _loading = true;
   String? _error;
 
@@ -36,11 +40,67 @@ class _HomeScreenState extends State<HomeScreen> {
   // arrows are currently showing below it.
   Prediction? _prediction;
 
+  // Medication reminders that are due now, shown as banners at the top.
+  // Checked every minute while Home is open, since the server marks them
+  // due in the background (see `MedicationReminderFutureCall`).
+  List<MedicationReminder> _dueReminders = [];
+  Map<int, Medication> _medsById = {};
+  Timer? _reminderTimer;
+
   @override
   void initState() {
     super.initState();
     _loadDay();
     _loadPrediction();
+    _loadReminders();
+    _reminderTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _loadReminders(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _reminderTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadReminders() async {
+    try {
+      final results = await Future.wait([
+        client.pain.getReminders(),
+        client.pain.myMeds(),
+      ]);
+      final reminders = results[0] as List<MedicationReminder>;
+      final meds = results[1] as List<Medication>;
+      if (!mounted) return;
+      setState(() {
+        _dueReminders = [
+          for (final r in reminders)
+            if (r.isDue) r,
+        ];
+        _medsById = {for (final med in meds) med.id!: med};
+      });
+    } catch (_) {
+      // A failed reminder check shouldn't block the rest of Home.
+    }
+  }
+
+  /// "Log dose" on a reminder banner: logs the medication as taken now
+  /// (which also sets the next reminder).
+  Future<void> _logReminderDose(MedicationReminder reminder) async {
+    final now = DateTime.now();
+    await client.pain.logDose(
+      reminder.medicationId,
+      DateTime.utc(now.year, now.month, now.day),
+      now.toUtc(),
+    );
+    await _loadReminders();
+  }
+
+  Future<void> _dismissReminder(MedicationReminder reminder) async {
+    await client.pain.dismissReminder(reminder.id!);
+    await _loadReminders();
   }
 
   Future<void> _loadPrediction() async {
@@ -63,6 +123,8 @@ class _HomeScreenState extends State<HomeScreen> {
         client.log.getRange(_selectedDate, _selectedDate),
         client.pain.getPainRange(_selectedDate, _selectedDate),
         client.period.getPeriods(_selectedDate, _selectedDate),
+        client.digestion.getBowelMovementRange(_selectedDate, _selectedDate),
+        client.insight.getUnitPreferences(),
       ]);
       final dayLogs = results[0] as List<DayLog>;
       final periods = results[2] as List<PeriodSpan>;
@@ -70,6 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _dayLog = dayLogs.isEmpty ? null : dayLogs.first;
         _period = periods.isEmpty ? null : periods.first;
         _painEntries = results[1] as List<PainEntry>;
+        _bowelMovements = results[3] as List<BowelMovement>;
+        _units = results[4] as UnitPreferences;
         _loading = false;
       });
     } catch (e) {
@@ -107,7 +171,10 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (_) => LogScreen(date: _selectedDate, dayLog: _dayLog),
       ),
     );
-    if (changed == true) _loadDay();
+    if (changed == true) {
+      _loadDay();
+      _loadReminders();
+    }
   }
 
   @override
@@ -124,6 +191,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
           children: [
+            for (final reminder in _dueReminders)
+              _ReminderBanner(
+                medicationName:
+                    _medsById[reminder.medicationId]?.name ?? 'Medication',
+                onLogDose: () => _logReminderDose(reminder),
+                onDismiss: () => _dismissReminder(reminder),
+              ),
             if (_prediction != null) _CycleHeader(prediction: _prediction!),
             _DayCircle(
               date: _selectedDate,
@@ -144,6 +218,8 @@ class _HomeScreenState extends State<HomeScreen> {
               DayBands(
                 dayLog: _dayLog,
                 painEntries: _painEntries,
+                bowelMovements: _bowelMovements,
+                units: _units,
               ),
           ],
         ),
@@ -273,6 +349,48 @@ class _CycleHeader extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// "Ibuprofen due now", with "Log dose" and "Dismiss".
+class _ReminderBanner extends StatelessWidget {
+  final String medicationName;
+  final VoidCallback onLogDose;
+  final VoidCallback onDismiss;
+
+  const _ReminderBanner({
+    required this.medicationName,
+    required this.onLogDose,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      decoration: BoxDecoration(
+        color: TidalColors.lavenderBand,
+        borderRadius: BorderRadius.circular(TidalRadius.large),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.notifications_active_outlined,
+            color: TidalColors.lavender,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '$medicationName due now',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          TextButton(onPressed: onLogDose, child: const Text('Log dose')),
+          TextButton(onPressed: onDismiss, child: const Text('Dismiss')),
         ],
       ),
     );

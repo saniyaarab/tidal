@@ -63,6 +63,18 @@ A daily self-care journal, one page per day, with prev/next arrows to move betwe
 - "Best moment of the day": a free-text box in a rose-bordered card.
 Saved on the server as the user taps/types. Included in "Delete all my data". Daily (not weekly) so future insights can relate self-care to pain and mood.
 
+## More daily logging + medication reminders (agreed Oct 2, 2026)
+New tiles on the Log (+) screen, each with its own sheet. Today and past days only (future days: Note only). Each shows as a band on Home and in the Calendar's day view (medications still don't).
+- Water: glasses per day (1 glass = 250 ml), − / + counter.
+- Caffeine: caffeinated drinks per day (coffee, tea, energy drinks), − / + counter.
+- Alcohol: drinks per day, − / + counter.
+- Sleep: quality 1–5 (poor → great) plus optional hours, for the night before the day logged.
+- Digestion: bowel movements (Bristol Stool Scale type 1–7, with day and time, several per day allowed), plus bloating and acid reflux once per day (none / mild / moderate / severe).
+- Weight: one value per day. Temperature: one value per day (basal body temperature, taken on waking). Each sheet has a unit switch (kg/lb, °C/°F) the app remembers; values are stored in kg and °C.
+- Mucus: cervical mucus once per day — dry, sticky, creamy, watery, egg white.
+- Love: sex once per day — protected or unprotected.
+- Medication reminders: per medication, "remind me every N hours after a dose". Logging a dose schedules a Serverpod future call for N hours later; when it fires, the reminder is due and Home shows an in-app banner ("Ibuprofen due now") with "Log dose" and "Dismiss". No push notifications in the MVP (later). Replaces the old "Reminder" tile.
+
 ## Data models (.spy.yaml)
 - DayLog: userId, date, flow (none/light/medium/heavy), mood, note
 - PainEntry: userId, date, timestamp, loggedAt, level, locations
@@ -115,7 +127,7 @@ Also: "small and finished rather than huge and broken". Extra prizes: Most Valua
 
 ## Plan to the deadline (agreed Oct 2, 2026; own target Oct 12)
 1. Done: Journal tab (replaces Partner), see "Journal" above.
-2. Medication reminders using Serverpod future calls (~1 day) — for "Use of the Serverpod stack". Design together before building.
+2. Done: medication reminders using Serverpod future calls, plus more daily logging (see "More daily logging + medication reminders" above).
 3. Deploy to Serverpod Cloud (~half a day) — a live link for "Does it work".
 4. Demo video (≤ 3 min) and project description (~2 days).
 5. Feedback write-up for the Serverpod team (e.g. `apply_migrations` returned "Future already completed" even though the migration applied) and a social post tagging Serverpod (~1 hour).

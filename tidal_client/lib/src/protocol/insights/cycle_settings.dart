@@ -11,6 +11,8 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
+import '../insights/temperature_unit.dart' as _ic708v43;
+import '../insights/weight_unit.dart' as _iq9jtd14;
 
 /// The user's own cycle estimates and birth year, collected at sign-up.
 /// Cycle/period length seed predictions before enough history has been
@@ -29,8 +31,12 @@ abstract class CycleSettings
     int? typicalCycleDays,
     int? typicalPeriodDays,
     this.birthYear,
+    _iq9jtd14.WeightUnit? weightUnit,
+    _ic708v43.TemperatureUnit? temperatureUnit,
   }) : typicalCycleDays = typicalCycleDays ?? 28,
-       typicalPeriodDays = typicalPeriodDays ?? 5;
+       typicalPeriodDays = typicalPeriodDays ?? 5,
+       weightUnit = weightUnit ?? _iq9jtd14.WeightUnit.kg,
+       temperatureUnit = temperatureUnit ?? _ic708v43.TemperatureUnit.celsius;
 
   factory CycleSettings({
     int? id,
@@ -38,6 +44,8 @@ abstract class CycleSettings
     int? typicalCycleDays,
     int? typicalPeriodDays,
     int? birthYear,
+    _iq9jtd14.WeightUnit? weightUnit,
+    _ic708v43.TemperatureUnit? temperatureUnit,
   }) = _CycleSettingsImpl;
 
   factory CycleSettings.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -47,6 +55,16 @@ abstract class CycleSettings
       typicalCycleDays: jsonSerialization['typicalCycleDays'] as int?,
       typicalPeriodDays: jsonSerialization['typicalPeriodDays'] as int?,
       birthYear: jsonSerialization['birthYear'] as int?,
+      weightUnit: jsonSerialization['weightUnit'] == null
+          ? null
+          : _iq9jtd14.WeightUnit.fromJson(
+              (jsonSerialization['weightUnit'] as String),
+            ),
+      temperatureUnit: jsonSerialization['temperatureUnit'] == null
+          ? null
+          : _ic708v43.TemperatureUnit.fromJson(
+              (jsonSerialization['temperatureUnit'] as String),
+            ),
     );
   }
 
@@ -73,6 +91,12 @@ abstract class CycleSettings
   /// from year alone is off by at most one year.
   int? birthYear;
 
+  /// Unit for showing weights (remembered from the Weight sheet's switch).
+  _iq9jtd14.WeightUnit weightUnit;
+
+  /// Unit for showing temperatures (remembered from the Temperature sheet).
+  _ic708v43.TemperatureUnit temperatureUnit;
+
   /// Returns a shallow copy of this [CycleSettings]
   /// with some or all fields replaced by the given arguments.
   @_isc.useResult
@@ -82,6 +106,8 @@ abstract class CycleSettings
     int? typicalCycleDays,
     int? typicalPeriodDays,
     int? birthYear,
+    _iq9jtd14.WeightUnit? weightUnit,
+    _ic708v43.TemperatureUnit? temperatureUnit,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -92,6 +118,8 @@ abstract class CycleSettings
       'typicalCycleDays': typicalCycleDays,
       'typicalPeriodDays': typicalPeriodDays,
       if (birthYear != null) 'birthYear': birthYear,
+      'weightUnit': weightUnit.toJson(),
+      'temperatureUnit': temperatureUnit.toJson(),
     };
   }
 
@@ -104,6 +132,8 @@ abstract class CycleSettings
       'typicalCycleDays': typicalCycleDays,
       'typicalPeriodDays': typicalPeriodDays,
       if (birthYear != null) 'birthYear': birthYear,
+      'weightUnit': weightUnit.toJson(),
+      'temperatureUnit': temperatureUnit.toJson(),
     };
   }
 
@@ -122,12 +152,16 @@ class _CycleSettingsImpl extends CycleSettings {
     int? typicalCycleDays,
     int? typicalPeriodDays,
     int? birthYear,
+    _iq9jtd14.WeightUnit? weightUnit,
+    _ic708v43.TemperatureUnit? temperatureUnit,
   }) : super._(
          id: id,
          userId: userId,
          typicalCycleDays: typicalCycleDays,
          typicalPeriodDays: typicalPeriodDays,
          birthYear: birthYear,
+         weightUnit: weightUnit,
+         temperatureUnit: temperatureUnit,
        );
 
   /// Returns a shallow copy of this [CycleSettings]
@@ -140,6 +174,8 @@ class _CycleSettingsImpl extends CycleSettings {
     int? typicalCycleDays,
     int? typicalPeriodDays,
     Object? birthYear = _Undefined,
+    _iq9jtd14.WeightUnit? weightUnit,
+    _ic708v43.TemperatureUnit? temperatureUnit,
   }) {
     return CycleSettings(
       id: id is int? ? id : this.id,
@@ -147,6 +183,8 @@ class _CycleSettingsImpl extends CycleSettings {
       typicalCycleDays: typicalCycleDays ?? this.typicalCycleDays,
       typicalPeriodDays: typicalPeriodDays ?? this.typicalPeriodDays,
       birthYear: birthYear is int? ? birthYear : this.birthYear,
+      weightUnit: weightUnit ?? this.weightUnit,
+      temperatureUnit: temperatureUnit ?? this.temperatureUnit,
     );
   }
 }

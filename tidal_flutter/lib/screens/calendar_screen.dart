@@ -32,6 +32,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Set<DateTime> _periodDates = {};
   Set<DateTime> _datesWithPain = {};
   List<PainEntry> _selectedPainEntries = [];
+  List<BowelMovement> _selectedBowelMovements = [];
+  UnitPreferences? _units;
   Prediction? _prediction;
   bool _loading = true;
   String? _error;
@@ -81,6 +83,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         client.pain.getPainRange(_selectedDate, _selectedDate),
         client.insight.getPrediction(),
         client.period.getPeriods(_gridStart, _gridEnd),
+        client.digestion.getBowelMovementRange(_selectedDate, _selectedDate),
+        client.insight.getUnitPreferences(),
       ]);
       final monthDayLogs = results[0] as List<DayLog>;
       final monthPainEntries = results[1] as List<PainEntry>;
@@ -103,6 +107,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _datesWithPain = {for (final entry in monthPainEntries) entry.date};
         _selectedPainEntries = results[2] as List<PainEntry>;
         _prediction = results[3] as Prediction;
+        _selectedBowelMovements = results[5] as List<BowelMovement>;
+        _units = results[6] as UnitPreferences;
         _loading = false;
       });
     } catch (e) {
@@ -228,6 +234,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
               DayBands(
                 dayLog: _dayLogsByDate[_selectedDate],
                 painEntries: _selectedPainEntries,
+                bowelMovements: _selectedBowelMovements,
+                units: _units,
                 emptyMessage: 'Nothing logged for this day.',
               ),
           ],

@@ -42,7 +42,9 @@ void main() {
         'Ibuprofen',
         '400 mg',
       );
+      await endpoints.pain.setReminder(asUser, medication.id!, 4);
       await endpoints.pain.logDose(asUser, medication.id!, today, now);
+      await endpoints.digestion.logBowelMovement(asUser, today, now, 4);
       await endpoints.journal.saveDay(
         asUser,
         today,
@@ -92,6 +94,20 @@ void main() {
         );
         expect(
           await Medication.db.count(
+            session,
+            where: (t) => t.userId.equals(userId),
+          ),
+          0,
+        );
+        expect(
+          await BowelMovement.db.count(
+            session,
+            where: (t) => t.userId.equals(userId),
+          ),
+          0,
+        );
+        expect(
+          await MedicationReminder.db.count(
             session,
             where: (t) => t.userId.equals(userId),
           ),

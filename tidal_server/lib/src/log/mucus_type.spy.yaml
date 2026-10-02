@@ -1,0 +1,9 @@
+### Cervical mucus, using the standard categories.
+enum: MucusType
+serialized: byName
+values:
+  - dry
+  - sticky
+  - creamy
+  - watery
+  - eggWhite

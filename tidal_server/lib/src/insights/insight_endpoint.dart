@@ -262,6 +262,24 @@ class InsightEndpoint extends Endpoint {
     );
   }
 
+  /// The units the user last chose in the Weight and Temperature sheets
+  /// (kg and °C until they switch).
+  Future<UnitPreferences> getUnitPreferences(Session session) async {
+    final settings = await _getSettingsOrDefault(session);
+    return UnitPreferences(
+      weightUnit: settings.weightUnit,
+      temperatureUnit: settings.temperatureUnit,
+    );
+  }
+
+  /// Remembers the unit chosen with the Weight sheet's switch.
+  Future<void> saveWeightUnit(Session session, WeightUnit unit) =>
+      _upsertSettings(session, (s) => s.copyWith(weightUnit: unit));
+
+  /// Remembers the unit chosen with the Temperature sheet's switch.
+  Future<void> saveTemperatureUnit(Session session, TemperatureUnit unit) =>
+      _upsertSettings(session, (s) => s.copyWith(temperatureUnit: unit));
+
   /// The signed-in user's saved cycle settings, or defaults (28/5) if
   /// they've never saved any. Never persists the defaults — [hasCycleSettings]
   /// stays false until the user actually saves something.

@@ -1,0 +1,7 @@
+### The drinks counted per day on `DayLog`.
+enum: DrinkType
+serialized: byName
+values:
+  - water
+  - caffeine
+  - alcohol
