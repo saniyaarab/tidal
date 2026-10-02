@@ -31,6 +31,10 @@ jobs:
       - name: Install Serverpod CLI
         run: dart install serverpod_cli $VERSION
 
+      # `dart install` puts the CLI here, which isn't on the PATH by default.
+      - name: Add Serverpod CLI to PATH
+        run: echo "$HOME/.local/state/Dart/install/bin" >> "$GITHUB_PATH"
+
       - name: Run Serverpod generator
         working-directory: tidal_server
         run: serverpod generate
