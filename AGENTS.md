@@ -62,7 +62,14 @@ Tidal is a period and pain tracker: a Flutter app (`tidal_flutter`) backed by a 
 - Me no longer shows cycle settings; it shows a read-only "Age" row and sign out. `saveBirthYear` is sign-up-only (throws once set); `cycle_length_sheet.dart` and `pickAndSaveBirthYear` were deleted.
 - `DayBands` shows pain (with time since, e.g. "3h ago"), mood and note only — medications were removed from Home and Calendar at the developer's request (they're in the Medications sheet), so neither screen fetches doses or meds any more. The Insights "Avg period" card shows just the number, with no note.
 
-**Next**: partner sharing (step 9), then privacy + delete all data (step 10).
+**Step 9 (partner sharing) was cut** by the developer. The bottom bar's Partner tab still shows a placeholder; it's planned to become a self-care Journal (design pending from the developer).
+
+**Step 10 (privacy + delete all data) is done.**
+
+- `PrivacyEndpoint.deleteAllMyData` (`tidal_server/lib/src/privacy/privacy_endpoint.dart`): in one transaction, deletes the user's `DayLog`, `Period`, `PainEntry`, `DoseLog`, `Medication` and `CycleSettings` rows, then the account via `const AuthUsers().delete` (cascades to the email login, profile and sessions), then broadcasts `RevokedAuthenticationUser`. Nothing is kept, not even anonymously. Tested in `privacy_endpoint_test.dart` with real auth users.
+- `PrivacyScreen` (`tidal_flutter/lib/screens/privacy_screen.dart`), opened from a "Privacy" row on Me: the three agreed lines, a red "Delete all my data" button, a confirm dialog, then `client.auth.updateSignedInUser(null)` to forget the sign-in locally (the account no longer exists to sign out of) — the app returns to the sign-in screen.
+
+**Next**: the Journal tab (waiting on the developer's design screenshot), then the demo video.
 
 The user starts the server and Flutter app with `serverpod start`. There is no need to check if the server is running: make the changes and call the `serverpod` MCP tools as needed. If the server is not running, an informative error message will be received from the MCP server. Then STOP and ask the user to start it. NEVER start the server yourself. The Flutter app is started along with it, or can be launched from the MCP tool `spawn_flutter_app`.
 

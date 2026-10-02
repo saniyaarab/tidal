@@ -597,6 +597,27 @@ class EndpointPeriod extends _isc.EndpointRef {
       );
 }
 
+/// "Delete all my data" from the Privacy screen.
+/// {@category Endpoint}
+class EndpointPrivacy extends _isc.EndpointRef {
+  EndpointPrivacy(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'privacy';
+
+  /// Permanently deletes everything tied to the signed-in user — day logs,
+  /// periods, pain entries, medications and doses, sign-up answers — and
+  /// then their account itself, signing them out everywhere. Nothing is
+  /// kept, not even anonymously.
+  ///
+  /// Runs in one transaction, so either everything is deleted or nothing is.
+  _ida.Future<void> deleteAllMyData() => caller.callServerEndpoint<void>(
+    'privacy',
+    'deleteAllMyData',
+    {},
+  );
+}
+
 class Modules {
   Modules(Client client) {
     serverpod_auth_idp = _iaic.Caller(client);
@@ -641,6 +662,7 @@ class Client extends _isc.ServerpodClientShared {
     log = EndpointLog(this);
     pain = EndpointPain(this);
     period = EndpointPeriod(this);
+    privacy = EndpointPrivacy(this);
     modules = Modules(this);
   }
 
@@ -656,6 +678,8 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointPeriod period;
 
+  late final EndpointPrivacy privacy;
+
   late final Modules modules;
 
   @override
@@ -666,6 +690,7 @@ class Client extends _isc.ServerpodClientShared {
     'log': log,
     'pain': pain,
     'period': period,
+    'privacy': privacy,
   };
 
   @override

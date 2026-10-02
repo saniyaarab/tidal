@@ -176,6 +176,8 @@ class TestEndpoints {
   late final _PainEndpoint pain;
 
   late final _PeriodEndpoint period;
+
+  late final _PrivacyEndpoint privacy;
 }
 
 class _InternalTestEndpoints extends TestEndpoints
@@ -206,6 +208,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     period = _PeriodEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    privacy = _PrivacyEndpoint(
       endpoints,
       serializationManager,
     );
@@ -1337,6 +1343,47 @@ class _PeriodEndpoint {
                   _localCallContext.arguments,
                 )
                 as _ida.Future<_inr0c2n2.PeriodLengthInfo>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
+class _PrivacyEndpoint {
+  _PrivacyEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _is.EndpointDispatch _endpointDispatch;
+
+  final _is.SerializationManager _serializationManager;
+
+  _ida.Future<void> deleteAllMyData(
+    _ist.TestSessionBuilder sessionBuilder,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'privacy',
+            method: 'deleteAllMyData',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'privacy',
+          methodName: 'deleteAllMyData',
+          parameters: _ist.testObjectToJson({}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<void>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

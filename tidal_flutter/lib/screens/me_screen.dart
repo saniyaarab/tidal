@@ -3,9 +3,10 @@ import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
 import '../client.dart';
 import '../theme.dart';
+import 'privacy_screen.dart';
 
 /// The "Me" tab. Shows who's signed in, their age (from the birth year
-/// asked at sign-up), and a way to sign out. Cycle and period length are only asked at sign-up; their learned
+/// asked at sign-up), the Privacy screen, and a way to sign out. Cycle and period length are only asked at sign-up; their learned
 /// averages are on Insights. Privacy controls (like "delete all my data") are added in a later
 /// step.
 class MeScreen extends StatefulWidget {
@@ -71,6 +72,13 @@ class _MeScreenState extends State<MeScreen> {
                   ? null
                   : (_age == null ? 'Not set' : '$_age yrs'),
             ),
+            const SizedBox(height: 8),
+            _SettingsRow(
+              label: 'Privacy',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+              ),
+            ),
             const SizedBox(height: 32),
             OutlinedButton(
               onPressed: () => client.auth.signOutDevice(),
@@ -91,16 +99,18 @@ class _MeScreenState extends State<MeScreen> {
   }
 }
 
-/// One read-only settings row: a label on the left, the value on the right.
+/// One settings row: a label on the left and either a value (read-only,
+/// like Age) or a chevron (tappable, like Privacy) on the right.
 class _SettingsRow extends StatelessWidget {
   final String label;
   final String? value;
+  final VoidCallback? onTap;
 
-  const _SettingsRow({required this.label, required this.value});
+  const _SettingsRow({required this.label, this.value, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final row = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: TidalColors.card,
@@ -112,9 +122,18 @@ class _SettingsRow extends StatelessWidget {
           Expanded(
             child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
           ),
-          Text(value ?? '…', style: Theme.of(context).textTheme.bodyMedium),
+          if (onTap == null)
+            Text(value ?? '…', style: Theme.of(context).textTheme.bodyMedium)
+          else
+            const Icon(Icons.chevron_right, color: TidalColors.textSecondary),
         ],
       ),
+    );
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(TidalRadius.large),
+      child: row,
     );
   }
 }
