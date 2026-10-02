@@ -6,7 +6,6 @@ import '../date_format.dart';
 import '../log_labels.dart';
 import '../theme.dart';
 import '../widgets/day_bands.dart';
-import 'check_in_screen.dart';
 import 'log_screen.dart';
 
 /// The "Today" tab: a big circle showing the selected day's period flow,
@@ -38,7 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadDay();
     _loadPrediction();
-    _checkForPendingCheckIn();
   }
 
   Future<void> _loadPrediction() async {
@@ -48,35 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       // A failed prediction lookup shouldn't block the rest of Home; the
       // header just won't show.
-    }
-  }
-
-  Future<void> _checkForPendingCheckIn() async {
-    try {
-      final pending = await client.pain.getPendingCheckIn();
-      if (pending == null || !mounted) return;
-
-      final meds = await client.pain.myMeds();
-      Medication? medication;
-      for (final med in meds) {
-        if (med.id == pending.medicationId) {
-          medication = med;
-          break;
-        }
-      }
-      if (!mounted) return;
-
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => CheckInScreen(
-            doseLog: pending,
-            medicationName: medication?.name ?? 'your medication',
-          ),
-        ),
-      );
-      if (mounted) _loadDay();
-    } catch (_) {
-      // A failed check-in lookup shouldn't block the rest of Home.
     }
   }
 

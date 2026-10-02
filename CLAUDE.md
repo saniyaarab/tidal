@@ -9,7 +9,7 @@ The developer is a data engineer (Python, Java, cloud) who is new to Flutter/Dar
 Serverpod App Studio runs the project locally (full-stack hot reload, embedded Postgres).
 
 ## The hook
-Popular trackers (Flo, Clue, Maya, Tide) don't track pain properly. Tidal logs pain level, the painkiller taken, and whether it helped, then learns what works.
+Popular trackers (Flo, Clue, Maya, Tide) don't track pain properly. Tidal logs pain level and the painkiller taken, then shows how pain follows the cycle.
 Demo story: "My periods are painful and I take painkillers. My tracker couldn't log any of that, so I built Tidal."
 
 ## MVP scope (build in this order)
@@ -17,10 +17,10 @@ Demo story: "My periods are painful and I take painkillers. My tracker couldn't 
 2. Day log: flow, mood, note.
 3. Pain log: level 0–10, locations (cramps, lower back, head, legs, stomach), time.
 4. Medication log: user's "my meds" list (name + usual dose), one-tap dose logging, "time since last dose". Record only. Never suggest doses.
-5. "Did it help?" check-in 1 hour after a dose (Serverpod future call) — saves painAfter.
+5. Removed: the "did it help?" check-in after a dose was cut at the developer's request (Oct 2, 2026). Do not re-add it or any relief/painAfter tracking.
 6. Calendar: period, predicted, and fertile days as rings, with a dot on pain days.
 7. Predictions: average of the last 3–6 cycle lengths, ± spread.
-8. Pain insights: average pain by cycle day; average relief for early doses (pain ≤ 4) vs. late doses (pain ≥ 7).
+8. Pain insights: average pain by cycle day.
 9. Partner sharing: invite code; partner sees phase + a live "bad pain day" status via a Serverpod streaming endpoint; care nudges.
 10. Privacy screen + "delete all my data".
 
@@ -31,14 +31,14 @@ Cut: pregnancy mode, community, wearables, ML.
 - DayLog: userId, date, flow (none/light/medium/heavy), mood, note
 - PainEntry: userId, timestamp, level, locations
 - Medication: userId, name, usualDose
-- DoseLog: userId, medicationId, timestamp, dose, painBefore, painAfter
+- DoseLog: userId, medicationId, timestamp, dose, painBefore
 - Cycle: userId, startDate, endDate, length
 - Prediction: userId, nextStart, confidenceDays
 - PartnerLink: ownerId, partnerId, inviteCode, sharesPhase, sharesPainStatus
 
 ## Endpoints
 - LogEndpoint: saveDay, getRange, deleteAll
-- PainEndpoint: logPain, logDose, recordRelief, myMeds
+- PainEndpoint: logPain, logDose, myMeds
 - InsightEndpoint: getPrediction, getPainInsights
 - PartnerEndpoint: createInvite, acceptInvite, watchPartner (stream)
 Every endpoint only returns the signed-in user's own data.
@@ -55,15 +55,14 @@ Every endpoint only returns the signed-in user's own data.
 
 ## Screens (wireframes exist; layout inspired by the Maya app, look is Tidal's own)
 - Bottom nav: Home, Calendar, Insights, Partner, Me. Yellow round "+" button on Home and Calendar.
-- Home ("Today"): cycle day + next period at the top; a large lavender day circle (date, "Day 1", "Period · heavy") with prev/next arrows; below it, full-width pastel bands per logged item (pain = rose, painkiller + "did it help? 7 → 3" = lavender, mood = yellow); a "your pattern" tip row.
+- Home ("Today"): cycle day + next period at the top; a large lavender day circle (date, "Day 1", "Period · heavy") with prev/next arrows; below it, full-width pastel bands per logged item (pain = rose, painkiller = lavender, mood = yellow); a "your pattern" tip row.
 - Log menu (+): two big tiles, Pain (rose) and Painkiller (lavender), then round pastel buttons: Flow, Mood, Symptoms, Note, Share, Reminder.
-- Log pain sheet: 0–10 circles (rose ramp), location chips, one-tap "my meds" list, "Save · we'll check in at <time>".
-- Check-in: before vs. now pain, 0/2/4/6/8/10 buttons, Save relief / Ask me again in 30 min.
+- Log pain sheet: 0–10 circles (rose ramp), location chips, one-tap "my meds" list, "Save".
 - Calendar, Insights (Pain/Cycle/History tabs), Partner view as described in the MVP.
 
 ## Current step
 Step 1 (foundation) is done: auth, DayLog + LogEndpoint, app shell with bottom nav and "+", Home screen with day circle and bands, Log sheet for Flow/Mood/Note.
 Steps 3-4 (pain + medication logging) are done: PainEntry/Medication/DoseLog + PainEndpoint, Pain and Painkiller log sheets, Home bands for pain and doses (ordered by time).
-Steps 5-6 (check-in + calendar) are done: CheckInFutureCall + recordRelief/snoozeCheckIn, CheckInScreen (shown automatically from Home when a check-in is due), CalendarScreen with a month grid (period rings, pain dots, tap-to-select day detail).
+Step 5 (check-in) was built and then removed at the developer's request. Step 6 (calendar) is done: CalendarScreen with a month grid (period rings, pain dots, tap-to-select day detail).
 Step 7 (predictions) is done: InsightEndpoint.getPrediction derives cycle starts from DayLog flow and averages the last 3-6 cycle lengths; Home shows "Cycle day N · Next period in Nd" and Calendar shows predicted-period and fertile-window rings. See AGENTS.md for what's built and where.
 Next: pain insights (step 8).

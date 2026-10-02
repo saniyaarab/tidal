@@ -497,36 +497,6 @@ class EndpointPain extends _isc.EndpointRef {
         'getLastDose',
         {},
       );
-
-  /// Returns the oldest dose log that's ready for its "did it help?"
-  /// check-in (set by [CheckInFutureCall]), or null if there isn't one.
-  _ida.Future<_i95dlci0.DoseLog?> getPendingCheckIn() =>
-      caller.callServerEndpoint<_i95dlci0.DoseLog?>(
-        'pain',
-        'getPendingCheckIn',
-        {},
-      );
-
-  /// Answers a check-in: saves how the pain feels now.
-  _ida.Future<_i95dlci0.DoseLog> recordRelief(
-    int doseLogId,
-    int painAfter,
-  ) => caller.callServerEndpoint<_i95dlci0.DoseLog>(
-    'pain',
-    'recordRelief',
-    {
-      'doseLogId': doseLogId,
-      'painAfter': painAfter,
-    },
-  );
-
-  /// Dismisses the check-in for now and asks again in 30 minutes.
-  _ida.Future<void> snoozeCheckIn(int doseLogId) =>
-      caller.callServerEndpoint<void>(
-        'pain',
-        'snoozeCheckIn',
-        {'doseLogId': doseLogId},
-      );
 }
 
 class Modules {

@@ -22,9 +22,7 @@ abstract class DoseLog
     required this.timestamp,
     required this.dose,
     this.painBefore,
-    this.painAfter,
-    bool? checkInDue,
-  }) : checkInDue = checkInDue ?? false;
+  });
 
   factory DoseLog({
     int? id,
@@ -33,8 +31,6 @@ abstract class DoseLog
     required DateTime timestamp,
     required String dose,
     int? painBefore,
-    int? painAfter,
-    bool? checkInDue,
   }) = _DoseLogImpl;
 
   factory DoseLog.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -47,10 +43,6 @@ abstract class DoseLog
       ),
       dose: jsonSerialization['dose'] as String,
       painBefore: jsonSerialization['painBefore'] as int?,
-      painAfter: jsonSerialization['painAfter'] as int?,
-      checkInDue: jsonSerialization['checkInDue'] == null
-          ? null
-          : _is.BoolJsonExtension.fromJson(jsonSerialization['checkInDue']),
     );
   }
 
@@ -77,13 +69,6 @@ abstract class DoseLog
   /// Pain level right before taking the dose, if known.
   int? painBefore;
 
-  /// Pain level at the "did it help?" check-in, once answered.
-  int? painAfter;
-
-  /// Set by CheckInFutureCall, 1 hour after the dose (or 30 minutes after
-  /// a snooze). True means the check-in is ready to show the user.
-  bool checkInDue;
-
   @override
   _is.Table<int?> get table => t;
 
@@ -97,8 +82,6 @@ abstract class DoseLog
     DateTime? timestamp,
     String? dose,
     int? painBefore,
-    int? painAfter,
-    bool? checkInDue,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -110,8 +93,6 @@ abstract class DoseLog
       'timestamp': timestamp.toJson(),
       'dose': dose,
       if (painBefore != null) 'painBefore': painBefore,
-      if (painAfter != null) 'painAfter': painAfter,
-      'checkInDue': checkInDue,
     };
   }
 
@@ -125,8 +106,6 @@ abstract class DoseLog
       'timestamp': timestamp.toJson(),
       'dose': dose,
       if (painBefore != null) 'painBefore': painBefore,
-      if (painAfter != null) 'painAfter': painAfter,
-      'checkInDue': checkInDue,
     };
   }
 
@@ -168,8 +147,6 @@ class _DoseLogImpl extends DoseLog {
     required DateTime timestamp,
     required String dose,
     int? painBefore,
-    int? painAfter,
-    bool? checkInDue,
   }) : super._(
          id: id,
          userId: userId,
@@ -177,8 +154,6 @@ class _DoseLogImpl extends DoseLog {
          timestamp: timestamp,
          dose: dose,
          painBefore: painBefore,
-         painAfter: painAfter,
-         checkInDue: checkInDue,
        );
 
   /// Returns a shallow copy of this [DoseLog]
@@ -192,8 +167,6 @@ class _DoseLogImpl extends DoseLog {
     DateTime? timestamp,
     String? dose,
     Object? painBefore = _Undefined,
-    Object? painAfter = _Undefined,
-    bool? checkInDue,
   }) {
     return DoseLog(
       id: id is int? ? id : this.id,
@@ -202,8 +175,6 @@ class _DoseLogImpl extends DoseLog {
       timestamp: timestamp ?? this.timestamp,
       dose: dose ?? this.dose,
       painBefore: painBefore is int? ? painBefore : this.painBefore,
-      painAfter: painAfter is int? ? painAfter : this.painAfter,
-      checkInDue: checkInDue ?? this.checkInDue,
     );
   }
 }
@@ -237,16 +208,6 @@ class DoseLogUpdateTable extends _is.UpdateTable<DoseLogTable> {
     table.painBefore,
     value,
   );
-
-  _is.ColumnValue<int, int> painAfter(int? value) => _is.ColumnValue(
-    table.painAfter,
-    value,
-  );
-
-  _is.ColumnValue<bool, bool> checkInDue(bool value) => _is.ColumnValue(
-    table.checkInDue,
-    value,
-  );
 }
 
 class DoseLogTable extends _is.Table<int?> {
@@ -272,15 +233,6 @@ class DoseLogTable extends _is.Table<int?> {
       'painBefore',
       this,
     );
-    painAfter = _is.ColumnInt(
-      'painAfter',
-      this,
-    );
-    checkInDue = _is.ColumnBool(
-      'checkInDue',
-      this,
-      hasDefault: true,
-    );
   }
 
   late final DoseLogUpdateTable updateTable;
@@ -301,13 +253,6 @@ class DoseLogTable extends _is.Table<int?> {
   /// Pain level right before taking the dose, if known.
   late final _is.ColumnInt painBefore;
 
-  /// Pain level at the "did it help?" check-in, once answered.
-  late final _is.ColumnInt painAfter;
-
-  /// Set by CheckInFutureCall, 1 hour after the dose (or 30 minutes after
-  /// a snooze). True means the check-in is ready to show the user.
-  late final _is.ColumnBool checkInDue;
-
   @override
   List<_is.Column> get columns => [
     id,
@@ -316,8 +261,6 @@ class DoseLogTable extends _is.Table<int?> {
     timestamp,
     dose,
     painBefore,
-    painAfter,
-    checkInDue,
   ];
 }
 

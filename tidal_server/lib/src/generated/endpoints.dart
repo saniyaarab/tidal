@@ -15,7 +15,6 @@ import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
 import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
-import 'package:tidal_server/src/generated/future_calls.dart' as _i0nkkjyq;
 import 'package:tidal_server/src/generated/log/flow_level.dart' as _idptobfz;
 import 'package:tidal_server/src/generated/log/mood.dart' as _ij0gfvc4;
 import 'package:tidal_server/src/generated/pain/pain_location.dart'
@@ -25,7 +24,6 @@ import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../insights/insight_endpoint.dart' as _irr87mt6;
 import '../log/log_endpoint.dart' as _iyqvybpl;
 import '../pain/pain_endpoint.dart' as _i9flen3s;
-export 'future_calls.dart' show ServerpodFutureCallsGetter;
 
 class Endpoints extends _is.EndpointDispatch {
   @override
@@ -615,70 +613,11 @@ class Endpoints extends _is.EndpointDispatch {
               ) async => (endpoints['pain'] as _i9flen3s.PainEndpoint)
                   .getLastDose(session),
         ),
-        'getPendingCheckIn': _is.MethodConnector(
-          name: 'getPendingCheckIn',
-          params: {},
-          call:
-              (
-                _is.Session session,
-                Map<String, dynamic> params,
-              ) async => (endpoints['pain'] as _i9flen3s.PainEndpoint)
-                  .getPendingCheckIn(session),
-        ),
-        'recordRelief': _is.MethodConnector(
-          name: 'recordRelief',
-          params: {
-            'doseLogId': _is.ParameterDescription(
-              name: 'doseLogId',
-              type: _is.getType<int>(),
-              nullable: false,
-            ),
-            'painAfter': _is.ParameterDescription(
-              name: 'painAfter',
-              type: _is.getType<int>(),
-              nullable: false,
-            ),
-          },
-          call:
-              (
-                _is.Session session,
-                Map<String, dynamic> params,
-              ) async =>
-                  (endpoints['pain'] as _i9flen3s.PainEndpoint).recordRelief(
-                    session,
-                    params['doseLogId'],
-                    params['painAfter'],
-                  ),
-        ),
-        'snoozeCheckIn': _is.MethodConnector(
-          name: 'snoozeCheckIn',
-          params: {
-            'doseLogId': _is.ParameterDescription(
-              name: 'doseLogId',
-              type: _is.getType<int>(),
-              nullable: false,
-            ),
-          },
-          call:
-              (
-                _is.Session session,
-                Map<String, dynamic> params,
-              ) async =>
-                  (endpoints['pain'] as _i9flen3s.PainEndpoint).snoozeCheckIn(
-                    session,
-                    params['doseLogId'],
-                  ),
-        ),
       },
     );
     modules['serverpod_auth_idp'] = _iais.Endpoints()
       ..initializeEndpoints(server);
     modules['serverpod_auth_core'] = _iacs.Endpoints()
       ..initializeEndpoints(server);
-  }
-
-  @override
-  _is.FutureCallDispatch? get futureCalls {
-    return _i0nkkjyq.FutureCalls();
   }
 }

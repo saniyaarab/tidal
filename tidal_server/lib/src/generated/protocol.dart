@@ -23,8 +23,6 @@ import 'package:tidal_server/src/generated/pain/medication.dart' as _i1bzforx;
 import 'package:tidal_server/src/generated/pain/pain_entry.dart' as _i0ft3vou;
 import 'package:tidal_server/src/generated/pain/pain_location.dart'
     as _iv8cvxsn;
-import 'future_calls_generated_models/check_in_future_call_check_model.dart'
-    as _iy7j8eve;
 import 'insights/cycle_settings.dart' as _irypdw9c;
 import 'insights/prediction.dart' as _itygu37j;
 import 'log/day_log.dart' as _ig2h1g4e;
@@ -220,19 +218,6 @@ class Protocol extends _is.DatabaseSerializationManager {
           isNullable: true,
           dartType: 'int?',
         ),
-        _isp.ColumnDefinition(
-          name: 'painAfter',
-          columnType: _isp.ColumnType.bigint,
-          isNullable: true,
-          dartType: 'int?',
-        ),
-        _isp.ColumnDefinition(
-          name: 'checkInDue',
-          columnType: _isp.ColumnType.boolean,
-          isNullable: false,
-          dartType: 'bool',
-          columnDefault: 'false',
-        ),
       ],
       foreignKeys: [
         _isp.ForeignKeyDefinition(
@@ -359,9 +344,6 @@ class Protocol extends _is.DatabaseSerializationManager {
       }
     }
 
-    if (t == _iy7j8eve.CheckInFutureCallCheckModel) {
-      return _iy7j8eve.CheckInFutureCallCheckModel.fromJson(data) as T;
-    }
     if (t == _irypdw9c.CycleSettings) {
       return _irypdw9c.CycleSettings.fromJson(data) as T;
     }
@@ -388,12 +370,6 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _i9r8gfuz.PainLocation) {
       return _i9r8gfuz.PainLocation.fromJson(data) as T;
-    }
-    if (t == _is.getType<_iy7j8eve.CheckInFutureCallCheckModel?>()) {
-      return (data != null
-              ? _iy7j8eve.CheckInFutureCallCheckModel.fromJson(data)
-              : null)
-          as T;
     }
     if (t == _is.getType<_irypdw9c.CycleSettings?>()) {
       return (data != null ? _irypdw9c.CycleSettings.fromJson(data) : null)
@@ -473,7 +449,6 @@ class Protocol extends _is.DatabaseSerializationManager {
 
   static String? getClassNameForType(Type type) {
     return switch (type) {
-      _iy7j8eve.CheckInFutureCallCheckModel => 'CheckInFutureCallCheckModel',
       _irypdw9c.CycleSettings => 'CycleSettings',
       _itygu37j.Prediction => 'Prediction',
       _ig2h1g4e.DayLog => 'DayLog',
@@ -497,8 +472,6 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
 
     switch (data) {
-      case _iy7j8eve.CheckInFutureCallCheckModel():
-        return 'CheckInFutureCallCheckModel';
       case _irypdw9c.CycleSettings():
         return 'CycleSettings';
       case _itygu37j.Prediction():
@@ -542,9 +515,6 @@ class Protocol extends _is.DatabaseSerializationManager {
     var dataClassName = data['className'];
     if (dataClassName is! String) {
       return super.deserializeByClassName(data);
-    }
-    if (dataClassName == 'CheckInFutureCallCheckModel') {
-      return deserialize<_iy7j8eve.CheckInFutureCallCheckModel>(data['data']);
     }
     if (dataClassName == 'CycleSettings') {
       return deserialize<_irypdw9c.CycleSettings>(data['data']);

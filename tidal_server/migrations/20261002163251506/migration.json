@@ -1,0 +1,69 @@
+{
+  "__className__": "serverpod.DatabaseMigration",
+  "actions": [
+    {
+      "__className__": "serverpod.DatabaseMigrationAction",
+      "type": "alterTable",
+      "alterTable": {
+        "__className__": "serverpod.TableMigration",
+        "name": "dose_log",
+        "schema": "public",
+        "addColumns": [],
+        "deleteColumns": [
+          "painAfter",
+          "checkInDue"
+        ],
+        "modifyColumns": [],
+        "addIndexes": [],
+        "deleteIndexes": [],
+        "addForeignKeys": [],
+        "deleteForeignKeys": [],
+        "warnings": [
+          {
+            "__className__": "serverpod.DatabaseMigrationWarning",
+            "type": "columnDropped",
+            "message": "Column \"painAfter\" of table \"dose_log\" will be dropped.",
+            "table": "dose_log",
+            "columns": [
+              "painAfter"
+            ],
+            "destrucive": true
+          },
+          {
+            "__className__": "serverpod.DatabaseMigrationWarning",
+            "type": "columnDropped",
+            "message": "Column \"checkInDue\" of table \"dose_log\" will be dropped.",
+            "table": "dose_log",
+            "columns": [
+              "checkInDue"
+            ],
+            "destrucive": true
+          }
+        ]
+      }
+    }
+  ],
+  "warnings": [
+    {
+      "__className__": "serverpod.DatabaseMigrationWarning",
+      "type": "columnDropped",
+      "message": "Column \"painAfter\" of table \"dose_log\" will be dropped.",
+      "table": "dose_log",
+      "columns": [
+        "painAfter"
+      ],
+      "destrucive": true
+    },
+    {
+      "__className__": "serverpod.DatabaseMigrationWarning",
+      "type": "columnDropped",
+      "message": "Column \"checkInDue\" of table \"dose_log\" will be dropped.",
+      "table": "dose_log",
+      "columns": [
+        "checkInDue"
+      ],
+      "destrucive": true
+    }
+  ],
+  "migrationApiVersion": 1
+}

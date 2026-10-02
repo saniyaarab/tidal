@@ -31,6 +31,3 @@ pain:
   - logDose:
   - getDoseRange:
   - getLastDose:
-  - getPendingCheckIn:
-  - recordRelief:
-  - snoozeCheckIn:

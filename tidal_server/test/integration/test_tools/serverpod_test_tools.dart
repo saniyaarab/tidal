@@ -17,9 +17,6 @@ import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
 import 'package:serverpod_test/serverpod_test.dart' as _ist;
-import 'package:tidal_server/src/generated/future_calls.dart' as _i0nkkjyq;
-import 'package:tidal_server/src/generated/future_calls_generated_models/check_in_future_call_check_model.dart'
-    as _ibjdqx6p;
 import 'package:tidal_server/src/generated/insights/prediction.dart'
     as _inmytcm7;
 import 'package:tidal_server/src/generated/log/day_log.dart' as _izjvvr32;
@@ -158,8 +155,6 @@ void withServerpod(
 }
 
 class TestEndpoints {
-  late final futureCalls = _FutureCalls();
-
   late final _EmailIdpEndpoint emailIdp;
 
   late final _JwtRefreshEndpoint jwtRefresh;
@@ -199,10 +194,6 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
   }
-}
-
-class _FutureCalls {
-  late final checkIn = _CheckInFutureCall();
 }
 
 class _EmailIdpEndpoint {
@@ -1159,120 +1150,5 @@ class _PainEndpoint {
         await _localUniqueSession.close();
       }
     });
-  }
-
-  _ida.Future<_ixayhju8.DoseLog?> getPendingCheckIn(
-    _ist.TestSessionBuilder sessionBuilder,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'pain',
-            method: 'getPendingCheckIn',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'pain',
-          methodName: 'getPendingCheckIn',
-          parameters: _ist.testObjectToJson({}),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<_ixayhju8.DoseLog?>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-
-  _ida.Future<_ixayhju8.DoseLog> recordRelief(
-    _ist.TestSessionBuilder sessionBuilder,
-    int doseLogId,
-    int painAfter,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'pain',
-            method: 'recordRelief',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'pain',
-          methodName: 'recordRelief',
-          parameters: _ist.testObjectToJson({
-            'doseLogId': doseLogId,
-            'painAfter': painAfter,
-          }),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<_ixayhju8.DoseLog>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-
-  _ida.Future<void> snoozeCheckIn(
-    _ist.TestSessionBuilder sessionBuilder,
-    int doseLogId,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'pain',
-            method: 'snoozeCheckIn',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'pain',
-          methodName: 'snoozeCheckIn',
-          parameters: _ist.testObjectToJson({'doseLogId': doseLogId}),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<void>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-}
-
-class _CheckInFutureCall {
-  Future<void> check(
-    _ist.TestSessionBuilder sessionBuilder,
-    int doseLogId,
-  ) async {
-    var object = _ibjdqx6p.CheckInFutureCallCheckModel(doseLogId: doseLogId);
-    var _localUniqueSession =
-        (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild();
-    try {
-      await _i0nkkjyq.CheckInCheckFutureCall().invoke(
-        _localUniqueSession,
-        object,
-      );
-    } finally {
-      await _localUniqueSession.close();
-    }
   }
 }

@@ -13,8 +13,3 @@ fields:
   dose: String
   ### Pain level right before taking the dose, if known.
   painBefore: int?
-  ### Pain level at the "did it help?" check-in, once answered.
-  painAfter: int?
-  ### Set by CheckInFutureCall, 1 hour after the dose (or 30 minutes after
-  ### a snooze). True means the check-in is ready to show the user.
-  checkInDue: bool, default=false

@@ -92,9 +92,7 @@ class PainEndpoint extends Endpoint {
       dose: medication.usualDose,
       painBefore: painBefore,
     );
-    final saved = await DoseLog.db.insertRow(session, dose);
-    await _scheduleCheckIn(session, saved.id!, const Duration(hours: 1));
-    return saved;
+    return DoseLog.db.insertRow(session, dose);
   }
 
   /// Returns the dose logs between [start] and [end] (inclusive days),
@@ -123,63 +121,6 @@ class PainEndpoint extends Endpoint {
       where: (t) => t.userId.equals(userId),
       orderBy: (t) => t.timestamp.desc(),
     );
-  }
-
-  /// Returns the oldest dose log that's ready for its "did it help?"
-  /// check-in (set by [CheckInFutureCall]), or null if there isn't one.
-  Future<DoseLog?> getPendingCheckIn(Session session) async {
-    final userId = session.authenticated!.authUserId;
-    return DoseLog.db.findFirstRow(
-      session,
-      where: (t) => t.userId.equals(userId) & t.checkInDue.equals(true),
-      orderBy: (t) => t.timestamp,
-    );
-  }
-
-  /// Answers a check-in: saves how the pain feels now.
-  Future<DoseLog> recordRelief(
-    Session session,
-    int doseLogId,
-    int painAfter,
-  ) async {
-    if (painAfter < 0 || painAfter > 10) {
-      throw ArgumentError('painAfter must be between 0 and 10');
-    }
-
-    final userId = session.authenticated!.authUserId;
-    final dose = await DoseLog.db.findById(session, doseLogId);
-    if (dose == null || dose.userId != userId) {
-      throw ArgumentError('Dose log not found.');
-    }
-
-    return DoseLog.db.updateRow(
-      session,
-      dose.copyWith(painAfter: painAfter, checkInDue: false),
-    );
-  }
-
-  /// Dismisses the check-in for now and asks again in 30 minutes.
-  Future<void> snoozeCheckIn(Session session, int doseLogId) async {
-    final userId = session.authenticated!.authUserId;
-    final dose = await DoseLog.db.findById(session, doseLogId);
-    if (dose == null || dose.userId != userId) {
-      throw ArgumentError('Dose log not found.');
-    }
-
-    await DoseLog.db.updateRow(session, dose.copyWith(checkInDue: false));
-    await _scheduleCheckIn(session, doseLogId, const Duration(minutes: 30));
-  }
-
-  /// Schedules [CheckInFutureCall] to mark the dose log ready after [delay].
-  Future<void> _scheduleCheckIn(
-    Session session,
-    int doseLogId,
-    Duration delay,
-  ) async {
-    await session.serverpod.futureCalls
-        .callWithDelay(delay, identifier: 'check-in-$doseLogId')
-        .checkIn
-        .check(doseLogId);
   }
 
   /// Midnight UTC at the start of [date]'s calendar day.

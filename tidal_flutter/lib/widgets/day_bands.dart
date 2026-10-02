@@ -104,14 +104,9 @@ class DayBands extends StatelessWidget {
     );
   }
 
-  /// "Medication dose" normally, plus a relief line once the check-in for
-  /// that dose has been answered.
-  String _doseText(String? medicationName, DoseLog dose) {
-    final text = '${medicationName ?? 'Medication'} ${dose.dose}';
-    final painAfter = dose.painAfter;
-    if (painAfter == null) return text;
-    return '$text\nDid it help? ${dose.painBefore ?? '–'} → $painAfter';
-  }
+  /// "Medication dose", e.g. "Ibuprofen 400 mg".
+  String _doseText(String? medicationName, DoseLog dose) =>
+      '${medicationName ?? 'Medication'} ${dose.dose}';
 }
 
 class Band extends StatelessWidget {
