@@ -16,20 +16,37 @@ import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
 import 'package:serverpod_auth_idp_client/serverpod_auth_idp_client.dart'
     as _iaic;
 import 'package:serverpod_client/serverpod_client.dart' as _isc;
+import 'package:tidal_client/src/protocol/digestion/bowel_movement.dart'
+    as _ityqtzed;
+import 'package:tidal_client/src/protocol/journal/self_care_activity.dart'
+    as _ifegaqrf;
 import 'package:tidal_client/src/protocol/log/day_log.dart' as _i91iyawq;
 import 'package:tidal_client/src/protocol/pain/dose_log.dart' as _i95dlci0;
 import 'package:tidal_client/src/protocol/pain/medication.dart' as _i2f8rdmx;
+import 'package:tidal_client/src/protocol/pain/medication_reminder.dart'
+    as _in2oittr;
 import 'package:tidal_client/src/protocol/pain/pain_entry.dart' as _imzr3ook;
 import 'package:tidal_client/src/protocol/pain/pain_location.dart' as _ivkbsfwn;
 import 'package:tidal_client/src/protocol/period/period_span.dart' as _idzkd17y;
+import 'digestion/bowel_movement.dart' as _i6bfb8vz;
 import 'insights/cycle_settings.dart' as _irypdw9c;
 import 'insights/cycle_summary.dart' as _itpp364r;
 import 'insights/prediction.dart' as _itygu37j;
+import 'insights/temperature_unit.dart' as _ik5b5xgi;
+import 'insights/unit_preferences.dart' as _if2yt2rb;
+import 'insights/weight_unit.dart' as _ibx9ytzf;
+import 'journal/journal_entry.dart' as _iofjnpf3;
+import 'journal/self_care_activity.dart' as _idiy7rnf;
 import 'log/day_log.dart' as _ig2h1g4e;
+import 'log/drink_type.dart' as _ivt7cba4;
 import 'log/flow_level.dart' as _i6jt696r;
+import 'log/love_type.dart' as _i7ihs2om;
 import 'log/mood.dart' as _iyv1k8fz;
+import 'log/mucus_type.dart' as _i5pmo1d8;
+import 'log/severity.dart' as _ish8wihn;
 import 'pain/dose_log.dart' as _ijd9wd5s;
 import 'pain/medication.dart' as _ifw90bis;
+import 'pain/medication_reminder.dart' as _i85kp92q;
 import 'pain/medication_type.dart' as _i47q3b5q;
 import 'pain/pain_entry.dart' as _irsb51xy;
 import 'pain/pain_location.dart' as _i9r8gfuz;
@@ -39,14 +56,25 @@ import 'period/period_change.dart' as _i1jla7k1;
 import 'period/period_change_kind.dart' as _ik4fqf6t;
 import 'period/period_length_info.dart' as _iq6fzgrr;
 import 'period/period_span.dart' as _i2feo9ly;
+export 'digestion/bowel_movement.dart';
 export 'insights/cycle_settings.dart';
 export 'insights/cycle_summary.dart';
 export 'insights/prediction.dart';
+export 'insights/temperature_unit.dart';
+export 'insights/unit_preferences.dart';
+export 'insights/weight_unit.dart';
+export 'journal/journal_entry.dart';
+export 'journal/self_care_activity.dart';
 export 'log/day_log.dart';
+export 'log/drink_type.dart';
 export 'log/flow_level.dart';
+export 'log/love_type.dart';
 export 'log/mood.dart';
+export 'log/mucus_type.dart';
+export 'log/severity.dart';
 export 'pain/dose_log.dart';
 export 'pain/medication.dart';
+export 'pain/medication_reminder.dart';
 export 'pain/medication_type.dart';
 export 'pain/pain_entry.dart';
 export 'pain/pain_location.dart';
@@ -92,6 +120,9 @@ class Protocol extends _isc.SerializationManager {
       }
     }
 
+    if (t == _i6bfb8vz.BowelMovement) {
+      return _i6bfb8vz.BowelMovement.fromJson(data) as T;
+    }
     if (t == _irypdw9c.CycleSettings) {
       return _irypdw9c.CycleSettings.fromJson(data) as T;
     }
@@ -101,20 +132,50 @@ class Protocol extends _isc.SerializationManager {
     if (t == _itygu37j.Prediction) {
       return _itygu37j.Prediction.fromJson(data) as T;
     }
+    if (t == _ik5b5xgi.TemperatureUnit) {
+      return _ik5b5xgi.TemperatureUnit.fromJson(data) as T;
+    }
+    if (t == _if2yt2rb.UnitPreferences) {
+      return _if2yt2rb.UnitPreferences.fromJson(data) as T;
+    }
+    if (t == _ibx9ytzf.WeightUnit) {
+      return _ibx9ytzf.WeightUnit.fromJson(data) as T;
+    }
+    if (t == _iofjnpf3.JournalEntry) {
+      return _iofjnpf3.JournalEntry.fromJson(data) as T;
+    }
+    if (t == _idiy7rnf.SelfCareActivity) {
+      return _idiy7rnf.SelfCareActivity.fromJson(data) as T;
+    }
     if (t == _ig2h1g4e.DayLog) {
       return _ig2h1g4e.DayLog.fromJson(data) as T;
+    }
+    if (t == _ivt7cba4.DrinkType) {
+      return _ivt7cba4.DrinkType.fromJson(data) as T;
     }
     if (t == _i6jt696r.FlowLevel) {
       return _i6jt696r.FlowLevel.fromJson(data) as T;
     }
+    if (t == _i7ihs2om.LoveType) {
+      return _i7ihs2om.LoveType.fromJson(data) as T;
+    }
     if (t == _iyv1k8fz.Mood) {
       return _iyv1k8fz.Mood.fromJson(data) as T;
+    }
+    if (t == _i5pmo1d8.MucusType) {
+      return _i5pmo1d8.MucusType.fromJson(data) as T;
+    }
+    if (t == _ish8wihn.Severity) {
+      return _ish8wihn.Severity.fromJson(data) as T;
     }
     if (t == _ijd9wd5s.DoseLog) {
       return _ijd9wd5s.DoseLog.fromJson(data) as T;
     }
     if (t == _ifw90bis.Medication) {
       return _ifw90bis.Medication.fromJson(data) as T;
+    }
+    if (t == _i85kp92q.MedicationReminder) {
+      return _i85kp92q.MedicationReminder.fromJson(data) as T;
     }
     if (t == _i47q3b5q.MedicationType) {
       return _i47q3b5q.MedicationType.fromJson(data) as T;
@@ -143,6 +204,10 @@ class Protocol extends _isc.SerializationManager {
     if (t == _i2feo9ly.PeriodSpan) {
       return _i2feo9ly.PeriodSpan.fromJson(data) as T;
     }
+    if (t == _isc.getType<_i6bfb8vz.BowelMovement?>()) {
+      return (data != null ? _i6bfb8vz.BowelMovement.fromJson(data) : null)
+          as T;
+    }
     if (t == _isc.getType<_irypdw9c.CycleSettings?>()) {
       return (data != null ? _irypdw9c.CycleSettings.fromJson(data) : null)
           as T;
@@ -153,20 +218,54 @@ class Protocol extends _isc.SerializationManager {
     if (t == _isc.getType<_itygu37j.Prediction?>()) {
       return (data != null ? _itygu37j.Prediction.fromJson(data) : null) as T;
     }
+    if (t == _isc.getType<_ik5b5xgi.TemperatureUnit?>()) {
+      return (data != null ? _ik5b5xgi.TemperatureUnit.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_if2yt2rb.UnitPreferences?>()) {
+      return (data != null ? _if2yt2rb.UnitPreferences.fromJson(data) : null)
+          as T;
+    }
+    if (t == _isc.getType<_ibx9ytzf.WeightUnit?>()) {
+      return (data != null ? _ibx9ytzf.WeightUnit.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_iofjnpf3.JournalEntry?>()) {
+      return (data != null ? _iofjnpf3.JournalEntry.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_idiy7rnf.SelfCareActivity?>()) {
+      return (data != null ? _idiy7rnf.SelfCareActivity.fromJson(data) : null)
+          as T;
+    }
     if (t == _isc.getType<_ig2h1g4e.DayLog?>()) {
       return (data != null ? _ig2h1g4e.DayLog.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ivt7cba4.DrinkType?>()) {
+      return (data != null ? _ivt7cba4.DrinkType.fromJson(data) : null) as T;
     }
     if (t == _isc.getType<_i6jt696r.FlowLevel?>()) {
       return (data != null ? _i6jt696r.FlowLevel.fromJson(data) : null) as T;
     }
+    if (t == _isc.getType<_i7ihs2om.LoveType?>()) {
+      return (data != null ? _i7ihs2om.LoveType.fromJson(data) : null) as T;
+    }
     if (t == _isc.getType<_iyv1k8fz.Mood?>()) {
       return (data != null ? _iyv1k8fz.Mood.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_i5pmo1d8.MucusType?>()) {
+      return (data != null ? _i5pmo1d8.MucusType.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_ish8wihn.Severity?>()) {
+      return (data != null ? _ish8wihn.Severity.fromJson(data) : null) as T;
     }
     if (t == _isc.getType<_ijd9wd5s.DoseLog?>()) {
       return (data != null ? _ijd9wd5s.DoseLog.fromJson(data) : null) as T;
     }
     if (t == _isc.getType<_ifw90bis.Medication?>()) {
       return (data != null ? _ifw90bis.Medication.fromJson(data) : null) as T;
+    }
+    if (t == _isc.getType<_i85kp92q.MedicationReminder?>()) {
+      return (data != null ? _i85kp92q.MedicationReminder.fromJson(data) : null)
+          as T;
     }
     if (t == _isc.getType<_i47q3b5q.MedicationType?>()) {
       return (data != null ? _i47q3b5q.MedicationType.fromJson(data) : null)
@@ -212,9 +311,27 @@ class Protocol extends _isc.SerializationManager {
               : null)
           as T;
     }
+    if (t == List<_idiy7rnf.SelfCareActivity>) {
+      return (data as List)
+              .map((e) => deserialize<_idiy7rnf.SelfCareActivity>(e))
+              .toList()
+          as T;
+    }
     if (t == List<_i9r8gfuz.PainLocation>) {
       return (data as List)
               .map((e) => deserialize<_i9r8gfuz.PainLocation>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ityqtzed.BowelMovement>) {
+      return (data as List)
+              .map((e) => deserialize<_ityqtzed.BowelMovement>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ifegaqrf.SelfCareActivity>) {
+      return (data as List)
+              .map((e) => deserialize<_ifegaqrf.SelfCareActivity>(e))
               .toList()
           as T;
     }
@@ -242,6 +359,12 @@ class Protocol extends _isc.SerializationManager {
               .toList()
           as T;
     }
+    if (t == List<_in2oittr.MedicationReminder>) {
+      return (data as List)
+              .map((e) => deserialize<_in2oittr.MedicationReminder>(e))
+              .toList()
+          as T;
+    }
     if (t == List<_i95dlci0.DoseLog>) {
       return (data as List)
               .map((e) => deserialize<_i95dlci0.DoseLog>(e))
@@ -265,14 +388,25 @@ class Protocol extends _isc.SerializationManager {
 
   static String? getClassNameForType(Type type) {
     return switch (type) {
+      _i6bfb8vz.BowelMovement => 'BowelMovement',
       _irypdw9c.CycleSettings => 'CycleSettings',
       _itpp364r.CycleSummary => 'CycleSummary',
       _itygu37j.Prediction => 'Prediction',
+      _ik5b5xgi.TemperatureUnit => 'TemperatureUnit',
+      _if2yt2rb.UnitPreferences => 'UnitPreferences',
+      _ibx9ytzf.WeightUnit => 'WeightUnit',
+      _iofjnpf3.JournalEntry => 'JournalEntry',
+      _idiy7rnf.SelfCareActivity => 'SelfCareActivity',
       _ig2h1g4e.DayLog => 'DayLog',
+      _ivt7cba4.DrinkType => 'DrinkType',
       _i6jt696r.FlowLevel => 'FlowLevel',
+      _i7ihs2om.LoveType => 'LoveType',
       _iyv1k8fz.Mood => 'Mood',
+      _i5pmo1d8.MucusType => 'MucusType',
+      _ish8wihn.Severity => 'Severity',
       _ijd9wd5s.DoseLog => 'DoseLog',
       _ifw90bis.Medication => 'Medication',
+      _i85kp92q.MedicationReminder => 'MedicationReminder',
       _i47q3b5q.MedicationType => 'MedicationType',
       _irsb51xy.PainEntry => 'PainEntry',
       _i9r8gfuz.PainLocation => 'PainLocation',
@@ -296,22 +430,44 @@ class Protocol extends _isc.SerializationManager {
     }
 
     switch (data) {
+      case _i6bfb8vz.BowelMovement():
+        return 'BowelMovement';
       case _irypdw9c.CycleSettings():
         return 'CycleSettings';
       case _itpp364r.CycleSummary():
         return 'CycleSummary';
       case _itygu37j.Prediction():
         return 'Prediction';
+      case _ik5b5xgi.TemperatureUnit():
+        return 'TemperatureUnit';
+      case _if2yt2rb.UnitPreferences():
+        return 'UnitPreferences';
+      case _ibx9ytzf.WeightUnit():
+        return 'WeightUnit';
+      case _iofjnpf3.JournalEntry():
+        return 'JournalEntry';
+      case _idiy7rnf.SelfCareActivity():
+        return 'SelfCareActivity';
       case _ig2h1g4e.DayLog():
         return 'DayLog';
+      case _ivt7cba4.DrinkType():
+        return 'DrinkType';
       case _i6jt696r.FlowLevel():
         return 'FlowLevel';
+      case _i7ihs2om.LoveType():
+        return 'LoveType';
       case _iyv1k8fz.Mood():
         return 'Mood';
+      case _i5pmo1d8.MucusType():
+        return 'MucusType';
+      case _ish8wihn.Severity():
+        return 'Severity';
       case _ijd9wd5s.DoseLog():
         return 'DoseLog';
       case _ifw90bis.Medication():
         return 'Medication';
+      case _i85kp92q.MedicationReminder():
+        return 'MedicationReminder';
       case _i47q3b5q.MedicationType():
         return 'MedicationType';
       case _irsb51xy.PainEntry():
@@ -352,6 +508,9 @@ class Protocol extends _isc.SerializationManager {
     if (dataClassName is! String) {
       return super.deserializeByClassName(data);
     }
+    if (dataClassName == 'BowelMovement') {
+      return deserialize<_i6bfb8vz.BowelMovement>(data['data']);
+    }
     if (dataClassName == 'CycleSettings') {
       return deserialize<_irypdw9c.CycleSettings>(data['data']);
     }
@@ -361,20 +520,50 @@ class Protocol extends _isc.SerializationManager {
     if (dataClassName == 'Prediction') {
       return deserialize<_itygu37j.Prediction>(data['data']);
     }
+    if (dataClassName == 'TemperatureUnit') {
+      return deserialize<_ik5b5xgi.TemperatureUnit>(data['data']);
+    }
+    if (dataClassName == 'UnitPreferences') {
+      return deserialize<_if2yt2rb.UnitPreferences>(data['data']);
+    }
+    if (dataClassName == 'WeightUnit') {
+      return deserialize<_ibx9ytzf.WeightUnit>(data['data']);
+    }
+    if (dataClassName == 'JournalEntry') {
+      return deserialize<_iofjnpf3.JournalEntry>(data['data']);
+    }
+    if (dataClassName == 'SelfCareActivity') {
+      return deserialize<_idiy7rnf.SelfCareActivity>(data['data']);
+    }
     if (dataClassName == 'DayLog') {
       return deserialize<_ig2h1g4e.DayLog>(data['data']);
+    }
+    if (dataClassName == 'DrinkType') {
+      return deserialize<_ivt7cba4.DrinkType>(data['data']);
     }
     if (dataClassName == 'FlowLevel') {
       return deserialize<_i6jt696r.FlowLevel>(data['data']);
     }
+    if (dataClassName == 'LoveType') {
+      return deserialize<_i7ihs2om.LoveType>(data['data']);
+    }
     if (dataClassName == 'Mood') {
       return deserialize<_iyv1k8fz.Mood>(data['data']);
+    }
+    if (dataClassName == 'MucusType') {
+      return deserialize<_i5pmo1d8.MucusType>(data['data']);
+    }
+    if (dataClassName == 'Severity') {
+      return deserialize<_ish8wihn.Severity>(data['data']);
     }
     if (dataClassName == 'DoseLog') {
       return deserialize<_ijd9wd5s.DoseLog>(data['data']);
     }
     if (dataClassName == 'Medication') {
       return deserialize<_ifw90bis.Medication>(data['data']);
+    }
+    if (dataClassName == 'MedicationReminder') {
+      return deserialize<_i85kp92q.MedicationReminder>(data['data']);
     }
     if (dataClassName == 'MedicationType') {
       return deserialize<_i47q3b5q.MedicationType>(data['data']);

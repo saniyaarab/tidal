@@ -1,0 +1,6 @@
+### Sex logged on a day.
+enum: LoveType
+serialized: byName
+values:
+  - protected
+  - unprotected

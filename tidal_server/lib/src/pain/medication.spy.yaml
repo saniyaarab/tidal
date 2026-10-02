@@ -14,3 +14,6 @@ fields:
   usualDose: String
   ### What kind of medication it is, if the user said.
   type: MedicationType?
+  ### Remind the user this many hours after each dose, or null for no
+  ### reminder.
+  reminderEveryHours: int?

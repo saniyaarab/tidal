@@ -4,20 +4,26 @@ import 'package:tidal_client/tidal_client.dart';
 import '../date_format.dart';
 import '../log_labels.dart';
 import '../theme.dart';
+import '../units.dart';
 
-/// The pastel bands showing what's logged for a day: pain entries, mood,
-/// and note. Pain bands are ordered by time; mood and note (at most one each
-/// per day) always come last. Medications aren't shown here — they're in the
-/// Medications sheet. Shows [emptyMessage] when nothing is logged.
+/// The pastel bands showing what's logged for a day: pain entries and bowel
+/// movements (ordered by time), then the once-a-day details (mood, drinks,
+/// sleep, digestion, body, love) and the note last. Medications aren't
+/// shown here — they're in the Medications sheet. Weight and temperature
+/// are shown in [units]. Shows [emptyMessage] when nothing is logged.
 class DayBands extends StatelessWidget {
   final DayLog? dayLog;
   final List<PainEntry> painEntries;
+  final List<BowelMovement> bowelMovements;
+  final UnitPreferences? units;
   final String emptyMessage;
 
   const DayBands({
     super.key,
     required this.dayLog,
     required this.painEntries,
+    this.bowelMovements = const [],
+    this.units,
     this.emptyMessage =
         'Nothing logged yet today. Tap + to add your flow, mood, or a note.',
   });
@@ -28,17 +34,38 @@ class DayBands extends StatelessWidget {
     final note = dayLog?.note;
     final hasNote = note != null && note.isNotEmpty;
 
-    final bands = <Widget>[
+    final day = dayLog;
+    final units = this.units ?? defaultUnits;
+
+    // Timed entries first, in the order they happened.
+    final timed = <(DateTime, Widget)>[
       for (final entry in painEntries)
-        Band(
-          color: TidalColors.roseBand,
-          iconColor: TidalColors.rose,
-          icon: Icons.bolt,
-          text: entry.locations.isEmpty
-              ? 'Pain ${entry.level}/10'
-              : 'Pain ${entry.level}/10 · ${formatPainLocations(entry.locations)}',
-          trailing: formatRelativeTime(entry.timestamp),
+        (
+          entry.timestamp,
+          Band(
+            color: TidalColors.roseBand,
+            iconColor: TidalColors.rose,
+            icon: Icons.bolt,
+            text: entry.locations.isEmpty
+                ? 'Pain ${entry.level}/10'
+                : 'Pain ${entry.level}/10 · ${formatPainLocations(entry.locations)}',
+            trailing: formatRelativeTime(entry.timestamp),
+          ),
         ),
+      for (final movement in bowelMovements)
+        (
+          movement.timestamp,
+          _yellow(
+            Icons.rice_bowl_outlined,
+            'Digestion · Type ${movement.bristolType} · '
+            '${bristolLabels[movement.bristolType - 1]}',
+            trailing: formatRelativeTime(movement.timestamp),
+          ),
+        ),
+    ]..sort((a, b) => a.$1.compareTo(b.$1));
+
+    final bands = <Widget>[
+      for (final (_, band) in timed) band,
       if (mood != null)
         Band(
           color: TidalColors.yellowBand,
@@ -46,6 +73,49 @@ class DayBands extends StatelessWidget {
           icon: Icons.sentiment_satisfied_alt,
           text: '${mood.label} · ${mood.subtitle}',
         ),
+      if (day != null) ...[
+        if (day.waterGlasses > 0)
+          _lavender(
+            Icons.local_drink_outlined,
+            'Water · ${_plural(day.waterGlasses, 'glass', 'glasses')}',
+          ),
+        if (day.caffeineDrinks > 0)
+          _yellow(
+            Icons.coffee_outlined,
+            'Caffeine · ${_plural(day.caffeineDrinks, 'drink', 'drinks')}',
+          ),
+        if (day.alcoholDrinks > 0)
+          _lavender(
+            Icons.wine_bar_outlined,
+            'Alcohol · ${_plural(day.alcoholDrinks, 'drink', 'drinks')}',
+          ),
+        if (day.sleepQuality != null || day.sleepHours != null)
+          _lavender(Icons.bedtime_outlined, _sleepText(day)),
+        if (day.bloating != null)
+          _yellow(Icons.air, 'Bloating · ${day.bloating!.label}'),
+        if (day.acidReflux != null)
+          _yellow(
+            Icons.local_fire_department_outlined,
+            'Acid reflux · ${day.acidReflux!.label}',
+          ),
+        if (day.weightKg != null)
+          _yellow(
+            Icons.monitor_weight_outlined,
+            'Weight · ${formatOneDecimal(kgTo(units.weightUnit, day.weightKg!))} '
+            '${weightSymbol(units.weightUnit)}',
+          ),
+        if (day.temperatureC != null)
+          _yellow(
+            Icons.thermostat_outlined,
+            'Temperature · '
+            '${formatOneDecimal(celsiusTo(units.temperatureUnit, day.temperatureC!))} '
+            '${temperatureSymbol(units.temperatureUnit)}',
+          ),
+        if (day.mucus != null)
+          _lavender(Icons.opacity, 'Mucus · ${day.mucus!.label}'),
+        if (day.love != null)
+          _lavender(Icons.favorite_border, 'Love · ${day.love!.label}'),
+      ],
       if (hasNote)
         Band(
           color: TidalColors.lavenderBand,
@@ -80,6 +150,35 @@ class DayBands extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  static Band _lavender(IconData icon, String text) => Band(
+    color: TidalColors.lavenderBand,
+    iconColor: TidalColors.lavender,
+    icon: icon,
+    text: text,
+  );
+
+  static Band _yellow(IconData icon, String text, {String? trailing}) => Band(
+    color: TidalColors.yellowBand,
+    iconColor: TidalColors.yellowIcon,
+    icon: icon,
+    text: text,
+    trailing: trailing,
+  );
+
+  static String _plural(int count, String one, String many) =>
+      '$count ${count == 1 ? one : many}';
+
+  /// "Sleep · Good · 7.5 h", leaving out whichever part wasn't logged.
+  static String _sleepText(DayLog day) {
+    final quality = day.sleepQuality;
+    final hours = day.sleepHours;
+    return [
+      'Sleep',
+      if (quality != null) sleepQualityLabels[quality - 1],
+      if (hours != null) '${formatOneDecimal(hours)} h',
+    ].join(' · ');
   }
 }
 

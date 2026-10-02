@@ -1,0 +1,19 @@
+### The self-care activities on the Journal's "Self care today" checklist.
+enum: SelfCareActivity
+serialized: byName
+values:
+  - meditated
+  - calledFriend
+  - hitSnooze
+  - listenedToMusic
+  - snackedHealthy
+  - wentOutside
+  - readBook
+  - tookBath
+  - drewOrPainted
+  - cookedMeal
+  - plannedTrip
+  - huggedSomeone
+  - madeTea
+  - complimentedMe
+  - tookNap

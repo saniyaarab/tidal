@@ -25,6 +25,7 @@ abstract class Medication
     required this.name,
     required this.usualDose,
     this.type,
+    this.reminderEveryHours,
   });
 
   factory Medication({
@@ -33,6 +34,7 @@ abstract class Medication
     required String name,
     required String usualDose,
     _ib85fggv.MedicationType? type,
+    int? reminderEveryHours,
   }) = _MedicationImpl;
 
   factory Medication.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -46,6 +48,7 @@ abstract class Medication
           : _ib85fggv.MedicationType.fromJson(
               (jsonSerialization['type'] as String),
             ),
+      reminderEveryHours: jsonSerialization['reminderEveryHours'] as int?,
     );
   }
 
@@ -69,6 +72,10 @@ abstract class Medication
   /// What kind of medication it is, if the user said.
   _ib85fggv.MedicationType? type;
 
+  /// Remind the user this many hours after each dose, or null for no
+  /// reminder.
+  int? reminderEveryHours;
+
   @override
   _is.Table<int?> get table => t;
 
@@ -81,6 +88,7 @@ abstract class Medication
     String? name,
     String? usualDose,
     _ib85fggv.MedicationType? type,
+    int? reminderEveryHours,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -91,6 +99,7 @@ abstract class Medication
       'name': name,
       'usualDose': usualDose,
       if (type != null) 'type': type?.toJson(),
+      if (reminderEveryHours != null) 'reminderEveryHours': reminderEveryHours,
     };
   }
 
@@ -103,6 +112,7 @@ abstract class Medication
       'name': name,
       'usualDose': usualDose,
       if (type != null) 'type': type?.toJson(),
+      if (reminderEveryHours != null) 'reminderEveryHours': reminderEveryHours,
     };
   }
 
@@ -143,12 +153,14 @@ class _MedicationImpl extends Medication {
     required String name,
     required String usualDose,
     _ib85fggv.MedicationType? type,
+    int? reminderEveryHours,
   }) : super._(
          id: id,
          userId: userId,
          name: name,
          usualDose: usualDose,
          type: type,
+         reminderEveryHours: reminderEveryHours,
        );
 
   /// Returns a shallow copy of this [Medication]
@@ -161,6 +173,7 @@ class _MedicationImpl extends Medication {
     String? name,
     String? usualDose,
     Object? type = _Undefined,
+    Object? reminderEveryHours = _Undefined,
   }) {
     return Medication(
       id: id is int? ? id : this.id,
@@ -168,6 +181,9 @@ class _MedicationImpl extends Medication {
       name: name ?? this.name,
       usualDose: usualDose ?? this.usualDose,
       type: type is _ib85fggv.MedicationType? ? type : this.type,
+      reminderEveryHours: reminderEveryHours is int?
+          ? reminderEveryHours
+          : this.reminderEveryHours,
     );
   }
 }
@@ -197,6 +213,11 @@ class MedicationUpdateTable extends _is.UpdateTable<MedicationTable> {
     table.type,
     value,
   );
+
+  _is.ColumnValue<int, int> reminderEveryHours(int? value) => _is.ColumnValue(
+    table.reminderEveryHours,
+    value,
+  );
 }
 
 class MedicationTable extends _is.Table<int?> {
@@ -219,6 +240,10 @@ class MedicationTable extends _is.Table<int?> {
       this,
       _is.EnumSerialization.byName,
     );
+    reminderEveryHours = _is.ColumnInt(
+      'reminderEveryHours',
+      this,
+    );
   }
 
   late final MedicationUpdateTable updateTable;
@@ -236,6 +261,10 @@ class MedicationTable extends _is.Table<int?> {
   /// What kind of medication it is, if the user said.
   late final _is.ColumnEnum<_ib85fggv.MedicationType> type;
 
+  /// Remind the user this many hours after each dose, or null for no
+  /// reminder.
+  late final _is.ColumnInt reminderEveryHours;
+
   @override
   List<_is.Column> get columns => [
     id,
@@ -243,6 +272,7 @@ class MedicationTable extends _is.Table<int?> {
     name,
     usualDose,
     type,
+    reminderEveryHours,
   ];
 }
 

@@ -9,6 +9,9 @@ emailIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
+digestion:
+  - logBowelMovement:
+  - getBowelMovementRange:
 insight:
   - getPrediction:
   - getCycleSummary:
@@ -20,8 +23,21 @@ insight:
   - saveCycleLength:
   - getPeriodLength:
   - savePeriodLength:
+  - getUnitPreferences:
+  - saveWeightUnit:
+  - saveTemperatureUnit:
+journal:
+  - getDay:
+  - saveDay:
 log:
   - saveDay:
+  - saveDrinkCount:
+  - saveSleep:
+  - saveDigestionDay:
+  - saveWeight:
+  - saveTemperature:
+  - saveMucus:
+  - saveLove:
   - getRange:
   - deleteAll:
 pain:
@@ -29,6 +45,9 @@ pain:
   - getPainRange:
   - myMeds:
   - addMedication:
+  - setReminder:
+  - getReminders:
+  - dismissReminder:
   - logDose:
   - getDoseRange:
   - getLastDosePerMedication:

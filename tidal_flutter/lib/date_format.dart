@@ -61,3 +61,14 @@ String formatRelativeTime(DateTime timestamp) {
   final days = elapsed.inDays;
   return days == 1 ? '1 day ago' : '$days days ago';
 }
+
+/// Formats how long until [timestamp], e.g. "in 2h 15m", "in 40 min".
+String formatTimeUntil(DateTime timestamp) {
+  final remaining = timestamp.toUtc().difference(DateTime.now().toUtc());
+  if (remaining.inMinutes < 1) return 'now';
+  if (remaining.inMinutes < 60) return 'in ${remaining.inMinutes} min';
+  final minutes = remaining.inMinutes % 60;
+  return minutes == 0
+      ? 'in ${remaining.inHours}h'
+      : 'in ${remaining.inHours}h ${minutes}m';
+}

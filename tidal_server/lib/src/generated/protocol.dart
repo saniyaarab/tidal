@@ -17,22 +17,41 @@ import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
 import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _iais;
+import 'package:tidal_server/src/generated/digestion/bowel_movement.dart'
+    as _ij7z5kq2;
+import 'package:tidal_server/src/generated/journal/self_care_activity.dart'
+    as _iq27cpnk;
 import 'package:tidal_server/src/generated/log/day_log.dart' as _izjvvr32;
 import 'package:tidal_server/src/generated/pain/dose_log.dart' as _ixayhju8;
 import 'package:tidal_server/src/generated/pain/medication.dart' as _i1bzforx;
+import 'package:tidal_server/src/generated/pain/medication_reminder.dart'
+    as _iuhzinof;
 import 'package:tidal_server/src/generated/pain/pain_entry.dart' as _i0ft3vou;
 import 'package:tidal_server/src/generated/pain/pain_location.dart'
     as _iv8cvxsn;
 import 'package:tidal_server/src/generated/period/period_span.dart'
     as _iiatq07z;
+import 'digestion/bowel_movement.dart' as _i6bfb8vz;
+import 'future_calls_generated_models/medication_reminder_future_call_mark_due_model.dart'
+    as _i0twoea3;
 import 'insights/cycle_settings.dart' as _irypdw9c;
 import 'insights/cycle_summary.dart' as _itpp364r;
 import 'insights/prediction.dart' as _itygu37j;
+import 'insights/temperature_unit.dart' as _ik5b5xgi;
+import 'insights/unit_preferences.dart' as _if2yt2rb;
+import 'insights/weight_unit.dart' as _ibx9ytzf;
+import 'journal/journal_entry.dart' as _iofjnpf3;
+import 'journal/self_care_activity.dart' as _idiy7rnf;
 import 'log/day_log.dart' as _ig2h1g4e;
+import 'log/drink_type.dart' as _ivt7cba4;
 import 'log/flow_level.dart' as _i6jt696r;
+import 'log/love_type.dart' as _i7ihs2om;
 import 'log/mood.dart' as _iyv1k8fz;
+import 'log/mucus_type.dart' as _i5pmo1d8;
+import 'log/severity.dart' as _ish8wihn;
 import 'pain/dose_log.dart' as _ijd9wd5s;
 import 'pain/medication.dart' as _ifw90bis;
+import 'pain/medication_reminder.dart' as _i85kp92q;
 import 'pain/medication_type.dart' as _i47q3b5q;
 import 'pain/pain_entry.dart' as _irsb51xy;
 import 'pain/pain_location.dart' as _i9r8gfuz;
@@ -42,14 +61,25 @@ import 'period/period_change.dart' as _i1jla7k1;
 import 'period/period_change_kind.dart' as _ik4fqf6t;
 import 'period/period_length_info.dart' as _iq6fzgrr;
 import 'period/period_span.dart' as _i2feo9ly;
+export 'digestion/bowel_movement.dart';
 export 'insights/cycle_settings.dart';
 export 'insights/cycle_summary.dart';
 export 'insights/prediction.dart';
+export 'insights/temperature_unit.dart';
+export 'insights/unit_preferences.dart';
+export 'insights/weight_unit.dart';
+export 'journal/journal_entry.dart';
+export 'journal/self_care_activity.dart';
 export 'log/day_log.dart';
+export 'log/drink_type.dart';
 export 'log/flow_level.dart';
+export 'log/love_type.dart';
 export 'log/mood.dart';
+export 'log/mucus_type.dart';
+export 'log/severity.dart';
 export 'pain/dose_log.dart';
 export 'pain/medication.dart';
+export 'pain/medication_reminder.dart';
 export 'pain/medication_type.dart';
 export 'pain/pain_entry.dart';
 export 'pain/pain_location.dart';
@@ -68,6 +98,72 @@ class Protocol extends _is.DatabaseSerializationManager {
   static final Protocol _instance = Protocol._().._registerHostProtocols();
 
   static List<_isp.TableDefinition> get targetTableDefinitions => [
+    _isp.TableDefinition(
+      name: 'bowel_movement',
+      dartName: 'BowelMovement',
+      schema: 'public',
+      module: 'tidal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'date',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'timestamp',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'loggedAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'bristolType',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'bowel_movement_user_date_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'date',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
     _isp.TableDefinition(
       name: 'cycle_settings',
       dartName: 'CycleSettings',
@@ -106,6 +202,20 @@ class Protocol extends _is.DatabaseSerializationManager {
           columnType: _isp.ColumnType.bigint,
           isNullable: true,
           dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'weightUnit',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:WeightUnit',
+          columnDefault: '\'kg\'',
+        ),
+        _isp.ColumnDefinition(
+          name: 'temperatureUnit',
+          columnType: _isp.ColumnType.text,
+          isNullable: false,
+          dartType: 'protocol:TemperatureUnit',
+          columnDefault: '\'celsius\'',
         ),
       ],
       foreignKeys: [],
@@ -169,6 +279,75 @@ class Protocol extends _is.DatabaseSerializationManager {
           columnType: _isp.ColumnType.text,
           isNullable: true,
           dartType: 'String?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'waterGlasses',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '0',
+        ),
+        _isp.ColumnDefinition(
+          name: 'caffeineDrinks',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '0',
+        ),
+        _isp.ColumnDefinition(
+          name: 'alcoholDrinks',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '0',
+        ),
+        _isp.ColumnDefinition(
+          name: 'sleepQuality',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'sleepHours',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: true,
+          dartType: 'double?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'bloating',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'protocol:Severity?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'acidReflux',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'protocol:Severity?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'weightKg',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: true,
+          dartType: 'double?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'temperatureC',
+          columnType: _isp.ColumnType.doublePrecision,
+          isNullable: true,
+          dartType: 'double?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'mucus',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'protocol:MucusType?',
+        ),
+        _isp.ColumnDefinition(
+          name: 'love',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'protocol:LoveType?',
         ),
       ],
       foreignKeys: [],
@@ -277,6 +456,66 @@ class Protocol extends _is.DatabaseSerializationManager {
       managed: true,
     ),
     _isp.TableDefinition(
+      name: 'journal_entry',
+      dartName: 'JournalEntry',
+      schema: 'public',
+      module: 'tidal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'date',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'activities',
+          columnType: _isp.ColumnType.json,
+          isNullable: false,
+          dartType: 'List<protocol:SelfCareActivity>',
+        ),
+        _isp.ColumnDefinition(
+          name: 'bestMoment',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'String?',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'journal_entry_user_date_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'date',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
       name: 'medication',
       dartName: 'Medication',
       schema: 'public',
@@ -313,9 +552,83 @@ class Protocol extends _is.DatabaseSerializationManager {
           isNullable: true,
           dartType: 'protocol:MedicationType?',
         ),
+        _isp.ColumnDefinition(
+          name: 'reminderEveryHours',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
       ],
       foreignKeys: [],
       indexes: [],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'medication_reminder',
+      dartName: 'MedicationReminder',
+      schema: 'public',
+      module: 'tidal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'medicationId',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+        ),
+        _isp.ColumnDefinition(
+          name: 'dueAt',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'isDue',
+          columnType: _isp.ColumnType.boolean,
+          isNullable: false,
+          dartType: 'bool',
+          columnDefault: 'false',
+        ),
+      ],
+      foreignKeys: [
+        _isp.ForeignKeyDefinition(
+          constraintName: 'medication_reminder_fk_0',
+          columns: ['medicationId'],
+          referenceTable: 'medication',
+          referenceTableSchema: 'public',
+          referenceColumns: ['id'],
+          onUpdate: _isp.ForeignKeyAction.noAction,
+          onDelete: _isp.ForeignKeyAction.noAction,
+          matchType: null,
+        ),
+      ],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'medication_reminder_medication_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'medicationId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
       managed: true,
     ),
     _isp.TableDefinition(
@@ -476,6 +789,13 @@ class Protocol extends _is.DatabaseSerializationManager {
       }
     }
 
+    if (t == _i6bfb8vz.BowelMovement) {
+      return _i6bfb8vz.BowelMovement.fromJson(data) as T;
+    }
+    if (t == _i0twoea3.MedicationReminderFutureCallMarkDueModel) {
+      return _i0twoea3.MedicationReminderFutureCallMarkDueModel.fromJson(data)
+          as T;
+    }
     if (t == _irypdw9c.CycleSettings) {
       return _irypdw9c.CycleSettings.fromJson(data) as T;
     }
@@ -485,20 +805,50 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _itygu37j.Prediction) {
       return _itygu37j.Prediction.fromJson(data) as T;
     }
+    if (t == _ik5b5xgi.TemperatureUnit) {
+      return _ik5b5xgi.TemperatureUnit.fromJson(data) as T;
+    }
+    if (t == _if2yt2rb.UnitPreferences) {
+      return _if2yt2rb.UnitPreferences.fromJson(data) as T;
+    }
+    if (t == _ibx9ytzf.WeightUnit) {
+      return _ibx9ytzf.WeightUnit.fromJson(data) as T;
+    }
+    if (t == _iofjnpf3.JournalEntry) {
+      return _iofjnpf3.JournalEntry.fromJson(data) as T;
+    }
+    if (t == _idiy7rnf.SelfCareActivity) {
+      return _idiy7rnf.SelfCareActivity.fromJson(data) as T;
+    }
     if (t == _ig2h1g4e.DayLog) {
       return _ig2h1g4e.DayLog.fromJson(data) as T;
+    }
+    if (t == _ivt7cba4.DrinkType) {
+      return _ivt7cba4.DrinkType.fromJson(data) as T;
     }
     if (t == _i6jt696r.FlowLevel) {
       return _i6jt696r.FlowLevel.fromJson(data) as T;
     }
+    if (t == _i7ihs2om.LoveType) {
+      return _i7ihs2om.LoveType.fromJson(data) as T;
+    }
     if (t == _iyv1k8fz.Mood) {
       return _iyv1k8fz.Mood.fromJson(data) as T;
+    }
+    if (t == _i5pmo1d8.MucusType) {
+      return _i5pmo1d8.MucusType.fromJson(data) as T;
+    }
+    if (t == _ish8wihn.Severity) {
+      return _ish8wihn.Severity.fromJson(data) as T;
     }
     if (t == _ijd9wd5s.DoseLog) {
       return _ijd9wd5s.DoseLog.fromJson(data) as T;
     }
     if (t == _ifw90bis.Medication) {
       return _ifw90bis.Medication.fromJson(data) as T;
+    }
+    if (t == _i85kp92q.MedicationReminder) {
+      return _i85kp92q.MedicationReminder.fromJson(data) as T;
     }
     if (t == _i47q3b5q.MedicationType) {
       return _i47q3b5q.MedicationType.fromJson(data) as T;
@@ -527,6 +877,19 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _i2feo9ly.PeriodSpan) {
       return _i2feo9ly.PeriodSpan.fromJson(data) as T;
     }
+    if (t == _is.getType<_i6bfb8vz.BowelMovement?>()) {
+      return (data != null ? _i6bfb8vz.BowelMovement.fromJson(data) : null)
+          as T;
+    }
+    if (t ==
+        _is.getType<_i0twoea3.MedicationReminderFutureCallMarkDueModel?>()) {
+      return (data != null
+              ? _i0twoea3.MedicationReminderFutureCallMarkDueModel.fromJson(
+                  data,
+                )
+              : null)
+          as T;
+    }
     if (t == _is.getType<_irypdw9c.CycleSettings?>()) {
       return (data != null ? _irypdw9c.CycleSettings.fromJson(data) : null)
           as T;
@@ -537,20 +900,54 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_itygu37j.Prediction?>()) {
       return (data != null ? _itygu37j.Prediction.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_ik5b5xgi.TemperatureUnit?>()) {
+      return (data != null ? _ik5b5xgi.TemperatureUnit.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_if2yt2rb.UnitPreferences?>()) {
+      return (data != null ? _if2yt2rb.UnitPreferences.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_ibx9ytzf.WeightUnit?>()) {
+      return (data != null ? _ibx9ytzf.WeightUnit.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_iofjnpf3.JournalEntry?>()) {
+      return (data != null ? _iofjnpf3.JournalEntry.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_idiy7rnf.SelfCareActivity?>()) {
+      return (data != null ? _idiy7rnf.SelfCareActivity.fromJson(data) : null)
+          as T;
+    }
     if (t == _is.getType<_ig2h1g4e.DayLog?>()) {
       return (data != null ? _ig2h1g4e.DayLog.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ivt7cba4.DrinkType?>()) {
+      return (data != null ? _ivt7cba4.DrinkType.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_i6jt696r.FlowLevel?>()) {
       return (data != null ? _i6jt696r.FlowLevel.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_i7ihs2om.LoveType?>()) {
+      return (data != null ? _i7ihs2om.LoveType.fromJson(data) : null) as T;
+    }
     if (t == _is.getType<_iyv1k8fz.Mood?>()) {
       return (data != null ? _iyv1k8fz.Mood.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i5pmo1d8.MucusType?>()) {
+      return (data != null ? _i5pmo1d8.MucusType.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ish8wihn.Severity?>()) {
+      return (data != null ? _ish8wihn.Severity.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_ijd9wd5s.DoseLog?>()) {
       return (data != null ? _ijd9wd5s.DoseLog.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_ifw90bis.Medication?>()) {
       return (data != null ? _ifw90bis.Medication.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i85kp92q.MedicationReminder?>()) {
+      return (data != null ? _i85kp92q.MedicationReminder.fromJson(data) : null)
+          as T;
     }
     if (t == _is.getType<_i47q3b5q.MedicationType?>()) {
       return (data != null ? _i47q3b5q.MedicationType.fromJson(data) : null)
@@ -596,9 +993,27 @@ class Protocol extends _is.DatabaseSerializationManager {
               : null)
           as T;
     }
+    if (t == List<_idiy7rnf.SelfCareActivity>) {
+      return (data as List)
+              .map((e) => deserialize<_idiy7rnf.SelfCareActivity>(e))
+              .toList()
+          as T;
+    }
     if (t == List<_i9r8gfuz.PainLocation>) {
       return (data as List)
               .map((e) => deserialize<_i9r8gfuz.PainLocation>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_ij7z5kq2.BowelMovement>) {
+      return (data as List)
+              .map((e) => deserialize<_ij7z5kq2.BowelMovement>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iq27cpnk.SelfCareActivity>) {
+      return (data as List)
+              .map((e) => deserialize<_iq27cpnk.SelfCareActivity>(e))
               .toList()
           as T;
     }
@@ -623,6 +1038,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == List<_i1bzforx.Medication>) {
       return (data as List)
               .map((e) => deserialize<_i1bzforx.Medication>(e))
+              .toList()
+          as T;
+    }
+    if (t == List<_iuhzinof.MedicationReminder>) {
+      return (data as List)
+              .map((e) => deserialize<_iuhzinof.MedicationReminder>(e))
               .toList()
           as T;
     }
@@ -652,14 +1073,27 @@ class Protocol extends _is.DatabaseSerializationManager {
 
   static String? getClassNameForType(Type type) {
     return switch (type) {
+      _i6bfb8vz.BowelMovement => 'BowelMovement',
+      _i0twoea3.MedicationReminderFutureCallMarkDueModel =>
+        'MedicationReminderFutureCallMarkDueModel',
       _irypdw9c.CycleSettings => 'CycleSettings',
       _itpp364r.CycleSummary => 'CycleSummary',
       _itygu37j.Prediction => 'Prediction',
+      _ik5b5xgi.TemperatureUnit => 'TemperatureUnit',
+      _if2yt2rb.UnitPreferences => 'UnitPreferences',
+      _ibx9ytzf.WeightUnit => 'WeightUnit',
+      _iofjnpf3.JournalEntry => 'JournalEntry',
+      _idiy7rnf.SelfCareActivity => 'SelfCareActivity',
       _ig2h1g4e.DayLog => 'DayLog',
+      _ivt7cba4.DrinkType => 'DrinkType',
       _i6jt696r.FlowLevel => 'FlowLevel',
+      _i7ihs2om.LoveType => 'LoveType',
       _iyv1k8fz.Mood => 'Mood',
+      _i5pmo1d8.MucusType => 'MucusType',
+      _ish8wihn.Severity => 'Severity',
       _ijd9wd5s.DoseLog => 'DoseLog',
       _ifw90bis.Medication => 'Medication',
+      _i85kp92q.MedicationReminder => 'MedicationReminder',
       _i47q3b5q.MedicationType => 'MedicationType',
       _irsb51xy.PainEntry => 'PainEntry',
       _i9r8gfuz.PainLocation => 'PainLocation',
@@ -683,22 +1117,46 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
 
     switch (data) {
+      case _i6bfb8vz.BowelMovement():
+        return 'BowelMovement';
+      case _i0twoea3.MedicationReminderFutureCallMarkDueModel():
+        return 'MedicationReminderFutureCallMarkDueModel';
       case _irypdw9c.CycleSettings():
         return 'CycleSettings';
       case _itpp364r.CycleSummary():
         return 'CycleSummary';
       case _itygu37j.Prediction():
         return 'Prediction';
+      case _ik5b5xgi.TemperatureUnit():
+        return 'TemperatureUnit';
+      case _if2yt2rb.UnitPreferences():
+        return 'UnitPreferences';
+      case _ibx9ytzf.WeightUnit():
+        return 'WeightUnit';
+      case _iofjnpf3.JournalEntry():
+        return 'JournalEntry';
+      case _idiy7rnf.SelfCareActivity():
+        return 'SelfCareActivity';
       case _ig2h1g4e.DayLog():
         return 'DayLog';
+      case _ivt7cba4.DrinkType():
+        return 'DrinkType';
       case _i6jt696r.FlowLevel():
         return 'FlowLevel';
+      case _i7ihs2om.LoveType():
+        return 'LoveType';
       case _iyv1k8fz.Mood():
         return 'Mood';
+      case _i5pmo1d8.MucusType():
+        return 'MucusType';
+      case _ish8wihn.Severity():
+        return 'Severity';
       case _ijd9wd5s.DoseLog():
         return 'DoseLog';
       case _ifw90bis.Medication():
         return 'Medication';
+      case _i85kp92q.MedicationReminder():
+        return 'MedicationReminder';
       case _i47q3b5q.MedicationType():
         return 'MedicationType';
       case _irsb51xy.PainEntry():
@@ -743,6 +1201,14 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName is! String) {
       return super.deserializeByClassName(data);
     }
+    if (dataClassName == 'BowelMovement') {
+      return deserialize<_i6bfb8vz.BowelMovement>(data['data']);
+    }
+    if (dataClassName == 'MedicationReminderFutureCallMarkDueModel') {
+      return deserialize<_i0twoea3.MedicationReminderFutureCallMarkDueModel>(
+        data['data'],
+      );
+    }
     if (dataClassName == 'CycleSettings') {
       return deserialize<_irypdw9c.CycleSettings>(data['data']);
     }
@@ -752,20 +1218,50 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'Prediction') {
       return deserialize<_itygu37j.Prediction>(data['data']);
     }
+    if (dataClassName == 'TemperatureUnit') {
+      return deserialize<_ik5b5xgi.TemperatureUnit>(data['data']);
+    }
+    if (dataClassName == 'UnitPreferences') {
+      return deserialize<_if2yt2rb.UnitPreferences>(data['data']);
+    }
+    if (dataClassName == 'WeightUnit') {
+      return deserialize<_ibx9ytzf.WeightUnit>(data['data']);
+    }
+    if (dataClassName == 'JournalEntry') {
+      return deserialize<_iofjnpf3.JournalEntry>(data['data']);
+    }
+    if (dataClassName == 'SelfCareActivity') {
+      return deserialize<_idiy7rnf.SelfCareActivity>(data['data']);
+    }
     if (dataClassName == 'DayLog') {
       return deserialize<_ig2h1g4e.DayLog>(data['data']);
+    }
+    if (dataClassName == 'DrinkType') {
+      return deserialize<_ivt7cba4.DrinkType>(data['data']);
     }
     if (dataClassName == 'FlowLevel') {
       return deserialize<_i6jt696r.FlowLevel>(data['data']);
     }
+    if (dataClassName == 'LoveType') {
+      return deserialize<_i7ihs2om.LoveType>(data['data']);
+    }
     if (dataClassName == 'Mood') {
       return deserialize<_iyv1k8fz.Mood>(data['data']);
+    }
+    if (dataClassName == 'MucusType') {
+      return deserialize<_i5pmo1d8.MucusType>(data['data']);
+    }
+    if (dataClassName == 'Severity') {
+      return deserialize<_ish8wihn.Severity>(data['data']);
     }
     if (dataClassName == 'DoseLog') {
       return deserialize<_ijd9wd5s.DoseLog>(data['data']);
     }
     if (dataClassName == 'Medication') {
       return deserialize<_ifw90bis.Medication>(data['data']);
+    }
+    if (dataClassName == 'MedicationReminder') {
+      return deserialize<_i85kp92q.MedicationReminder>(data['data']);
     }
     if (dataClassName == 'MedicationType') {
       return deserialize<_i47q3b5q.MedicationType>(data['data']);
@@ -835,14 +1331,20 @@ class Protocol extends _is.DatabaseSerializationManager {
       }
     }
     switch (t) {
+      case _i6bfb8vz.BowelMovement:
+        return _i6bfb8vz.BowelMovement.t;
       case _irypdw9c.CycleSettings:
         return _irypdw9c.CycleSettings.t;
+      case _iofjnpf3.JournalEntry:
+        return _iofjnpf3.JournalEntry.t;
       case _ig2h1g4e.DayLog:
         return _ig2h1g4e.DayLog.t;
       case _ijd9wd5s.DoseLog:
         return _ijd9wd5s.DoseLog.t;
       case _ifw90bis.Medication:
         return _ifw90bis.Medication.t;
+      case _i85kp92q.MedicationReminder:
+        return _i85kp92q.MedicationReminder.t;
       case _irsb51xy.PainEntry:
         return _irsb51xy.PainEntry.t;
       case _imkg8d7f.Period:

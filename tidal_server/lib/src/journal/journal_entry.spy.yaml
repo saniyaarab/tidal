@@ -1,0 +1,19 @@
+### One day of the self-care journal: which activities the user did, and
+### their best moment of the day. At most one per user per date.
+class: JournalEntry
+table: journal_entry
+fields:
+  ### The user this entry belongs to.
+  userId: UuidValue
+  ### The calendar day this entry is for, stored as midnight UTC (the same
+  ### way `DayLog.date` is).
+  date: DateTime
+  ### The self-care activities ticked for the day.
+  activities: List<SelfCareActivity>
+  ### Free text for "Best moment of the day", if the user wrote one.
+  bestMoment: String?
+
+indexes:
+  journal_entry_user_date_idx:
+    fields: userId, date
+    unique: true

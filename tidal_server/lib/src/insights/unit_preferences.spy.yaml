@@ -1,0 +1,5 @@
+### The units the user has chosen in the Weight and Temperature sheets.
+class: UnitPreferences
+fields:
+  weightUnit: WeightUnit
+  temperatureUnit: TemperatureUnit

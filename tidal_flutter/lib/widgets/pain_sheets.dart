@@ -152,6 +152,7 @@ class _MedicationsSheet extends StatefulWidget {
 class _MedicationsSheetState extends State<_MedicationsSheet> {
   List<Medication>? _meds;
   Map<int, DoseLog> _lastDoseByMedicationId = {};
+  Map<int, MedicationReminder> _reminderByMedicationId = {};
   late LogMoment _when = LogMoment.nowOn(widget.date);
   String? _loadError;
   int? _loggingMedicationId;
@@ -166,11 +167,15 @@ class _MedicationsSheetState extends State<_MedicationsSheet> {
     try {
       final meds = await client.pain.myMeds();
       final lastDoses = await client.pain.getLastDosePerMedication();
+      final reminders = await client.pain.getReminders();
       if (!mounted) return;
       setState(() {
         _meds = meds;
         _lastDoseByMedicationId = {
           for (final dose in lastDoses) dose.medicationId: dose,
+        };
+        _reminderByMedicationId = {
+          for (final reminder in reminders) reminder.medicationId: reminder,
         };
       });
     } catch (e) {
@@ -194,6 +199,35 @@ class _MedicationsSheetState extends State<_MedicationsSheet> {
       setState(() => _loggingMedicationId = null);
       showSheetError(context, e);
     }
+  }
+
+  /// The bell on a medication: pick how often to be reminded after a dose.
+  Future<void> _editReminder(Medication medication) async {
+    final hours = await showReminderSheet(
+      context,
+      current: medication.reminderEveryHours,
+    );
+    // The sheet returns -1 when closed without saving.
+    if (hours == -1 || !mounted) return;
+    try {
+      await client.pain.setReminder(medication.id!, hours);
+      await _load();
+    } catch (e) {
+      if (mounted) showSheetError(context, e);
+    }
+  }
+
+  /// "Last taken 2h ago · next in 2h", "… · due now", or "Not taken yet".
+  String _subtitle(Medication med) {
+    final lastDose = _lastDoseByMedicationId[med.id];
+    final reminder = _reminderByMedicationId[med.id];
+    final last = lastDose == null
+        ? 'Not taken yet'
+        : 'Last taken ${formatRelativeTime(lastDose.timestamp)}';
+    if (med.reminderEveryHours == null || reminder == null) return last;
+    return reminder.isDue
+        ? '$last · due now'
+        : '$last · next ${formatTimeUntil(reminder.dueAt)}';
   }
 
   Future<void> _addMedication() async {
@@ -257,22 +291,34 @@ class _MedicationsSheetState extends State<_MedicationsSheet> {
           else
             ...meds.map((med) {
               final logging = _loggingMedicationId == med.id;
-              final lastDose = _lastDoseByMedicationId[med.id];
               return _MedicationTile(
                 medication: med,
-                subtitle: lastDose == null
-                    ? 'Not taken yet'
-                    : 'Last taken ${formatRelativeTime(lastDose.timestamp)}',
-                trailing: logging
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(
-                        Icons.add_circle_outline,
+                subtitle: _subtitle(med),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Reminder',
+                      onPressed: () => _editReminder(med),
+                      icon: Icon(
+                        med.reminderEveryHours == null
+                            ? Icons.notifications_none
+                            : Icons.notifications_active,
                         color: TidalColors.lavender,
                       ),
+                    ),
+                    logging
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(
+                            Icons.add_circle_outline,
+                            color: TidalColors.lavender,
+                          ),
+                  ],
+                ),
                 onTap: _loggingMedicationId == null
                     ? () => _logDose(med)
                     : null,
@@ -369,6 +415,7 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
   final _nameController = TextEditingController();
   final _doseController = TextEditingController();
   MedicationType? _type;
+  int? _reminderEveryHours;
   bool _saving = false;
 
   @override
@@ -389,6 +436,7 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
         _nameController.text.trim(),
         _doseController.text.trim(),
         type: _type,
+        reminderEveryHours: _reminderEveryHours,
       );
       if (!mounted) return;
       Navigator.pop(context, medication);
@@ -450,7 +498,88 @@ class _AddMedicationSheetState extends State<_AddMedicationSheet> {
               );
             }).toList(),
           ),
+          const SizedBox(height: 16),
+          Text('Remind me', style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 8),
+          _ReminderChips(
+            selected: _reminderEveryHours,
+            onPick: (hours) => setState(() => _reminderEveryHours = hours),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+/// How often a reminder can repeat after each dose (null = off).
+const _reminderOptions = <int?>[null, 4, 6, 8, 12, 24];
+
+/// "Off", "Every 4h", "Every 6h"… chips.
+class _ReminderChips extends StatelessWidget {
+  final int? selected;
+  final ValueChanged<int?> onPick;
+  const _ReminderChips({required this.selected, required this.onPick});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final hours in _reminderOptions)
+          OptionChip(
+            label: hours == null ? 'Off' : 'Every ${hours}h',
+            selected: hours == selected,
+            selectedBackground: TidalColors.lavenderBand,
+            selectedForeground: TidalColors.lavender,
+            onTap: () => onPick(hours),
+          ),
+      ],
+    );
+  }
+}
+
+/// Opens the "Reminder" sheet for one medication. Returns the chosen hours
+/// (null = off), or -1 if the sheet was closed without saving.
+Future<int?> showReminderSheet(
+  BuildContext context, {
+  required int? current,
+}) async {
+  final result = await showTidalSheet<Object?>(
+    context,
+    _ReminderSheet(current: current),
+  );
+  // Closing with X (false) or by swiping (null) isn't a choice.
+  return result is _ReminderChoice ? result.hours : -1;
+}
+
+/// What the Reminder sheet's Save returns, so "Off" (null hours) can be
+/// told apart from closing the sheet.
+class _ReminderChoice {
+  final int? hours;
+  const _ReminderChoice(this.hours);
+}
+
+class _ReminderSheet extends StatefulWidget {
+  final int? current;
+  const _ReminderSheet({required this.current});
+
+  @override
+  State<_ReminderSheet> createState() => _ReminderSheetState();
+}
+
+class _ReminderSheetState extends State<_ReminderSheet> {
+  late int? _hours = widget.current;
+
+  @override
+  Widget build(BuildContext context) {
+    return SheetScaffold(
+      title: 'Remind me',
+      saving: false,
+      onSave: () => Navigator.pop(context, _ReminderChoice(_hours)),
+      child: _ReminderChips(
+        selected: _hours,
+        onPick: (hours) => setState(() => _hours = hours),
       ),
     );
   }
