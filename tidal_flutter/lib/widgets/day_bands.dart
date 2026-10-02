@@ -5,23 +5,19 @@ import '../date_format.dart';
 import '../log_labels.dart';
 import '../theme.dart';
 
-/// The pastel bands showing what's logged for a day: pain entries, doses,
-/// mood, and note. Pain and dose bands are ordered by time; mood and note
-/// (at most one each per day) always come last. Shows [emptyMessage] when
-/// nothing is logged.
+/// The pastel bands showing what's logged for a day: pain entries, mood,
+/// and note. Pain bands are ordered by time; mood and note (at most one each
+/// per day) always come last. Medications aren't shown here — they're in the
+/// Medications sheet. Shows [emptyMessage] when nothing is logged.
 class DayBands extends StatelessWidget {
   final DayLog? dayLog;
   final List<PainEntry> painEntries;
-  final List<DoseLog> doseLogs;
-  final Map<int, Medication> medsById;
   final String emptyMessage;
 
   const DayBands({
     super.key,
     required this.dayLog,
     required this.painEntries,
-    required this.doseLogs,
-    required this.medsById,
     this.emptyMessage =
         'Nothing logged yet today. Tap + to add your flow, mood, or a note.',
   });
@@ -32,35 +28,17 @@ class DayBands extends StatelessWidget {
     final note = dayLog?.note;
     final hasNote = note != null && note.isNotEmpty;
 
-    final timedBands = <(DateTime, Widget)>[
-      for (final entry in painEntries)
-        (
-          entry.timestamp,
-          Band(
-            color: TidalColors.roseBand,
-            iconColor: TidalColors.rose,
-            icon: Icons.bolt,
-            text: entry.locations.isEmpty
-                ? 'Pain ${entry.level}/10'
-                : 'Pain ${entry.level}/10 · ${formatPainLocations(entry.locations)}',
-            trailing: formatTimeOfDay(entry.timestamp),
-          ),
-        ),
-      for (final dose in doseLogs)
-        (
-          dose.timestamp,
-          Band(
-            color: TidalColors.lavenderBand,
-            iconColor: TidalColors.lavender,
-            icon: Icons.medication,
-            text: _doseText(medsById[dose.medicationId]?.name, dose),
-            trailing: formatTimeOfDay(dose.timestamp),
-          ),
-        ),
-    ]..sort((a, b) => a.$1.compareTo(b.$1));
-
     final bands = <Widget>[
-      for (final (_, band) in timedBands) band,
+      for (final entry in painEntries)
+        Band(
+          color: TidalColors.roseBand,
+          iconColor: TidalColors.rose,
+          icon: Icons.bolt,
+          text: entry.locations.isEmpty
+              ? 'Pain ${entry.level}/10'
+              : 'Pain ${entry.level}/10 · ${formatPainLocations(entry.locations)}',
+          trailing: formatRelativeTime(entry.timestamp),
+        ),
       if (mood != null)
         Band(
           color: TidalColors.yellowBand,
@@ -102,15 +80,6 @@ class DayBands extends StatelessWidget {
         ],
       ],
     );
-  }
-
-  /// "Medication dose" normally, plus a relief line once the check-in for
-  /// that dose has been answered.
-  String _doseText(String? medicationName, DoseLog dose) {
-    final text = '${medicationName ?? 'Medication'} ${dose.dose}';
-    final painAfter = dose.painAfter;
-    if (painAfter == null) return text;
-    return '$text\nDid it help? ${dose.painBefore ?? '–'} → $painAfter';
   }
 }
 

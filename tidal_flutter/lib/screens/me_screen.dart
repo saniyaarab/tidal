@@ -4,8 +4,10 @@ import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 import '../client.dart';
 import '../theme.dart';
 
-/// The "Me" tab. For now just shows who's signed in and a way to sign out.
-/// Privacy controls (like "delete all my data") are added in a later step.
+/// The "Me" tab. Shows who's signed in, their age (from the birth year
+/// asked at sign-up), and a way to sign out. Cycle and period length are only asked at sign-up; their learned
+/// averages are on Insights. Privacy controls (like "delete all my data") are added in a later
+/// step.
 class MeScreen extends StatefulWidget {
   const MeScreen({super.key});
 
@@ -15,17 +17,32 @@ class MeScreen extends StatefulWidget {
 
 class _MeScreenState extends State<MeScreen> {
   String? _email;
+  int? _age;
+  // Separate from _age being null, which also means "not set" — this just
+  // tracks whether the initial load has finished.
+  bool _ageLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _loadAge();
   }
 
   Future<void> _loadProfile() async {
     final profile = await client.modules.serverpod_auth_core.userProfileInfo
         .get();
     if (mounted) setState(() => _email = profile.email);
+  }
+
+  Future<void> _loadAge() async {
+    final age = await client.insight.getAge();
+    if (mounted) {
+      setState(() {
+        _age = age;
+        _ageLoaded = true;
+      });
+    }
   }
 
   @override
@@ -44,6 +61,17 @@ class _MeScreenState extends State<MeScreen> {
             const SizedBox(height: 4),
             Text(_email ?? '…', style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 32),
+            Text('Profile', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            // Read-only: birth year is asked once, at sign-up, and this shows
+            // the age computed from it.
+            _SettingsRow(
+              label: 'Age',
+              value: !_ageLoaded
+                  ? null
+                  : (_age == null ? 'Not set' : '$_age yrs'),
+            ),
+            const SizedBox(height: 32),
             OutlinedButton(
               onPressed: () => client.auth.signOutDevice(),
               style: OutlinedButton.styleFrom(
@@ -58,6 +86,34 @@ class _MeScreenState extends State<MeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// One read-only settings row: a label on the left, the value on the right.
+class _SettingsRow extends StatelessWidget {
+  final String label;
+  final String? value;
+
+  const _SettingsRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: TidalColors.card,
+        borderRadius: BorderRadius.circular(TidalRadius.large),
+        border: Border.all(color: TidalColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
+          ),
+          Text(value ?? '…', style: Theme.of(context).textTheme.bodyMedium),
+        ],
       ),
     );
   }

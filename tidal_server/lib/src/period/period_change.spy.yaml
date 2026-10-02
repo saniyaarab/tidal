@@ -1,0 +1,14 @@
+### The result of a long-press, so the app can show what happened
+### ("Period started · assumed 5 days") and offer Undo. Pass it back to
+### `PeriodEndpoint.undo` to reverse the change.
+class: PeriodChange
+fields:
+  ### What the long-press did.
+  kind: PeriodChangeKind
+  ### Length in days of the affected period after the change (0 when it
+  ### was removed).
+  lengthDays: int
+  ### The period as it was before the change. Null when a new one started.
+  before: Period?
+  ### The period as it is after the change. Null when it was removed.
+  after: Period?

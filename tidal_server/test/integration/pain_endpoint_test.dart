@@ -1,6 +1,5 @@
 import 'package:test/test.dart';
 import 'package:tidal_server/src/generated/protocol.dart';
-import 'package:tidal_server/src/pain/check_in_future_call.dart';
 
 import 'test_tools/serverpod_test_tools.dart';
 
@@ -22,12 +21,14 @@ void main() {
       ),
     );
 
-    final today = DateTime.now().toUtc();
+    final now = DateTime.now().toUtc();
+    final today = DateTime.utc(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
 
     group('when logging a pain level outside 0-10', () {
       test('then logPain throws', () async {
         await expectLater(
-          endpoints.pain.logPain(asUserA, 11, []),
+          endpoints.pain.logPain(asUserA, 11, [], today, now),
           throwsArgumentError,
         );
       });
@@ -35,10 +36,13 @@ void main() {
 
     group('when logging pain with a level and locations', () {
       test('then it is saved and shows up in getPainRange', () async {
-        final saved = await endpoints.pain.logPain(asUserA, 7, [
-          PainLocation.cramps,
-          PainLocation.lowerBack,
-        ]);
+        final saved = await endpoints.pain.logPain(
+          asUserA,
+          7,
+          [PainLocation.cramps, PainLocation.lowerBack],
+          today,
+          now,
+        );
         expect(saved.level, 7);
         expect(saved.locations, [PainLocation.cramps, PainLocation.lowerBack]);
 
@@ -52,12 +56,54 @@ void main() {
       });
     });
 
+    group('when logging pain for a past day and time', () {
+      test('then it is saved on that day with that time', () async {
+        final lastNight = yesterday.add(const Duration(hours: 21));
+
+        final saved = await endpoints.pain.logPain(
+          asUserA,
+          6,
+          [],
+          yesterday,
+          lastNight,
+        );
+
+        expect(saved.date, yesterday);
+        expect(saved.timestamp, lastNight);
+        // The moment it was saved is recorded separately.
+        expect(saved.loggedAt.isAfter(lastNight), isTrue);
+        expect(
+          await endpoints.pain.getPainRange(asUserA, yesterday, yesterday),
+          hasLength(1),
+        );
+        expect(
+          await endpoints.pain.getPainRange(asUserA, today, today),
+          isEmpty,
+        );
+      });
+    });
+
+    group('when logging pain for a future time', () {
+      test('then logPain throws', () async {
+        await expectLater(
+          endpoints.pain.logPain(
+            asUserA,
+            5,
+            [],
+            today,
+            now.add(const Duration(hours: 2)),
+          ),
+          throwsArgumentError,
+        );
+      });
+    });
+
     group('when two users have logged pain on the same day', () {
       test(
         'then getPainRange only returns the signed-in user\'s entries',
         () async {
-          await endpoints.pain.logPain(asUserA, 5, []);
-          await endpoints.pain.logPain(asUserB, 9, []);
+          await endpoints.pain.logPain(asUserA, 5, [], today, now);
+          await endpoints.pain.logPain(asUserB, 9, [], today, now);
 
           final result = await endpoints.pain.getPainRange(
             asUserA,
@@ -78,6 +124,19 @@ void main() {
       });
     });
 
+    group('when adding a medication with a type', () {
+      test('then the type is saved', () async {
+        final medication = await endpoints.pain.addMedication(
+          asUserA,
+          'Yaz',
+          '1 pill',
+          type: MedicationType.birthControl,
+        );
+
+        expect(medication.type, MedicationType.birthControl);
+      });
+    });
+
     group('when adding a medication and logging a dose', () {
       test(
         'then the dose copies the usual dose and shows up in range',
@@ -91,11 +150,11 @@ void main() {
           final dose = await endpoints.pain.logDose(
             asUserA,
             medication.id!,
-            painBefore: 7,
+            today,
+            now,
           );
 
           expect(dose.dose, '400 mg');
-          expect(dose.painBefore, 7);
 
           final range = await endpoints.pain.getDoseRange(
             asUserA,
@@ -117,154 +176,57 @@ void main() {
         );
 
         await expectLater(
-          endpoints.pain.logDose(asUserB, medication.id!),
+          endpoints.pain.logDose(asUserB, medication.id!, today, now),
           throwsArgumentError,
         );
       });
     });
 
-    group('when a user has logged two doses over time', () {
-      test('then getLastDose returns the most recent one', () async {
-        final medication = await endpoints.pain.addMedication(
-          asUserA,
-          'Ibuprofen',
-          '400 mg',
-        );
-
-        await endpoints.pain.logDose(asUserA, medication.id!);
-        final second = await endpoints.pain.logDose(asUserA, medication.id!);
-
-        final last = await endpoints.pain.getLastDose(asUserA);
-        expect(last, isNotNull);
-        expect(last!.id, second.id);
-      });
-    });
-
-    group('when a user has never logged a dose', () {
-      test('then getLastDose returns null', () async {
-        final last = await endpoints.pain.getLastDose(asUserB);
-        expect(last, isNull);
-      });
-    });
-
-    group('when a dose has just been logged', () {
-      test('then its check-in is not pending yet', () async {
-        final medication = await endpoints.pain.addMedication(
-          asUserA,
-          'Ibuprofen',
-          '400 mg',
-        );
-        await endpoints.pain.logDose(asUserA, medication.id!);
-
-        expect(await endpoints.pain.getPendingCheckIn(asUserA), isNull);
-      });
-    });
-
-    group('when CheckInFutureCall runs for a dose', () {
-      test('then getPendingCheckIn returns that dose', () async {
-        final medication = await endpoints.pain.addMedication(
-          asUserA,
-          'Ibuprofen',
-          '400 mg',
-        );
-        final dose = await endpoints.pain.logDose(
-          asUserA,
-          medication.id!,
-          painBefore: 7,
-        );
-
-        await CheckInFutureCall().check(asUserA.build(), dose.id!);
-
-        final pending = await endpoints.pain.getPendingCheckIn(asUserA);
-        expect(pending, isNotNull);
-        expect(pending!.id, dose.id);
-      });
-
-      test('then it leaves an already-answered dose alone', () async {
-        final medication = await endpoints.pain.addMedication(
-          asUserA,
-          'Ibuprofen',
-          '400 mg',
-        );
-        final dose = await endpoints.pain.logDose(asUserA, medication.id!);
-        await endpoints.pain.recordRelief(asUserA, dose.id!, 2);
-
-        await CheckInFutureCall().check(asUserA.build(), dose.id!);
-
-        expect(await endpoints.pain.getPendingCheckIn(asUserA), isNull);
-      });
-    });
-
-    group('when answering a pending check-in', () {
+    group('when a user has taken two medications several times', () {
       test(
-        'then recordRelief saves painAfter and clears the pending flag',
+        'then getLastDosePerMedication returns the latest of each',
         () async {
-          final medication = await endpoints.pain.addMedication(
+          final ibuprofen = await endpoints.pain.addMedication(
             asUserA,
             'Ibuprofen',
             '400 mg',
           );
-          final dose = await endpoints.pain.logDose(
+          final vitaminD = await endpoints.pain.addMedication(
             asUserA,
-            medication.id!,
-            painBefore: 7,
+            'Vitamin D',
+            '1000 IU',
+            type: MedicationType.vitamin,
           );
-          await CheckInFutureCall().check(asUserA.build(), dose.id!);
-
-          final updated = await endpoints.pain.recordRelief(
+          final earlier = now.subtract(const Duration(hours: 5));
+          await endpoints.pain.logDose(asUserA, ibuprofen.id!, today, earlier);
+          final latestIbuprofen = await endpoints.pain.logDose(
             asUserA,
-            dose.id!,
-            3,
+            ibuprofen.id!,
+            today,
+            now,
+          );
+          final latestVitamin = await endpoints.pain.logDose(
+            asUserA,
+            vitaminD.id!,
+            today,
+            earlier,
           );
 
-          expect(updated.painAfter, 3);
-          expect(updated.checkInDue, isFalse);
-          expect(await endpoints.pain.getPendingCheckIn(asUserA), isNull);
+          final latest = await endpoints.pain.getLastDosePerMedication(
+            asUserA,
+          );
+
+          expect(
+            {for (final dose in latest) dose.id},
+            {latestIbuprofen.id, latestVitamin.id},
+          );
         },
       );
-
-      test('then an out-of-range value throws', () async {
-        final medication = await endpoints.pain.addMedication(
-          asUserA,
-          'Ibuprofen',
-          '400 mg',
-        );
-        final dose = await endpoints.pain.logDose(asUserA, medication.id!);
-
-        await expectLater(
-          endpoints.pain.recordRelief(asUserA, dose.id!, 11),
-          throwsArgumentError,
-        );
-      });
-
-      test('then another user cannot answer it', () async {
-        final medication = await endpoints.pain.addMedication(
-          asUserA,
-          'Ibuprofen',
-          '400 mg',
-        );
-        final dose = await endpoints.pain.logDose(asUserA, medication.id!);
-
-        await expectLater(
-          endpoints.pain.recordRelief(asUserB, dose.id!, 3),
-          throwsArgumentError,
-        );
-      });
     });
 
-    group('when snoozing a pending check-in', () {
-      test('then it is no longer pending right away', () async {
-        final medication = await endpoints.pain.addMedication(
-          asUserA,
-          'Ibuprofen',
-          '400 mg',
-        );
-        final dose = await endpoints.pain.logDose(asUserA, medication.id!);
-        await CheckInFutureCall().check(asUserA.build(), dose.id!);
-
-        await endpoints.pain.snoozeCheckIn(asUserA, dose.id!);
-
-        expect(await endpoints.pain.getPendingCheckIn(asUserA), isNull);
+    group('when a user has never logged a dose', () {
+      test('then getLastDosePerMedication is empty', () async {
+        expect(await endpoints.pain.getLastDosePerMedication(asUserB), isEmpty);
       });
     });
   });

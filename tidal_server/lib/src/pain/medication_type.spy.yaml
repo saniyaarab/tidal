@@ -1,0 +1,9 @@
+### What kind of medication a `Medication` is. Optional; used to show an
+### icon now, and for insights and reminders later.
+enum: MedicationType
+serialized: byName
+values:
+  - painkiller
+  - birthControl
+  - vitamin
+  - other

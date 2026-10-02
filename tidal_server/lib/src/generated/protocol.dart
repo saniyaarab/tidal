@@ -23,22 +23,42 @@ import 'package:tidal_server/src/generated/pain/medication.dart' as _i1bzforx;
 import 'package:tidal_server/src/generated/pain/pain_entry.dart' as _i0ft3vou;
 import 'package:tidal_server/src/generated/pain/pain_location.dart'
     as _iv8cvxsn;
-import 'future_calls_generated_models/check_in_future_call_check_model.dart'
-    as _iy7j8eve;
+import 'package:tidal_server/src/generated/period/period_span.dart'
+    as _iiatq07z;
+import 'insights/cycle_settings.dart' as _irypdw9c;
+import 'insights/cycle_summary.dart' as _itpp364r;
+import 'insights/prediction.dart' as _itygu37j;
 import 'log/day_log.dart' as _ig2h1g4e;
 import 'log/flow_level.dart' as _i6jt696r;
 import 'log/mood.dart' as _iyv1k8fz;
 import 'pain/dose_log.dart' as _ijd9wd5s;
 import 'pain/medication.dart' as _ifw90bis;
+import 'pain/medication_type.dart' as _i47q3b5q;
 import 'pain/pain_entry.dart' as _irsb51xy;
 import 'pain/pain_location.dart' as _i9r8gfuz;
+import 'period/cycle_length.dart' as _i850u96d;
+import 'period/period.dart' as _imkg8d7f;
+import 'period/period_change.dart' as _i1jla7k1;
+import 'period/period_change_kind.dart' as _ik4fqf6t;
+import 'period/period_length_info.dart' as _iq6fzgrr;
+import 'period/period_span.dart' as _i2feo9ly;
+export 'insights/cycle_settings.dart';
+export 'insights/cycle_summary.dart';
+export 'insights/prediction.dart';
 export 'log/day_log.dart';
 export 'log/flow_level.dart';
 export 'log/mood.dart';
 export 'pain/dose_log.dart';
 export 'pain/medication.dart';
+export 'pain/medication_type.dart';
 export 'pain/pain_entry.dart';
 export 'pain/pain_location.dart';
+export 'period/cycle_length.dart';
+export 'period/period.dart';
+export 'period/period_change.dart';
+export 'period/period_change_kind.dart';
+export 'period/period_length_info.dart';
+export 'period/period_span.dart';
 
 class Protocol extends _is.DatabaseSerializationManager {
   Protocol._();
@@ -48,6 +68,64 @@ class Protocol extends _is.DatabaseSerializationManager {
   static final Protocol _instance = Protocol._().._registerHostProtocols();
 
   static List<_isp.TableDefinition> get targetTableDefinitions => [
+    _isp.TableDefinition(
+      name: 'cycle_settings',
+      dartName: 'CycleSettings',
+      schema: 'public',
+      module: 'tidal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'typicalCycleDays',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '28',
+        ),
+        _isp.ColumnDefinition(
+          name: 'typicalPeriodDays',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int',
+          columnDefault: '5',
+        ),
+        _isp.ColumnDefinition(
+          name: 'birthYear',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: true,
+          dartType: 'int?',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'cycle_settings_user_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
     _isp.TableDefinition(
       name: 'day_log',
       dartName: 'DayLog',
@@ -141,7 +219,19 @@ class Protocol extends _is.DatabaseSerializationManager {
           dartType: 'int',
         ),
         _isp.ColumnDefinition(
+          name: 'date',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
           name: 'timestamp',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'loggedAt',
           columnType: _isp.ColumnType.timestampWithoutTimeZone,
           isNullable: false,
           dartType: 'DateTime',
@@ -151,25 +241,6 @@ class Protocol extends _is.DatabaseSerializationManager {
           columnType: _isp.ColumnType.text,
           isNullable: false,
           dartType: 'String',
-        ),
-        _isp.ColumnDefinition(
-          name: 'painBefore',
-          columnType: _isp.ColumnType.bigint,
-          isNullable: true,
-          dartType: 'int?',
-        ),
-        _isp.ColumnDefinition(
-          name: 'painAfter',
-          columnType: _isp.ColumnType.bigint,
-          isNullable: true,
-          dartType: 'int?',
-        ),
-        _isp.ColumnDefinition(
-          name: 'checkInDue',
-          columnType: _isp.ColumnType.boolean,
-          isNullable: false,
-          dartType: 'bool',
-          columnDefault: 'false',
         ),
       ],
       foreignKeys: [
@@ -184,7 +255,25 @@ class Protocol extends _is.DatabaseSerializationManager {
           matchType: null,
         ),
       ],
-      indexes: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'dose_log_user_date_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'date',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+      ],
       managed: true,
     ),
     _isp.TableDefinition(
@@ -218,6 +307,12 @@ class Protocol extends _is.DatabaseSerializationManager {
           isNullable: false,
           dartType: 'String',
         ),
+        _isp.ColumnDefinition(
+          name: 'type',
+          columnType: _isp.ColumnType.text,
+          isNullable: true,
+          dartType: 'protocol:MedicationType?',
+        ),
       ],
       foreignKeys: [],
       indexes: [],
@@ -243,7 +338,19 @@ class Protocol extends _is.DatabaseSerializationManager {
           dartType: 'UuidValue',
         ),
         _isp.ColumnDefinition(
+          name: 'date',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
           name: 'timestamp',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'loggedAt',
           columnType: _isp.ColumnType.timestampWithoutTimeZone,
           isNullable: false,
           dartType: 'DateTime',
@@ -262,7 +369,79 @@ class Protocol extends _is.DatabaseSerializationManager {
         ),
       ],
       foreignKeys: [],
-      indexes: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'pain_entry_user_date_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'date',
+            ),
+          ],
+          type: 'btree',
+          isUnique: false,
+          isPrimary: false,
+        ),
+      ],
+      managed: true,
+    ),
+    _isp.TableDefinition(
+      name: 'period',
+      dartName: 'Period',
+      schema: 'public',
+      module: 'tidal',
+      columns: [
+        _isp.ColumnDefinition(
+          name: 'id',
+          columnType: _isp.ColumnType.bigint,
+          isNullable: false,
+          dartType: 'int?',
+          columnDefault: 'serial',
+        ),
+        _isp.ColumnDefinition(
+          name: 'userId',
+          columnType: _isp.ColumnType.uuid,
+          isNullable: false,
+          dartType: 'UuidValue',
+        ),
+        _isp.ColumnDefinition(
+          name: 'startDate',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: false,
+          dartType: 'DateTime',
+        ),
+        _isp.ColumnDefinition(
+          name: 'endDate',
+          columnType: _isp.ColumnType.timestampWithoutTimeZone,
+          isNullable: true,
+          dartType: 'DateTime?',
+        ),
+      ],
+      foreignKeys: [],
+      indexes: [
+        _isp.IndexDefinition(
+          indexName: 'period_user_start_idx',
+          tableSpace: null,
+          elements: [
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'userId',
+            ),
+            _isp.IndexElementDefinition(
+              type: _isp.IndexElementDefinitionType.column,
+              definition: 'startDate',
+            ),
+          ],
+          type: 'btree',
+          isUnique: true,
+          isPrimary: false,
+        ),
+      ],
       managed: true,
     ),
     ..._iais.Protocol.targetTableDefinitions,
@@ -297,8 +476,14 @@ class Protocol extends _is.DatabaseSerializationManager {
       }
     }
 
-    if (t == _iy7j8eve.CheckInFutureCallCheckModel) {
-      return _iy7j8eve.CheckInFutureCallCheckModel.fromJson(data) as T;
+    if (t == _irypdw9c.CycleSettings) {
+      return _irypdw9c.CycleSettings.fromJson(data) as T;
+    }
+    if (t == _itpp364r.CycleSummary) {
+      return _itpp364r.CycleSummary.fromJson(data) as T;
+    }
+    if (t == _itygu37j.Prediction) {
+      return _itygu37j.Prediction.fromJson(data) as T;
     }
     if (t == _ig2h1g4e.DayLog) {
       return _ig2h1g4e.DayLog.fromJson(data) as T;
@@ -315,17 +500,42 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ifw90bis.Medication) {
       return _ifw90bis.Medication.fromJson(data) as T;
     }
+    if (t == _i47q3b5q.MedicationType) {
+      return _i47q3b5q.MedicationType.fromJson(data) as T;
+    }
     if (t == _irsb51xy.PainEntry) {
       return _irsb51xy.PainEntry.fromJson(data) as T;
     }
     if (t == _i9r8gfuz.PainLocation) {
       return _i9r8gfuz.PainLocation.fromJson(data) as T;
     }
-    if (t == _is.getType<_iy7j8eve.CheckInFutureCallCheckModel?>()) {
-      return (data != null
-              ? _iy7j8eve.CheckInFutureCallCheckModel.fromJson(data)
-              : null)
+    if (t == _i850u96d.CycleLength) {
+      return _i850u96d.CycleLength.fromJson(data) as T;
+    }
+    if (t == _imkg8d7f.Period) {
+      return _imkg8d7f.Period.fromJson(data) as T;
+    }
+    if (t == _i1jla7k1.PeriodChange) {
+      return _i1jla7k1.PeriodChange.fromJson(data) as T;
+    }
+    if (t == _ik4fqf6t.PeriodChangeKind) {
+      return _ik4fqf6t.PeriodChangeKind.fromJson(data) as T;
+    }
+    if (t == _iq6fzgrr.PeriodLengthInfo) {
+      return _iq6fzgrr.PeriodLengthInfo.fromJson(data) as T;
+    }
+    if (t == _i2feo9ly.PeriodSpan) {
+      return _i2feo9ly.PeriodSpan.fromJson(data) as T;
+    }
+    if (t == _is.getType<_irypdw9c.CycleSettings?>()) {
+      return (data != null ? _irypdw9c.CycleSettings.fromJson(data) : null)
           as T;
+    }
+    if (t == _is.getType<_itpp364r.CycleSummary?>()) {
+      return (data != null ? _itpp364r.CycleSummary.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_itygu37j.Prediction?>()) {
+      return (data != null ? _itygu37j.Prediction.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_ig2h1g4e.DayLog?>()) {
       return (data != null ? _ig2h1g4e.DayLog.fromJson(data) : null) as T;
@@ -342,11 +552,49 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _is.getType<_ifw90bis.Medication?>()) {
       return (data != null ? _ifw90bis.Medication.fromJson(data) : null) as T;
     }
+    if (t == _is.getType<_i47q3b5q.MedicationType?>()) {
+      return (data != null ? _i47q3b5q.MedicationType.fromJson(data) : null)
+          as T;
+    }
     if (t == _is.getType<_irsb51xy.PainEntry?>()) {
       return (data != null ? _irsb51xy.PainEntry.fromJson(data) : null) as T;
     }
     if (t == _is.getType<_i9r8gfuz.PainLocation?>()) {
       return (data != null ? _i9r8gfuz.PainLocation.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i850u96d.CycleLength?>()) {
+      return (data != null ? _i850u96d.CycleLength.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_imkg8d7f.Period?>()) {
+      return (data != null ? _imkg8d7f.Period.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_i1jla7k1.PeriodChange?>()) {
+      return (data != null ? _i1jla7k1.PeriodChange.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ik4fqf6t.PeriodChangeKind?>()) {
+      return (data != null ? _ik4fqf6t.PeriodChangeKind.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_iq6fzgrr.PeriodLengthInfo?>()) {
+      return (data != null ? _iq6fzgrr.PeriodLengthInfo.fromJson(data) : null)
+          as T;
+    }
+    if (t == _is.getType<_i2feo9ly.PeriodSpan?>()) {
+      return (data != null ? _i2feo9ly.PeriodSpan.fromJson(data) : null) as T;
+    }
+    if (t == List<_i850u96d.CycleLength>) {
+      return (data as List)
+              .map((e) => deserialize<_i850u96d.CycleLength>(e))
+              .toList()
+          as T;
+    }
+    if (t == _is.getType<List<_i850u96d.CycleLength>?>()) {
+      return (data != null
+              ? (data as List)
+                    .map((e) => deserialize<_i850u96d.CycleLength>(e))
+                    .toList()
+              : null)
+          as T;
     }
     if (t == List<_i9r8gfuz.PainLocation>) {
       return (data as List)
@@ -384,6 +632,12 @@ class Protocol extends _is.DatabaseSerializationManager {
               .toList()
           as T;
     }
+    if (t == List<_iiatq07z.PeriodSpan>) {
+      return (data as List)
+              .map((e) => deserialize<_iiatq07z.PeriodSpan>(e))
+              .toList()
+          as T;
+    }
     try {
       return _iais.Protocol().deserialize<T>(data, t);
     } on _is.DeserializationTypeNotFoundException catch (_) {}
@@ -398,14 +652,23 @@ class Protocol extends _is.DatabaseSerializationManager {
 
   static String? getClassNameForType(Type type) {
     return switch (type) {
-      _iy7j8eve.CheckInFutureCallCheckModel => 'CheckInFutureCallCheckModel',
+      _irypdw9c.CycleSettings => 'CycleSettings',
+      _itpp364r.CycleSummary => 'CycleSummary',
+      _itygu37j.Prediction => 'Prediction',
       _ig2h1g4e.DayLog => 'DayLog',
       _i6jt696r.FlowLevel => 'FlowLevel',
       _iyv1k8fz.Mood => 'Mood',
       _ijd9wd5s.DoseLog => 'DoseLog',
       _ifw90bis.Medication => 'Medication',
+      _i47q3b5q.MedicationType => 'MedicationType',
       _irsb51xy.PainEntry => 'PainEntry',
       _i9r8gfuz.PainLocation => 'PainLocation',
+      _i850u96d.CycleLength => 'CycleLength',
+      _imkg8d7f.Period => 'Period',
+      _i1jla7k1.PeriodChange => 'PeriodChange',
+      _ik4fqf6t.PeriodChangeKind => 'PeriodChangeKind',
+      _iq6fzgrr.PeriodLengthInfo => 'PeriodLengthInfo',
+      _i2feo9ly.PeriodSpan => 'PeriodSpan',
       _ => null,
     };
   }
@@ -420,8 +683,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
 
     switch (data) {
-      case _iy7j8eve.CheckInFutureCallCheckModel():
-        return 'CheckInFutureCallCheckModel';
+      case _irypdw9c.CycleSettings():
+        return 'CycleSettings';
+      case _itpp364r.CycleSummary():
+        return 'CycleSummary';
+      case _itygu37j.Prediction():
+        return 'Prediction';
       case _ig2h1g4e.DayLog():
         return 'DayLog';
       case _i6jt696r.FlowLevel():
@@ -432,10 +699,24 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'DoseLog';
       case _ifw90bis.Medication():
         return 'Medication';
+      case _i47q3b5q.MedicationType():
+        return 'MedicationType';
       case _irsb51xy.PainEntry():
         return 'PainEntry';
       case _i9r8gfuz.PainLocation():
         return 'PainLocation';
+      case _i850u96d.CycleLength():
+        return 'CycleLength';
+      case _imkg8d7f.Period():
+        return 'Period';
+      case _i1jla7k1.PeriodChange():
+        return 'PeriodChange';
+      case _ik4fqf6t.PeriodChangeKind():
+        return 'PeriodChangeKind';
+      case _iq6fzgrr.PeriodLengthInfo():
+        return 'PeriodLengthInfo';
+      case _i2feo9ly.PeriodSpan():
+        return 'PeriodSpan';
     }
     className = _iais.Protocol().getClassNameForObject(data);
     if (className != null) {
@@ -462,8 +743,14 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName is! String) {
       return super.deserializeByClassName(data);
     }
-    if (dataClassName == 'CheckInFutureCallCheckModel') {
-      return deserialize<_iy7j8eve.CheckInFutureCallCheckModel>(data['data']);
+    if (dataClassName == 'CycleSettings') {
+      return deserialize<_irypdw9c.CycleSettings>(data['data']);
+    }
+    if (dataClassName == 'CycleSummary') {
+      return deserialize<_itpp364r.CycleSummary>(data['data']);
+    }
+    if (dataClassName == 'Prediction') {
+      return deserialize<_itygu37j.Prediction>(data['data']);
     }
     if (dataClassName == 'DayLog') {
       return deserialize<_ig2h1g4e.DayLog>(data['data']);
@@ -480,11 +767,32 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (dataClassName == 'Medication') {
       return deserialize<_ifw90bis.Medication>(data['data']);
     }
+    if (dataClassName == 'MedicationType') {
+      return deserialize<_i47q3b5q.MedicationType>(data['data']);
+    }
     if (dataClassName == 'PainEntry') {
       return deserialize<_irsb51xy.PainEntry>(data['data']);
     }
     if (dataClassName == 'PainLocation') {
       return deserialize<_i9r8gfuz.PainLocation>(data['data']);
+    }
+    if (dataClassName == 'CycleLength') {
+      return deserialize<_i850u96d.CycleLength>(data['data']);
+    }
+    if (dataClassName == 'Period') {
+      return deserialize<_imkg8d7f.Period>(data['data']);
+    }
+    if (dataClassName == 'PeriodChange') {
+      return deserialize<_i1jla7k1.PeriodChange>(data['data']);
+    }
+    if (dataClassName == 'PeriodChangeKind') {
+      return deserialize<_ik4fqf6t.PeriodChangeKind>(data['data']);
+    }
+    if (dataClassName == 'PeriodLengthInfo') {
+      return deserialize<_iq6fzgrr.PeriodLengthInfo>(data['data']);
+    }
+    if (dataClassName == 'PeriodSpan') {
+      return deserialize<_i2feo9ly.PeriodSpan>(data['data']);
     }
     if (dataClassName.startsWith('serverpod_auth_idp.')) {
       data['className'] = dataClassName.substring(19);
@@ -527,6 +835,8 @@ class Protocol extends _is.DatabaseSerializationManager {
       }
     }
     switch (t) {
+      case _irypdw9c.CycleSettings:
+        return _irypdw9c.CycleSettings.t;
       case _ig2h1g4e.DayLog:
         return _ig2h1g4e.DayLog.t;
       case _ijd9wd5s.DoseLog:
@@ -535,6 +845,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return _ifw90bis.Medication.t;
       case _irsb51xy.PainEntry:
         return _irsb51xy.PainEntry.t;
+      case _imkg8d7f.Period:
+        return _imkg8d7f.Period.t;
     }
     return null;
   }

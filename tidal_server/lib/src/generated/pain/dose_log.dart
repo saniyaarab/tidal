@@ -12,29 +12,27 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:serverpod/serverpod.dart' as _is;
 
-/// A single one-tap record of a medication dose being taken.
+/// A single one-tap record of a medication being taken.
 abstract class DoseLog
     implements _is.TableRow<int?>, _is.ProtocolSerialization {
   DoseLog._({
     this.id,
     required this.userId,
     required this.medicationId,
+    required this.date,
     required this.timestamp,
+    required this.loggedAt,
     required this.dose,
-    this.painBefore,
-    this.painAfter,
-    bool? checkInDue,
-  }) : checkInDue = checkInDue ?? false;
+  });
 
   factory DoseLog({
     int? id,
     required _is.UuidValue userId,
     required int medicationId,
+    required DateTime date,
     required DateTime timestamp,
+    required DateTime loggedAt,
     required String dose,
-    int? painBefore,
-    int? painAfter,
-    bool? checkInDue,
   }) = _DoseLogImpl;
 
   factory DoseLog.fromJson(Map<String, dynamic> jsonSerialization) {
@@ -42,15 +40,14 @@ abstract class DoseLog
       id: jsonSerialization['id'] as int?,
       userId: _is.UuidValueJsonExtension.fromJson(jsonSerialization['userId']),
       medicationId: jsonSerialization['medicationId'] as int,
+      date: _is.DateTimeJsonExtension.fromJson(jsonSerialization['date']),
       timestamp: _is.DateTimeJsonExtension.fromJson(
         jsonSerialization['timestamp'],
       ),
+      loggedAt: _is.DateTimeJsonExtension.fromJson(
+        jsonSerialization['loggedAt'],
+      ),
       dose: jsonSerialization['dose'] as String,
-      painBefore: jsonSerialization['painBefore'] as int?,
-      painAfter: jsonSerialization['painAfter'] as int?,
-      checkInDue: jsonSerialization['checkInDue'] == null
-          ? null
-          : _is.BoolJsonExtension.fromJson(jsonSerialization['checkInDue']),
     );
   }
 
@@ -67,22 +64,21 @@ abstract class DoseLog
   /// Which medication was taken.
   int medicationId;
 
-  /// When the dose was taken. Always "now" at the time of logging.
+  /// The calendar day this dose belongs to, stored as midnight UTC (the
+  /// same way `DayLog.date` is). Doses are grouped and looked up by this.
+  DateTime date;
+
+  /// When the medication was taken, as chosen by the user (defaults to the
+  /// time of logging). Never in the future.
   DateTime timestamp;
+
+  /// The exact moment the dose was saved, set by the server. Not shown in
+  /// the app.
+  DateTime loggedAt;
 
   /// Snapshot of the dose taken, e.g. "400 mg" (copied from the
   /// medication's usualDose at the time of logging).
   String dose;
-
-  /// Pain level right before taking the dose, if known.
-  int? painBefore;
-
-  /// Pain level at the "did it help?" check-in, once answered.
-  int? painAfter;
-
-  /// Set by CheckInFutureCall, 1 hour after the dose (or 30 minutes after
-  /// a snooze). True means the check-in is ready to show the user.
-  bool checkInDue;
 
   @override
   _is.Table<int?> get table => t;
@@ -94,11 +90,10 @@ abstract class DoseLog
     int? id,
     _is.UuidValue? userId,
     int? medicationId,
+    DateTime? date,
     DateTime? timestamp,
+    DateTime? loggedAt,
     String? dose,
-    int? painBefore,
-    int? painAfter,
-    bool? checkInDue,
   });
   @override
   Map<String, dynamic> toJson() {
@@ -107,11 +102,10 @@ abstract class DoseLog
       if (id != null) 'id': id,
       'userId': userId.toJson(),
       'medicationId': medicationId,
+      'date': date.toJson(),
       'timestamp': timestamp.toJson(),
+      'loggedAt': loggedAt.toJson(),
       'dose': dose,
-      if (painBefore != null) 'painBefore': painBefore,
-      if (painAfter != null) 'painAfter': painAfter,
-      'checkInDue': checkInDue,
     };
   }
 
@@ -122,11 +116,10 @@ abstract class DoseLog
       if (id != null) 'id': id,
       'userId': userId.toJson(),
       'medicationId': medicationId,
+      'date': date.toJson(),
       'timestamp': timestamp.toJson(),
+      'loggedAt': loggedAt.toJson(),
       'dose': dose,
-      if (painBefore != null) 'painBefore': painBefore,
-      if (painAfter != null) 'painAfter': painAfter,
-      'checkInDue': checkInDue,
     };
   }
 
@@ -165,20 +158,18 @@ class _DoseLogImpl extends DoseLog {
     int? id,
     required _is.UuidValue userId,
     required int medicationId,
+    required DateTime date,
     required DateTime timestamp,
+    required DateTime loggedAt,
     required String dose,
-    int? painBefore,
-    int? painAfter,
-    bool? checkInDue,
   }) : super._(
          id: id,
          userId: userId,
          medicationId: medicationId,
+         date: date,
          timestamp: timestamp,
+         loggedAt: loggedAt,
          dose: dose,
-         painBefore: painBefore,
-         painAfter: painAfter,
-         checkInDue: checkInDue,
        );
 
   /// Returns a shallow copy of this [DoseLog]
@@ -189,21 +180,19 @@ class _DoseLogImpl extends DoseLog {
     Object? id = _Undefined,
     _is.UuidValue? userId,
     int? medicationId,
+    DateTime? date,
     DateTime? timestamp,
+    DateTime? loggedAt,
     String? dose,
-    Object? painBefore = _Undefined,
-    Object? painAfter = _Undefined,
-    bool? checkInDue,
   }) {
     return DoseLog(
       id: id is int? ? id : this.id,
       userId: userId ?? this.userId,
       medicationId: medicationId ?? this.medicationId,
+      date: date ?? this.date,
       timestamp: timestamp ?? this.timestamp,
+      loggedAt: loggedAt ?? this.loggedAt,
       dose: dose ?? this.dose,
-      painBefore: painBefore is int? ? painBefore : this.painBefore,
-      painAfter: painAfter is int? ? painAfter : this.painAfter,
-      checkInDue: checkInDue ?? this.checkInDue,
     );
   }
 }
@@ -222,29 +211,25 @@ class DoseLogUpdateTable extends _is.UpdateTable<DoseLogTable> {
     value,
   );
 
+  _is.ColumnValue<DateTime, DateTime> date(DateTime value) => _is.ColumnValue(
+    table.date,
+    value,
+  );
+
   _is.ColumnValue<DateTime, DateTime> timestamp(DateTime value) =>
       _is.ColumnValue(
         table.timestamp,
         value,
       );
 
+  _is.ColumnValue<DateTime, DateTime> loggedAt(DateTime value) =>
+      _is.ColumnValue(
+        table.loggedAt,
+        value,
+      );
+
   _is.ColumnValue<String, String> dose(String value) => _is.ColumnValue(
     table.dose,
-    value,
-  );
-
-  _is.ColumnValue<int, int> painBefore(int? value) => _is.ColumnValue(
-    table.painBefore,
-    value,
-  );
-
-  _is.ColumnValue<int, int> painAfter(int? value) => _is.ColumnValue(
-    table.painAfter,
-    value,
-  );
-
-  _is.ColumnValue<bool, bool> checkInDue(bool value) => _is.ColumnValue(
-    table.checkInDue,
     value,
   );
 }
@@ -260,26 +245,21 @@ class DoseLogTable extends _is.Table<int?> {
       'medicationId',
       this,
     );
+    date = _is.ColumnDateTime(
+      'date',
+      this,
+    );
     timestamp = _is.ColumnDateTime(
       'timestamp',
+      this,
+    );
+    loggedAt = _is.ColumnDateTime(
+      'loggedAt',
       this,
     );
     dose = _is.ColumnString(
       'dose',
       this,
-    );
-    painBefore = _is.ColumnInt(
-      'painBefore',
-      this,
-    );
-    painAfter = _is.ColumnInt(
-      'painAfter',
-      this,
-    );
-    checkInDue = _is.ColumnBool(
-      'checkInDue',
-      this,
-      hasDefault: true,
     );
   }
 
@@ -291,33 +271,31 @@ class DoseLogTable extends _is.Table<int?> {
   /// Which medication was taken.
   late final _is.ColumnInt medicationId;
 
-  /// When the dose was taken. Always "now" at the time of logging.
+  /// The calendar day this dose belongs to, stored as midnight UTC (the
+  /// same way `DayLog.date` is). Doses are grouped and looked up by this.
+  late final _is.ColumnDateTime date;
+
+  /// When the medication was taken, as chosen by the user (defaults to the
+  /// time of logging). Never in the future.
   late final _is.ColumnDateTime timestamp;
+
+  /// The exact moment the dose was saved, set by the server. Not shown in
+  /// the app.
+  late final _is.ColumnDateTime loggedAt;
 
   /// Snapshot of the dose taken, e.g. "400 mg" (copied from the
   /// medication's usualDose at the time of logging).
   late final _is.ColumnString dose;
-
-  /// Pain level right before taking the dose, if known.
-  late final _is.ColumnInt painBefore;
-
-  /// Pain level at the "did it help?" check-in, once answered.
-  late final _is.ColumnInt painAfter;
-
-  /// Set by CheckInFutureCall, 1 hour after the dose (or 30 minutes after
-  /// a snooze). True means the check-in is ready to show the user.
-  late final _is.ColumnBool checkInDue;
 
   @override
   List<_is.Column> get columns => [
     id,
     userId,
     medicationId,
+    date,
     timestamp,
+    loggedAt,
     dose,
-    painBefore,
-    painAfter,
-    checkInDue,
   ];
 }
 

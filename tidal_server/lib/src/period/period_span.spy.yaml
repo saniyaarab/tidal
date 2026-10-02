@@ -1,0 +1,14 @@
+### A period as the Calendar draws it: always has an end date, even when
+### the user hasn't confirmed one yet (then it's the assumed end). Computed
+### on request, never stored.
+class: PeriodSpan
+fields:
+  ### Id of the underlying `Period` row.
+  periodId: int
+  ### First day of the period.
+  startDate: DateTime
+  ### Last day of the period: the confirmed end date, or the assumed one.
+  endDate: DateTime
+  ### True when the user set endDate by long-press; false when it's assumed
+  ### from the default period length.
+  endConfirmed: bool

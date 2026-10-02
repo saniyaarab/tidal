@@ -1,12 +1,13 @@
 import 'package:tidal_client/tidal_client.dart';
 
-/// Display text for each [FlowLevel], shown inside the day circle.
+/// Display name for each [FlowLevel], shown inside the day circle (e.g.
+/// "Period · Day 2" then "Heavy").
 extension FlowLevelLabel on FlowLevel {
   String get label => switch (this) {
-    FlowLevel.none => 'No period',
-    FlowLevel.light => 'Period · Light',
-    FlowLevel.medium => 'Period · Medium',
-    FlowLevel.heavy => 'Period · Heavy',
+    FlowLevel.none => 'None',
+    FlowLevel.light => 'Light',
+    FlowLevel.medium => 'Medium',
+    FlowLevel.heavy => 'Heavy',
   };
 }
 
@@ -45,4 +46,15 @@ extension PainLocationLabel on PainLocation {
 /// Joins pain locations into a short summary, e.g. "cramps, lower back".
 String formatPainLocations(List<PainLocation> locations) {
   return locations.map((l) => l.label.toLowerCase()).join(', ');
+}
+
+/// Display name for each [MedicationType], shown as chips when adding a
+/// medication.
+extension MedicationTypeLabel on MedicationType {
+  String get label => switch (this) {
+    MedicationType.painkiller => 'Painkiller',
+    MedicationType.birthControl => 'Birth control',
+    MedicationType.vitamin => 'Vitamin / supplement',
+    MedicationType.other => 'Other',
+  };
 }

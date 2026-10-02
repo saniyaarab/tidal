@@ -1,0 +1,29 @@
+### A snapshot of where the signed-in user is in their cycle, and where
+### their next period is predicted to start. Not persisted — recomputed from
+### the user's `Period` rows on every request, so changes are always
+### reflected immediately.
+class: Prediction
+fields:
+  ### Start date of the most recent period. Null if no period has ever
+  ### been logged.
+  lastPeriodStart: DateTime?
+  ### 1-based day count since lastPeriodStart. Null if lastPeriodStart is null.
+  currentCycleDay: int?
+  ### Predicted start of the next period, from the average of the last 3-6
+  ### completed cycle lengths. Null until at least one full cycle (two
+  ### period starts) has been logged.
+  nextPeriodStart: DateTime?
+  ### "± this many days" around nextPeriodStart, from the spread of recent
+  ### cycle lengths. 0 whenever nextPeriodStart is null.
+  confidenceDays: int, default=0
+  ### Last day of the predicted period, from the user's default period
+  ### length (learned from confirmed periods, else the sign-up value). Null whenever nextPeriodStart is null.
+  predictedPeriodEnd: DateTime?
+  ### Estimated fertile window (ovulation around 14 days before the next
+  ### period, plus the days sperm can survive before it). Null whenever
+  ### nextPeriodStart is null.
+  fertileWindowStart: DateTime?
+  fertileWindowEnd: DateTime?
+  ### The most recent completed cycles (up to 6), oldest first, including
+  ### any left out of the average for being over 45 days long.
+  recentCycles: List<CycleLength>?

@@ -9,6 +9,17 @@ emailIdp:
   - hasAccount:
 jwtRefresh:
   - refreshAccessToken:
+insight:
+  - getPrediction:
+  - getCycleSummary:
+  - hasCycleSettings:
+  - getBirthYear:
+  - saveBirthYear:
+  - getAge:
+  - getCycleLength:
+  - saveCycleLength:
+  - getPeriodLength:
+  - savePeriodLength:
 log:
   - saveDay:
   - getRange:
@@ -20,7 +31,9 @@ pain:
   - addMedication:
   - logDose:
   - getDoseRange:
-  - getLastDose:
-  - getPendingCheckIn:
-  - recordRelief:
-  - snoozeCheckIn:
+  - getLastDosePerMedication:
+period:
+  - longPress:
+  - undo:
+  - getPeriods:
+  - getDefaultPeriodLength:

@@ -6,9 +6,9 @@ import '../theme.dart';
 import '../widgets/log_sheets.dart';
 import '../widgets/pain_sheets.dart';
 
-/// The full-screen "Log" menu opened from the "+" button. Flow, Mood, and
-/// Note are wired up; the rest are later steps in the MVP and show a
-/// "coming soon" message for now.
+/// The full-screen "Log" menu opened from the "+" button. For a future date
+/// only Note can be logged; the other tiles are greyed out and explain why
+/// when tapped.
 class LogScreen extends StatefulWidget {
   final DateTime date;
   final DayLog? dayLog;
@@ -22,6 +22,21 @@ class LogScreen extends StatefulWidget {
 class _LogScreenState extends State<LogScreen> {
   // Tracks whether anything was saved, so Home knows to refresh when we pop.
   bool _changed = false;
+
+  bool get _isFuture => widget.date.isAfter(todayAsDateKey());
+
+  /// Runs [log] for today or past dates; for future dates, explains that
+  /// only notes can be added instead.
+  VoidCallback _unlessFuture(String what, VoidCallback log) => () {
+    if (!_isFuture) return log();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "You can't log $what for future dates. Only notes can be added.",
+        ),
+      ),
+    );
+  };
 
   void _comingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -66,15 +81,15 @@ class _LogScreenState extends State<LogScreen> {
   }
 
   Future<void> _logPain() async {
-    final saved = await showPainSheet(context);
+    final saved = await showPainSheet(context, date: widget.date);
     if (saved && mounted) {
       setState(() => _changed = true);
       Navigator.pop(context, true);
     }
   }
 
-  Future<void> _logPainkiller() async {
-    final saved = await showPainkillerSheet(context);
+  Future<void> _logMedication() async {
+    final saved = await showMedicationsSheet(context, date: widget.date);
     if (saved && mounted) {
       setState(() => _changed = true);
       Navigator.pop(context, true);
@@ -105,16 +120,24 @@ class _LogScreenState extends State<LogScreen> {
               _LogTile(
                 label: 'Flow',
                 icon: Icons.water_drop,
-                background: TidalColors.roseBand,
-                iconColor: TidalColors.rose,
-                onTap: _logFlow,
+                background: _isFuture
+                    ? TidalColors.disabled
+                    : TidalColors.roseBand,
+                iconColor: _isFuture
+                    ? TidalColors.disabledIcon
+                    : TidalColors.rose,
+                onTap: _unlessFuture('flow', _logFlow),
               ),
               _LogTile(
                 label: 'Mood',
                 icon: Icons.sentiment_satisfied_alt,
-                background: TidalColors.yellowBand,
-                iconColor: TidalColors.yellowIcon,
-                onTap: _logMood,
+                background: _isFuture
+                    ? TidalColors.disabled
+                    : TidalColors.yellowBand,
+                iconColor: _isFuture
+                    ? TidalColors.disabledIcon
+                    : TidalColors.yellowIcon,
+                onTap: _unlessFuture('mood', _logMood),
               ),
               _LogTile(
                 label: 'Note',
@@ -126,16 +149,24 @@ class _LogScreenState extends State<LogScreen> {
               _LogTile(
                 label: 'Pain',
                 icon: Icons.bolt,
-                background: TidalColors.roseBand,
-                iconColor: TidalColors.rose,
-                onTap: _logPain,
+                background: _isFuture
+                    ? TidalColors.disabled
+                    : TidalColors.roseBand,
+                iconColor: _isFuture
+                    ? TidalColors.disabledIcon
+                    : TidalColors.rose,
+                onTap: _unlessFuture('pain', _logPain),
               ),
               _LogTile(
-                label: 'Painkiller',
+                label: 'Medications',
                 icon: Icons.medication,
-                background: TidalColors.lavenderBand,
-                iconColor: TidalColors.lavender,
-                onTap: _logPainkiller,
+                background: _isFuture
+                    ? TidalColors.disabled
+                    : TidalColors.lavenderBand,
+                iconColor: _isFuture
+                    ? TidalColors.disabledIcon
+                    : TidalColors.lavender,
+                onTap: _unlessFuture('medications', _logMedication),
               ),
               _LogTile(
                 label: 'Reminder',

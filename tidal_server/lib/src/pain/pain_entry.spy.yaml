@@ -4,9 +4,20 @@ table: pain_entry
 fields:
   ### The user this entry belongs to.
   userId: UuidValue
-  ### When the pain was logged. Always "now" at the time of logging.
+  ### The calendar day this entry belongs to, stored as midnight UTC (the
+  ### same way `DayLog.date` is). Entries are grouped and looked up by this.
+  date: DateTime
+  ### When the pain happened, as chosen by the user (defaults to the time
+  ### of logging). Never in the future.
   timestamp: DateTime
+  ### The exact moment the entry was saved, set by the server. Not shown in
+  ### the app.
+  loggedAt: DateTime
   ### Pain level from 0 (no pain) to 10 (worst pain).
   level: int
   ### Where the pain was felt. Can be empty if the user didn't say.
   locations: List<PainLocation>
+
+indexes:
+  pain_entry_user_date_idx:
+    fields: userId, date
