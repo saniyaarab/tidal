@@ -17,3 +17,4 @@ pubspec_overrides.yaml
 
 # Serverpod Cloud CLI
 .scloud/
+.DS_Store
