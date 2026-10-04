@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'client.dart';
+import 'features/home/data/client_home_server_api.dart';
+import 'features/home/data/server_home_repository.dart';
+import 'features/home/presentation/bloc/home_bloc.dart';
+import 'features/home/presentation/bloc/home_event.dart';
+import 'features/home/presentation/home_screen.dart';
 import 'screens/calendar_screen.dart';
-import 'screens/home_screen.dart';
 import 'screens/insights_screen.dart';
 import 'screens/journal_screen.dart';
 import 'screens/me_screen.dart';
@@ -30,7 +37,17 @@ class _AppShellState extends State<AppShell> {
   // the latest periods instead of showing what it loaded at startup.
   int _insightsVisits = 0;
 
-  late final HomeScreen _home = HomeScreen(onOpenCalendar: _openCalendar);
+  // Home's state lives in a HomeBloc, created once here and closed by the
+  // provider when the shell goes away (so signing out drops it). It checks
+  // for due medication reminders once a minute.
+  late final Widget _home = BlocProvider(
+    create: (_) => HomeBloc(
+      repository: ServerHomeRepository(ClientHomeServerApi(client)),
+      now: DateTime.now,
+      reminderTicks: Stream<void>.periodic(const Duration(minutes: 1)),
+    )..add(const HomeStarted()),
+    child: HomeScreen(onOpenCalendar: _openCalendar),
+  );
   late final CalendarScreen _calendar = CalendarScreen(
     dateToShow: _calendarDate,
   );
