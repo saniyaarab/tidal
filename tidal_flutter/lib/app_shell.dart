@@ -3,12 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'client.dart';
+import 'features/calendar/data/client_calendar_server_api.dart';
+import 'features/calendar/data/server_calendar_repository.dart';
+import 'features/calendar/presentation/bloc/calendar_bloc.dart';
+import 'features/calendar/presentation/bloc/calendar_event.dart';
+import 'features/calendar/presentation/calendar_screen.dart';
 import 'features/home/data/client_home_server_api.dart';
 import 'features/home/data/server_home_repository.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
 import 'features/home/presentation/bloc/home_event.dart';
 import 'features/home/presentation/home_screen.dart';
-import 'screens/calendar_screen.dart';
 import 'screens/insights_screen.dart';
 import 'screens/journal_screen.dart';
 import 'screens/me_screen.dart';
@@ -29,10 +33,6 @@ class _AppShellState extends State<AppShell> {
 
   int _index = 0;
 
-  // Home sets this when its day circle is tapped; the Calendar listens and
-  // jumps to that date.
-  final _calendarDate = ValueNotifier<DateTime?>(null);
-
   // Bumped every time Insights is opened, so it's rebuilt and reloads with
   // the latest periods instead of showing what it loaded at startup.
   int _insightsVisits = 0;
@@ -48,8 +48,17 @@ class _AppShellState extends State<AppShell> {
     )..add(const HomeStarted()),
     child: HomeScreen(onOpenCalendar: _openCalendar),
   );
-  late final CalendarScreen _calendar = CalendarScreen(
-    dateToShow: _calendarDate,
+
+  // The Calendar's state lives in a CalendarBloc, created once here and
+  // closed by the provider when the shell goes away. Kept in a field so
+  // Home's day circle can ask it to show a date.
+  late final CalendarBloc _calendarBloc = CalendarBloc(
+    repository: ServerCalendarRepository(ClientCalendarServerApi(client)),
+    now: DateTime.now,
+  )..add(const CalendarStarted());
+  late final Widget _calendar = BlocProvider.value(
+    value: _calendarBloc,
+    child: const CalendarScreen(),
   );
 
   List<Widget> get _tabs => [
@@ -61,13 +70,14 @@ class _AppShellState extends State<AppShell> {
   ];
 
   void _openCalendar(DateTime date) {
-    _calendarDate.value = date;
+    _calendarBloc.add(CalendarDateRequested(date));
     setState(() => _index = _calendarTab);
   }
 
   @override
   void dispose() {
-    _calendarDate.dispose();
+    // BlocProvider.value does not close the bloc, so the shell does.
+    _calendarBloc.close();
     super.dispose();
   }
 

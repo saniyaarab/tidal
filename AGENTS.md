@@ -92,6 +92,13 @@ Tidal is a period and pain tracker: a Flutter app (`tidal_flutter`) backed by a 
 - Tests are under `tidal_flutter/test/features/home/` (`flutter test` in `tidal_flutter`): headless domain, data and bloc tests with hand-written fakes, plus three happy-path widget tests found by key.
 - New dependencies: `flutter_bloc`, `bloc_concurrency`, `equatable`, and `bloc_test` (dev).
 
+**The Calendar was migrated to BLoC and clean architecture (Oct 4, 2026).** See `specs/002-calendar-screen-bloc/` and "Calendar differences" in `tidal_flutter/lib/features/home/README.md`.
+
+- `lib/features/calendar/` has `domain/` (`CalendarRepository`, `CalendarGrid`, `expandPeriodDays`, `DayMarks`, `CalendarMessage`), `data/` (`ServerCalendarRepository` over `CalendarServerApi`, adapted by `ClientCalendarServerApi`) and `presentation/` (`CalendarBloc`, `CalendarScreen`, `calendar_text.dart`, widgets). `lib/screens/calendar_screen.dart` no longer exists.
+- Home's day circle still calls `onOpenCalendar(date)`; `AppShell` sends `CalendarDateRequested(date)` to the `CalendarBloc` (the old `ValueNotifier` is gone). Asking for the same date twice now moves the Calendar both times.
+- Period-change messages are one-time messages in bloc state; Undo that fails still reloads the grid.
+- Tests are under `tidal_flutter/test/features/calendar/` (headless domain, data and bloc tests, plus three widget happy paths).
+
 **Next**: see "Plan to the deadline" in CLAUDE.md (deploy to Serverpod Cloud, demo video).
 
 The user starts the server and Flutter app with `serverpod start`. There is no need to check if the server is running: make the changes and call the `serverpod` MCP tools as needed. If the server is not running, an informative error message will be received from the MCP server. Then STOP and ask the user to start it. NEVER start the server yourself. The Flutter app is started along with it, or can be launched from the MCP tool `spawn_flutter_app`.

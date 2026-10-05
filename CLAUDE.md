@@ -117,6 +117,7 @@ Period tracking by long-press (see the section above) is done: `Period` table + 
 Medications (step 4 redesign), editable pain/medication times, and Insights MVP (step 8) are done. Me shows only Age (read-only) and sign out.
 Step 10 (privacy + delete all data) is done. Step 9 (partner sharing) was cut. The Journal tab (replacing Partner) is done.
 The Home screen was migrated to BLoC + clean architecture (Oct 3, 2026); new Flutter features follow `tidal_flutter/lib/features/home/` (see its README and the constitution).
+The Calendar screen was migrated the same way (Oct 4, 2026; `tidal_flutter/lib/features/calendar/`, spec `specs/002-calendar-screen-bloc/`).
 Next: see "Plan to the deadline" below.
 
 ## Judging (from the hackathon page)

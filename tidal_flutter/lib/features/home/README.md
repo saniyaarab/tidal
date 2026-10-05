@@ -1,7 +1,8 @@
 # Home feature: the reference layout for clean architecture + BLoC
 
-Home was the first screen migrated (spec: `specs/001-home-screen-bloc/`). Copy this
-layout for the next screen.
+Home was the first screen migrated (spec: `specs/001-home-screen-bloc/`); Calendar followed
+with the same layout (`lib/features/calendar/`, spec: `specs/002-calendar-screen-bloc/`, see
+"Calendar differences" below). Copy this layout for the next screen.
 
 ```
 features/home/
@@ -47,3 +48,12 @@ drops all of Home's state.
 ## Gotchas
 - In a bloc handler, `emit(state.copyWith(x: await y))` reads `state` *before* the await; await into a local first, because other loads may have changed `state` meanwhile.
 - Don't `await bloc.close()` in a widget test; it never finishes on the fake clock. Unmount the widget and `unawaited(bloc.close())`, as `BlocProvider` does.
+
+## Calendar differences (`lib/features/calendar/`, same layers and test layout)
+- **One load for the whole screen**: `CalendarRepository.load(month, selectedDate)` returns one `CalendarData` bundle; `longPress` and `undo` are separate methods. The pure rules are `CalendarGrid` (42 grid dates), `expandPeriodDays`, and `DayMarks.of` (which ring a day gets: period > predicted > fertile > today).
+- **One-time messages** (period started/ended/moved/removed, future date refused, update failed) live in `CalendarState.message`, a `CalendarMessage` with an ever-increasing `id`. The screen's `BlocListener` shows a message only when its id differs from the previous state's, so rebuilding the screen never repeats one, and a new message replaces the old. The message holds values; `calendar_text.dart` makes the words.
+- **Stale answers**: load events use `restartable()`, and `_load` also drops an answer if the month or selected day in state no longer matches what it asked for.
+- **Period edits** (long-press and Undo) share the base event `CalendarPeriodEdit` and one `sequential()` handler, so two quick presses never interleave their server writes. A long-press whose follow-up reload fails still shows its message with Undo; a failed Undo still reloads.
+- **Hand-off from Home**: Home calls `onOpenCalendar(date)`; `AppShell` turns that into `CalendarDateRequested(date)` on the `CalendarBloc` it owns. Home knows nothing about Calendar. (An event always fires, so asking for the same date twice now moves the Calendar both times; the old `ValueNotifier` ignored an unchanged value.)
+- **Ownership**: `AppShell` creates the bloc and provides it with `BlocProvider.value`, so it also calls `close()` itself in `dispose`.
+- Pull-to-refresh awaits `bloc.stream.firstWhere(... orElse: () => bloc.state)`, so a closed bloc cannot leave the spinner hanging.

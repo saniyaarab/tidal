@@ -41,3 +41,19 @@ MedicationReminder reminder(int id, int medicationId, {bool isDue = true}) =>
       dueAt: DateTime.utc(2026, 10, 3, 12),
       isDue: isDue,
     );
+
+Prediction prediction({
+  DateTime? nextPeriodStart,
+  DateTime? predictedPeriodEnd,
+  DateTime? fertileWindowStart,
+  DateTime? fertileWindowEnd,
+}) => Prediction(
+  confidenceDays: 2,
+  nextPeriodStart: nextPeriodStart,
+  predictedPeriodEnd: predictedPeriodEnd,
+  fertileWindowStart: fertileWindowStart,
+  fertileWindowEnd: fertileWindowEnd,
+);
+
+PeriodChange periodChange(PeriodChangeKind kind, int days) =>
+    PeriodChange(kind: kind, lengthDays: days);
