@@ -17,3 +17,5 @@ pubspec_overrides.yaml
 
 # Serverpod Cloud CLI
 .scloud/
+.DS_Store
+.config/dart_skills/skills_config.json

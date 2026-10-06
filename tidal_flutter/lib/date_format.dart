@@ -20,12 +20,14 @@ String formatDayLabel(DateTime date) {
   return '$weekday ${date.day} $month';
 }
 
-/// Returns today's date as a UTC midnight timestamp, which is how dates are
-/// stored and compared on the server (see `LogEndpoint._dateOnly`).
-DateTime todayAsDateKey() {
-  final now = DateTime.now();
-  return DateTime.utc(now.year, now.month, now.day);
+/// Returns [moment]'s calendar day as a UTC midnight timestamp, which is how
+/// dates are stored and compared on the server (see `LogEndpoint._dateOnly`).
+DateTime dateKeyOf(DateTime moment) {
+  return DateTime.utc(moment.year, moment.month, moment.day);
 }
+
+/// Returns today's date as a UTC midnight timestamp (see [dateKeyOf]).
+DateTime todayAsDateKey() => dateKeyOf(DateTime.now());
 
 /// Formats a month and year, e.g. "October 2026".
 String formatMonthYear(DateTime date) {

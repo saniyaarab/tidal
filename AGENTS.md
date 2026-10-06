@@ -85,6 +85,20 @@ Tidal is a period and pain tracker: a Flutter app (`tidal_flutter`) backed by a 
 - App: `widgets/day_detail_sheets.dart` has the drink counter, Sleep, Digestion, Weight/Temperature (unit switch, generic `_MeasurementSheet`) and Mucus/Love (`_ChoiceSheet`) sheets. The Log screen is a list of `_TileSpec`s (14 tiles; the old Reminder placeholder is gone). `DayBands` shows the new items (taking `bowelMovements` and `units`). Home shows a "<medication> due now" banner per due reminder with Log dose / Dismiss, re-checked every minute. The Medications sheet has a bell per medication (`showReminderSheet`) and shows "next in 2h" / "due now"; the add-medication sheet has "Remind me" chips.
 - `SheetScaffold`'s close button now pops with no result (it used to return `false`, which crashed sheets whose result isn't a bool, like Add a medication).
 
+**Home was migrated to BLoC and clean architecture (Oct 3, 2026).** See `specs/001-home-screen-bloc/` and `tidal_flutter/lib/features/home/README.md`; new Flutter screens follow this layout.
+
+- `lib/features/home/` has `domain/` (repository interface, `DayStatus`/`CycleOutlook` rules), `data/` (`ServerHomeRepository` over a small `HomeServerApi`, adapted to the generated client by `ClientHomeServerApi`) and `presentation/` (`HomeBloc`, `HomeScreen`, widgets, `home_text.dart`). `lib/screens/home_screen.dart` no longer exists; `AppShell` provides the bloc with `BlocProvider`.
+- Behavior is unchanged except that quickly stepping between days now shows only the last day chosen. Pull-to-refresh reloads the day only; returning from the log screen reloads the day and reminders; the prediction loads once.
+- Tests are under `tidal_flutter/test/features/home/` (`flutter test` in `tidal_flutter`): headless domain, data and bloc tests with hand-written fakes, plus three happy-path widget tests found by key.
+- New dependencies: `flutter_bloc`, `bloc_concurrency`, `equatable`, and `bloc_test` (dev).
+
+**The Calendar was migrated to BLoC and clean architecture (Oct 4, 2026).** See `specs/002-calendar-screen-bloc/` and "Calendar differences" in `tidal_flutter/lib/features/home/README.md`.
+
+- `lib/features/calendar/` has `domain/` (`CalendarRepository`, `CalendarGrid`, `expandPeriodDays`, `DayMarks`, `CalendarMessage`), `data/` (`ServerCalendarRepository` over `CalendarServerApi`, adapted by `ClientCalendarServerApi`) and `presentation/` (`CalendarBloc`, `CalendarScreen`, `calendar_text.dart`, widgets). `lib/screens/calendar_screen.dart` no longer exists.
+- Home's day circle still calls `onOpenCalendar(date)`; `AppShell` sends `CalendarDateRequested(date)` to the `CalendarBloc` (the old `ValueNotifier` is gone). Asking for the same date twice now moves the Calendar both times.
+- Period-change messages are one-time messages in bloc state; Undo that fails still reloads the grid.
+- Tests are under `tidal_flutter/test/features/calendar/` (headless domain, data and bloc tests, plus three widget happy paths).
+
 **Next**: see "Plan to the deadline" in CLAUDE.md (deploy to Serverpod Cloud, demo video).
 
 The user starts the server and Flutter app with `serverpod start`. There is no need to check if the server is running: make the changes and call the `serverpod` MCP tools as needed. If the server is not running, an informative error message will be received from the MCP server. Then STOP and ask the user to start it. NEVER start the server yourself. The Flutter app is started along with it, or can be launched from the MCP tool `spawn_flutter_app`.

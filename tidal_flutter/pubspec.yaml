@@ -35,9 +35,13 @@ dependencies:
   serverpod_flutter: 4.0.0
   serverpod_auth_idp_flutter: 4.0.0
   fl_chart: ^1.2.0
+  flutter_bloc: ^9.1.1
+  bloc_concurrency: ^0.3.0
+  equatable: ^2.1.0
 
 dev_dependencies:
   # Used for agents to drive the app through the Dart MCP
+  bloc_test: ^10.0.0
   flutter_driver:
     sdk: flutter
   flutter_lints: '>=3.0.0 <7.0.0'
