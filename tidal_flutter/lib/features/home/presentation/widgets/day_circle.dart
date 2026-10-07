@@ -12,7 +12,9 @@ class DayCircle extends StatelessWidget {
   static const nextKey = Key('home-day-next');
 
   final DateTime date;
-  final String status;
+
+  /// The line under the date, or null to show the date alone.
+  final String? status;
   final VoidCallback onTap;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
@@ -58,15 +60,17 @@ class DayCircle extends StatelessWidget {
                     formatDayLabel(date),
                     style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    status,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontSize: 18,
+                  if (status != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      status!,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontSize: 18,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

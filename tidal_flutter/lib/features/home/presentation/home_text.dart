@@ -7,9 +7,11 @@ import '../domain/day_status.dart';
 // The wording Home shows. The domain rules produce values; turning them into
 // text happens only here, so this is the one place to localize later.
 
-/// The text inside the day circle, e.g. "Period · Day 2\nHeavy",
-/// "Light flow" (flow logged outside a period), or "No period".
-String dayStatusText(DayStatus status) {
+/// The text inside the day circle under the date: "Period · Day 2\nHeavy",
+/// "Light flow" (flow logged outside a period), "Period expected",
+/// "Fertile window", "PMS possible", or null on an ordinary day (the circle
+/// then shows only the date).
+String? dayStatusText(DayStatus status) {
   final flowLogged = status.flow != FlowLevel.none;
   final day = status.periodDayNumber;
   if (day != null) {
@@ -17,7 +19,13 @@ String dayStatusText(DayStatus status) {
         ? 'Period · Day $day\n${status.flow.label}'
         : 'Period · Day $day';
   }
-  return flowLogged ? '${status.flow.label} flow' : 'No period';
+  if (flowLogged) return '${status.flow.label} flow';
+  return switch (status.forecast) {
+    DayForecast.expectedPeriod => 'Period expected',
+    DayForecast.fertileWindow => 'Fertile window',
+    DayForecast.pms => 'PMS possible',
+    DayForecast.none => null,
+  };
 }
 
 /// "Cycle day 5".
