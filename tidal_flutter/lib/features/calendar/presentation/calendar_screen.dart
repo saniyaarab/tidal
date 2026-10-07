@@ -59,6 +59,10 @@ class CalendarScreen extends StatelessWidget {
     messenger.showSnackBar(
       SnackBar(
         content: Text(messageText(message)),
+        // Disappear after the default 4 seconds even with an Undo button:
+        // since Flutter 3.29 a SnackBar with an action stays until tapped
+        // unless told otherwise, and then it lingers on every tab.
+        persist: false,
         action: message.canUndo
             ? SnackBarAction(
                 label: undoLabel,

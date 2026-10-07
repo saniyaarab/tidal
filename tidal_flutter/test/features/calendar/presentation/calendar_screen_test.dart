@@ -78,4 +78,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(repo.undone, hasLength(1));
   });
+
+  testWidgets('a long-press message with Undo goes away by itself', (
+    tester,
+  ) async {
+    await pumpCalendar(tester);
+
+    await tester.longPress(find.byKey(ValueKey(day(10, 2))));
+    await tester.pumpAndSettle();
+    expect(find.byType(SnackBar), findsOneWidget);
+
+    // Flutter's default SnackBar duration is 4 seconds.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.byType(SnackBar), findsNothing);
+  });
 }
