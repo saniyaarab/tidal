@@ -18,20 +18,18 @@ class Legend extends StatelessWidget {
           label: legendPredicted,
         ),
         _LegendItem(ringColor: TidalColors.lavenderRing, label: legendFertile),
-        _LegendItem(dotColor: TidalColors.rose, label: legendPain),
       ],
     );
   }
 }
 
-/// One legend entry: either a ringed circle (period/predicted/fertile) or a
-/// small filled dot (pain day), followed by its label.
+/// One legend entry: a ringed circle (period/predicted/fertile) followed by
+/// its label. Pain days keep their dot in the grid but have no legend entry.
 class _LegendItem extends StatelessWidget {
-  final Color? ringColor;
-  final Color? dotColor;
+  final Color ringColor;
   final String label;
 
-  const _LegendItem({this.ringColor, this.dotColor, required this.label});
+  const _LegendItem({required this.ringColor, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -39,14 +37,11 @@ class _LegendItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: dotColor != null ? 8 : 14,
-          height: dotColor != null ? 8 : 14,
+          width: 14,
+          height: 14,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: dotColor,
-            border: ringColor != null
-                ? Border.all(color: ringColor!, width: 2)
-                : null,
+            border: Border.all(color: ringColor, width: 2),
           ),
         ),
         const SizedBox(width: 6),

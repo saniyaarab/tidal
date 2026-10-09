@@ -28,6 +28,8 @@ State transitions:
 ## DayStatus (domain, pure)
 `isPeriodDay`, `periodDayNumber` (1-based, null outside a period), `flow` (`FlowLevel`). Built from `(selectedDate, PeriodSpan?, DayLog?)`. Presentation renders "Period · Day N" / "Period · Day N\n<Flow>" / "<Flow> flow" / "No period" from it, exactly as today.
 
+> **Superseded (2026-10-07):** the day circle's text is now defined by [specs/003-home-day-forecast](../003-home-day-forecast/spec.md): "No period" is gone, and `DayStatus` also carries a forecast (expected period, fertile window, PMS).
+
 ## CycleOutlook (domain, pure)
 `cycleDay` (null → nothing shown), `daysUntilNextPeriod` (null if unknown), `confidenceDays`, `isDueNow` (days until ≤ 0). Built from `(Prediction, today)`.
 

@@ -55,4 +55,77 @@ void main() {
     expect(status.isPeriodDay, isFalse);
     expect(status.flow, FlowLevel.none);
   });
+
+  group('with a prediction', () {
+    // Next period predicted for Oct 25–29, fertile window Oct 6–11.
+    final prediction = Prediction(
+      nextPeriodStart: day(10, 25),
+      predictedPeriodEnd: day(10, 29),
+      fertileWindowStart: day(10, 6),
+      fertileWindowEnd: day(10, 11),
+    );
+
+    test('a day in the predicted period is an expected period day', () {
+      final status = buildDayStatus(
+        date: day(10, 29),
+        period: null,
+        dayLog: null,
+        prediction: prediction,
+      );
+      expect(status.forecast, DayForecast.expectedPeriod);
+    });
+
+    test('a day in the fertile window is a fertile day', () {
+      final status = buildDayStatus(
+        date: day(10, 6),
+        period: null,
+        dayLog: null,
+        prediction: prediction,
+      );
+      expect(status.forecast, DayForecast.fertileWindow);
+    });
+
+    test('the 7 days before the predicted period are PMS days', () {
+      for (final date in [day(10, 24), day(10, 18)]) {
+        final status = buildDayStatus(
+          date: date,
+          period: null,
+          dayLog: null,
+          prediction: prediction,
+        );
+        expect(status.forecast, DayForecast.pms, reason: '$date');
+      }
+    });
+
+    test('8 days before the predicted period is not a PMS day', () {
+      final status = buildDayStatus(
+        date: day(10, 17),
+        period: null,
+        dayLog: null,
+        prediction: prediction,
+      );
+      expect(status.forecast, DayForecast.none);
+    });
+
+    test('a day outside both has no forecast', () {
+      final status = buildDayStatus(
+        date: day(10, 15),
+        period: null,
+        dayLog: null,
+        prediction: prediction,
+      );
+      expect(status.forecast, DayForecast.none);
+    });
+
+    test('a logged period beats the prediction', () {
+      final status = buildDayStatus(
+        date: day(10, 25),
+        period: period(day(10, 25)),
+        dayLog: null,
+        prediction: prediction,
+      );
+      expect(status.periodDayNumber, 1);
+      expect(status.forecast, DayForecast.none);
+    });
+  });
 }

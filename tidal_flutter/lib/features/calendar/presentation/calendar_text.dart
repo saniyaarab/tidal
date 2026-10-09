@@ -26,4 +26,3 @@ const emptyDayText = 'Nothing logged for this day.';
 const legendPeriod = 'Period';
 const legendPredicted = 'Predicted';
 const legendFertile = 'Fertile window';
-const legendPain = 'Pain day';

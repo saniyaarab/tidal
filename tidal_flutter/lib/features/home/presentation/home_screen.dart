@@ -71,6 +71,7 @@ class HomeScreen extends StatelessWidget {
               date: state.selectedDate,
               period: state.day?.period,
               dayLog: state.day?.dayLog,
+              prediction: prediction,
             );
             final day = state.day;
 

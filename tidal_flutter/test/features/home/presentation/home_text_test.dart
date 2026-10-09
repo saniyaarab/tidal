@@ -22,9 +22,45 @@ void main() {
       expect(dayStatusText(status), 'Light flow');
     });
 
-    test('no period', () {
+    test('an ordinary day has no text', () {
       const status = DayStatus(periodDayNumber: null, flow: FlowLevel.none);
-      expect(dayStatusText(status), 'No period');
+      expect(dayStatusText(status), isNull);
+    });
+
+    test('a day in the predicted period', () {
+      const status = DayStatus(
+        periodDayNumber: null,
+        flow: FlowLevel.none,
+        forecast: DayForecast.expectedPeriod,
+      );
+      expect(dayStatusText(status), 'Period expected');
+    });
+
+    test('a day in the fertile window', () {
+      const status = DayStatus(
+        periodDayNumber: null,
+        flow: FlowLevel.none,
+        forecast: DayForecast.fertileWindow,
+      );
+      expect(dayStatusText(status), 'Fertile window');
+    });
+
+    test('a PMS day', () {
+      const status = DayStatus(
+        periodDayNumber: null,
+        flow: FlowLevel.none,
+        forecast: DayForecast.pms,
+      );
+      expect(dayStatusText(status), 'PMS possible');
+    });
+
+    test('logged flow beats the prediction', () {
+      const status = DayStatus(
+        periodDayNumber: null,
+        flow: FlowLevel.light,
+        forecast: DayForecast.fertileWindow,
+      );
+      expect(dayStatusText(status), 'Light flow');
     });
   });
 
