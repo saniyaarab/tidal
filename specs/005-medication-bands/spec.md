@@ -56,6 +56,9 @@ A user who marked the wrong medication, or marked it twice, swipes its band left
 ### Edge Cases
 
 - Deleting fails (offline, server error): the band stays and a message says it couldn't be deleted.
+- The dose was already deleted (a double tap, or another device): nothing happens on the server, the band disappears when the day reloads, and no failure message or Undo is shown.
+- Undo fails (offline, server error): the day reloads as it is, and a message says the dose couldn't be restored.
+- The day's doses or medications can't be loaded: the day shows the same error state as any other failed load, with the existing retry. The bands are never silently missing.
 - A user can only ever see or delete their own doses.
 - A medication with no dose on the shown day has no band.
 - The Calendar and Home don't refresh each other when switching tabs (issue #6), so a dose logged or deleted on one tab appears on the other after a pull-to-refresh, until #6 is fixed.
@@ -69,7 +72,7 @@ A user who marked the wrong medication, or marked it twice, swipes its band left
 - **FR-003**: A band MUST be lavender and use the medication's type icon (the same icons as the Medications sheet).
 - **FR-004**: Medication bands MUST be ordered by time among the other timed bands (pain, bowel movements), before the once-a-day items and the note.
 - **FR-005**: Swiping a medication band left MUST reveal a Delete option; tapping it MUST delete that dose. Other bands don't swipe.
-- **FR-006**: The server MUST offer deleting a dose, only for the signed-in user's own doses, and MUST update or remove that medication's reminder so it reflects the latest remaining dose.
+- **FR-006**: The server MUST offer deleting a dose, only for the signed-in user's own doses, and MUST update or remove that medication's reminder so it reflects the latest remaining dose. Deleting a dose that isn't the medication's latest MUST leave its reminder, including a dismissed one, unchanged.
 - **FR-007**: The rule choosing the last dose per medication per day MUST be plain logic, tested headlessly; the server's delete MUST be covered by integration tests (constitution Principle II).
 - **FR-008**: "Delete all my data" continues to delete all doses (unchanged).
 - **FR-009**: CLAUDE.md and AGENTS.md MUST be updated: they currently say medications aren't shown on Home or the Calendar.

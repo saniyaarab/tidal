@@ -172,15 +172,34 @@ class PainEndpoint extends Endpoint {
     if (hours == null) return;
 
     final dueAt = takenAt.add(Duration(hours: hours));
-    final now = DateTime.now().toUtc();
     // An older dose logged after the fact mustn't push back a reminder set
     // by a more recent dose.
-    final existing = await MedicationReminder.db.findFirstRow(
+    final existing = await _reminderOf(session, medication);
+    if (existing != null && existing.dueAt.isAfter(dueAt)) return;
+
+    await _setReminder(session, medication, existing, dueAt);
+  }
+
+  Future<MedicationReminder?> _reminderOf(
+    Session session,
+    Medication medication,
+  ) {
+    return MedicationReminder.db.findFirstRow(
       session,
       where: (t) => t.medicationId.equals(medication.id!),
     );
-    if (existing != null && existing.dueAt.isAfter(dueAt)) return;
+  }
 
+  /// Saves [dueAt] as the reminder time for [medication] (creating or
+  /// updating its one reminder, [existing]) and, if it's still ahead,
+  /// schedules [MedicationReminderFutureCall] to mark it due then.
+  Future<void> _setReminder(
+    Session session,
+    Medication medication,
+    MedicationReminder? existing,
+    DateTime dueAt,
+  ) async {
+    final now = DateTime.now().toUtc();
     final reminder = existing == null
         ? await MedicationReminder.db.insertRow(
             session,
@@ -200,12 +219,95 @@ class PainEndpoint extends Endpoint {
       await session.serverpod.futureCalls
           .callWithDelay(
             dueAt.difference(now),
-            identifier:
-                'med-reminder-${reminder.id}-${dueAt.toIso8601String()}',
+            identifier: _reminderCallId(reminder.id!, dueAt),
           )
           .medicationReminder
           .markDue(reminder.id!);
     }
+  }
+
+  String _reminderCallId(int reminderId, DateTime dueAt) =>
+      'med-reminder-$reminderId-${dueAt.toIso8601String()}';
+
+  /// After [changed] was deleted or restored, points [medication]'s reminder
+  /// at its latest dose, or removes it if no dose is left. Does nothing if
+  /// [changed] isn't the latest dose, so a reminder the user already
+  /// dismissed isn't brought back by an older dose coming or going. Unlike
+  /// [_scheduleReminder], this may move the due time earlier.
+  Future<void> _recalculateReminder(
+    Session session,
+    Medication medication,
+    DoseLog changed,
+  ) async {
+    final hours = medication.reminderEveryHours;
+    if (hours == null) return;
+
+    final latest = await DoseLog.db.findFirstRow(
+      session,
+      where: (t) => t.medicationId.equals(medication.id!),
+      orderBy: (t) => t.timestamp.desc(),
+    );
+    if (latest != null && latest.timestamp.isAfter(changed.timestamp)) return;
+
+    final existing = await _reminderOf(session, medication);
+    if (latest == null) {
+      if (existing != null) {
+        await session.serverpod.futureCalls.cancel(
+          _reminderCallId(existing.id!, existing.dueAt),
+        );
+        await MedicationReminder.db.deleteRow(session, existing);
+      }
+      return;
+    }
+
+    final dueAt = latest.timestamp.add(Duration(hours: hours));
+    if (existing != null) {
+      // The call for the old time would find the reminder dismissed and
+      // mark it due again, so cancel it.
+      await session.serverpod.futureCalls.cancel(
+        _reminderCallId(existing.id!, existing.dueAt),
+      );
+    }
+    await _setReminder(session, medication, existing, dueAt);
+  }
+
+  /// Deletes one of the signed-in user's doses (e.g. one logged by mistake)
+  /// and returns it, so the app can offer Undo through [restoreDose].
+  /// Returns null if there's no such dose, or it isn't the user's: the same
+  /// answer either way, so it doesn't reveal that someone else's dose exists.
+  Future<DoseLog?> deleteDose(Session session, int doseLogId) async {
+    final userId = session.authenticated!.authUserId;
+    final dose = await DoseLog.db.findById(session, doseLogId);
+    if (dose == null || dose.userId != userId) return null;
+
+    final medication = await Medication.db.findById(session, dose.medicationId);
+    await DoseLog.db.deleteRow(session, dose);
+    if (medication != null) {
+      await _recalculateReminder(session, medication, dose);
+    }
+    return dose;
+  }
+
+  /// Puts back a dose returned by [deleteDose] (Undo): the same medication,
+  /// day, time, dose text and saved-at time, as a new row. Always saved under
+  /// the signed-in user, whatever the passed dose says.
+  Future<DoseLog> restoreDose(Session session, DoseLog dose) async {
+    final medication = await _ownMedication(session, dose.medicationId);
+    _checkNotFuture(dose.date, dose.timestamp);
+
+    final saved = await DoseLog.db.insertRow(
+      session,
+      DoseLog(
+        userId: session.authenticated!.authUserId,
+        medicationId: medication.id!,
+        date: _dateOnly(dose.date),
+        timestamp: dose.timestamp.toUtc(),
+        loggedAt: dose.loggedAt.toUtc(),
+        dose: dose.dose,
+      ),
+    );
+    await _recalculateReminder(session, medication, saved);
+    return saved;
   }
 
   Future<Medication> _ownMedication(Session session, int medicationId) async {

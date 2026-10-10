@@ -34,6 +34,20 @@ class ClientCalendarServerApi implements CalendarServerApi {
   Future<Prediction> getPrediction() => _client.insight.getPrediction();
 
   @override
+  Future<List<DoseLog>> getDoses(DateTime from, DateTime to) =>
+      _client.pain.getDoseRange(from, to);
+
+  @override
+  Future<List<Medication>> getMedications() => _client.pain.myMeds();
+
+  @override
+  Future<DoseLog?> deleteDose(int doseLogId) =>
+      _client.pain.deleteDose(doseLogId);
+
+  @override
+  Future<void> restoreDose(DoseLog dose) => _client.pain.restoreDose(dose);
+
+  @override
   Future<PeriodChange> longPress(DateTime date) =>
       _client.period.longPress(date);
 

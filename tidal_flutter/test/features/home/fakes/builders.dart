@@ -33,6 +33,21 @@ Medication medication(int id, String name) => Medication(
   usualDose: '200 mg',
 );
 
+DoseLog doseLog(
+  int id,
+  int medicationId,
+  DateTime timestamp, {
+  String dose = '200 mg',
+}) => DoseLog(
+  id: id,
+  userId: testUserId,
+  medicationId: medicationId,
+  date: DateTime.utc(timestamp.year, timestamp.month, timestamp.day),
+  timestamp: timestamp,
+  loggedAt: timestamp,
+  dose: dose,
+);
+
 MedicationReminder reminder(int id, int medicationId, {bool isDue = true}) =>
     MedicationReminder(
       id: id,

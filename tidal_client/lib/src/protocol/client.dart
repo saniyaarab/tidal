@@ -761,6 +761,27 @@ class EndpointPain extends _isc.EndpointRef {
     },
   );
 
+  /// Deletes one of the signed-in user's doses (e.g. one logged by mistake)
+  /// and returns it, so the app can offer Undo through [restoreDose].
+  /// Returns null if there's no such dose, or it isn't the user's: the same
+  /// answer either way, so it doesn't reveal that someone else's dose exists.
+  _ida.Future<_i95dlci0.DoseLog?> deleteDose(int doseLogId) =>
+      caller.callServerEndpoint<_i95dlci0.DoseLog?>(
+        'pain',
+        'deleteDose',
+        {'doseLogId': doseLogId},
+      );
+
+  /// Puts back a dose returned by [deleteDose] (Undo): the same medication,
+  /// day, time, dose text and saved-at time, as a new row. Always saved under
+  /// the signed-in user, whatever the passed dose says.
+  _ida.Future<_i95dlci0.DoseLog> restoreDose(_i95dlci0.DoseLog dose) =>
+      caller.callServerEndpoint<_i95dlci0.DoseLog>(
+        'pain',
+        'restoreDose',
+        {'dose': dose},
+      );
+
   /// Returns the dose logs for the days [start] through [end] (inclusive),
   /// ordered by time.
   _ida.Future<List<_i95dlci0.DoseLog>> getDoseRange(

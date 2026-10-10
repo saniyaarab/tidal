@@ -15,6 +15,11 @@ String messageText(CalendarMessage message) => switch (message.kind) {
     "Periods can't be logged for future dates.",
   CalendarMessageKind.updateFailed =>
     'Could not update the period: ${message.error}',
+  CalendarMessageKind.doseRemoved => 'Dose removed',
+  CalendarMessageKind.doseDeleteFailed =>
+    "Couldn't delete the dose: ${message.error}",
+  CalendarMessageKind.doseRestoreFailed =>
+    "Couldn't restore the dose: ${message.error}",
 };
 
 const undoLabel = 'Undo';

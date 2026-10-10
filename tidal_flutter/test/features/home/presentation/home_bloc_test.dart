@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tidal_client/tidal_client.dart';
 import 'package:tidal_flutter/features/home/domain/day_data.dart';
 import 'package:tidal_flutter/features/home/domain/due_reminder.dart';
+import 'package:tidal_flutter/features/home/domain/home_message.dart';
 import 'package:tidal_flutter/features/home/presentation/bloc/home_bloc.dart';
 import 'package:tidal_flutter/features/home/presentation/bloc/home_event.dart';
 import 'package:tidal_flutter/features/home/presentation/bloc/home_state.dart';
@@ -244,6 +245,80 @@ void main() {
 
       expect(bloc.state.dueReminders, [ibuprofen]);
       expect(repo.reminderLoads, 2);
+    });
+  });
+
+  group('dose actions', () {
+    final tylenol = doseLog(7, 10, DateTime.utc(2026, 10, 3, 8));
+
+    setUp(() async {
+      bloc.add(const HomeStarted());
+      await settle();
+    });
+
+    test('deleting calls the repository, reloads, then says so once', () async {
+      bloc.add(HomeDoseDeleted(tylenol));
+      await settle();
+
+      expect(repo.deletedDoses, [tylenol]);
+      expect(repo.loadedDays, [day(10, 3), day(10, 3)]);
+      expect(repo.reminderLoads, 2);
+      final message = bloc.state.message!;
+      expect(message.kind, HomeMessageKind.doseRemoved);
+      expect(message.dose, tylenol);
+      expect(message.canUndo, isTrue);
+    });
+
+    test('deleting a dose that is already gone reloads, no message', () async {
+      repo.deleteReturnsNull = true;
+
+      bloc.add(HomeDoseDeleted(tylenol));
+      await settle();
+
+      expect(repo.loadedDays, hasLength(2));
+      expect(bloc.state.message, isNull);
+    });
+
+    test('a failing delete says so and keeps the day as it was', () async {
+      repo.deleteDoseError = Exception('offline');
+
+      bloc.add(HomeDoseDeleted(tylenol));
+      await settle();
+
+      expect(repo.loadedDays, hasLength(1));
+      expect(bloc.state.message!.kind, HomeMessageKind.doseDeleteFailed);
+      expect(bloc.state.message!.canUndo, isFalse);
+      expect(bloc.state.dayStatus, DayLoadStatus.loaded);
+    });
+
+    test('restoring calls the repository, then reloads', () async {
+      bloc.add(HomeDoseRestored(tylenol));
+      await settle();
+
+      expect(repo.restoredDoses, [tylenol]);
+      expect(repo.loadedDays, hasLength(2));
+      expect(repo.reminderLoads, 2);
+    });
+
+    test('a failing restore says so and reloads the day', () async {
+      repo.restoreDoseError = Exception('offline');
+
+      bloc.add(HomeDoseRestored(tylenol));
+      await settle();
+
+      expect(bloc.state.message!.kind, HomeMessageKind.doseRestoreFailed);
+      expect(repo.loadedDays, hasLength(2));
+    });
+
+    test('each message gets a new id', () async {
+      bloc.add(HomeDoseDeleted(tylenol));
+      await settle();
+      final first = bloc.state.message!.id;
+
+      bloc.add(HomeDoseDeleted(tylenol));
+      await settle();
+
+      expect(bloc.state.message!.id, greaterThan(first));
     });
   });
 

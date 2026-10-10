@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tidal_client/tidal_client.dart';
 
 import '../../../../date_format.dart';
+import '../../domain/home_message.dart';
 import '../../domain/home_repository.dart';
 import 'home_event.dart';
 import 'home_state.dart';
@@ -20,6 +22,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   // Set as soon as close() starts. close() waits for handlers that are still
   // running, so a late answer must not be emitted while it waits.
   bool _closing = false;
+
+  int _lastMessageId = 0;
 
   HomeBloc({
     required this._repository,
@@ -40,6 +44,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     );
     on<HomeReminderDoseLogged>(_onDoseLogged);
     on<HomeReminderDismissed>(_onDismissed);
+    // sequential: dose changes run one at a time, in the order pressed.
+    on<HomeDoseDeleted>(_onDoseDeleted, transformer: sequential());
+    on<HomeDoseRestored>(_onDoseRestored, transformer: sequential());
 
     _ticks = reminderTicks.listen((_) => add(const HomeRemindersChecked()));
   }
@@ -130,5 +137,50 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       // Keep the banner so the user can try again.
     }
     await _loadReminders(emit);
+  }
+
+  Future<void> _onDoseDeleted(
+    HomeDoseDeleted event,
+    Emitter<HomeState> emit,
+  ) async {
+    final DoseLog? deleted;
+    try {
+      deleted = await _repository.deleteDose(event.dose);
+    } catch (e) {
+      if (_closing) return;
+      emit(
+        state.copyWith(
+          message: HomeMessage.deleteFailed(++_lastMessageId, '$e'),
+        ),
+      );
+      return;
+    }
+    if (_closing) return;
+
+    // Reload even when the dose was already gone, so the band goes away.
+    await Future.wait([_loadDay(emit), _loadReminders(emit)]);
+    if (_closing || deleted == null) return;
+    emit(
+      state.copyWith(
+        message: HomeMessage.doseRemoved(++_lastMessageId, deleted),
+      ),
+    );
+  }
+
+  Future<void> _onDoseRestored(
+    HomeDoseRestored event,
+    Emitter<HomeState> emit,
+  ) async {
+    HomeMessage? failure;
+    try {
+      await _repository.restoreDose(event.dose);
+    } catch (e) {
+      failure = HomeMessage.restoreFailed(++_lastMessageId, '$e');
+    }
+    if (_closing) return;
+
+    await Future.wait([_loadDay(emit), _loadReminders(emit)]);
+    if (_closing || failure == null) return;
+    emit(state.copyWith(message: failure));
   }
 }

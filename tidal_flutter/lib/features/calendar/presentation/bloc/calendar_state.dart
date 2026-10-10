@@ -21,6 +21,8 @@ class CalendarState extends Equatable {
   final Set<DateTime> painDates;
   final List<PainEntry> selectedPainEntries;
   final List<BowelMovement> selectedBowelMovements;
+  final List<DoseLog> selectedDoses;
+  final Map<int, Medication> medicationsById;
 
   /// Null until the first load succeeds.
   final UnitPreferences? units;
@@ -40,6 +42,8 @@ class CalendarState extends Equatable {
     this.painDates = const {},
     this.selectedPainEntries = const [],
     this.selectedBowelMovements = const [],
+    this.selectedDoses = const [],
+    this.medicationsById = const {},
     this.units,
     this.prediction,
     this.message,
@@ -57,6 +61,8 @@ class CalendarState extends Equatable {
     Set<DateTime>? painDates,
     List<PainEntry>? selectedPainEntries,
     List<BowelMovement>? selectedBowelMovements,
+    List<DoseLog>? selectedDoses,
+    Map<int, Medication>? medicationsById,
     UnitPreferences? units,
     Prediction? prediction,
     CalendarMessage? message,
@@ -72,6 +78,8 @@ class CalendarState extends Equatable {
       selectedPainEntries: selectedPainEntries ?? this.selectedPainEntries,
       selectedBowelMovements:
           selectedBowelMovements ?? this.selectedBowelMovements,
+      selectedDoses: selectedDoses ?? this.selectedDoses,
+      medicationsById: medicationsById ?? this.medicationsById,
       units: units ?? this.units,
       prediction: prediction ?? this.prediction,
       message: message ?? this.message,
@@ -89,6 +97,8 @@ class CalendarState extends Equatable {
     painDates,
     selectedPainEntries,
     selectedBowelMovements,
+    selectedDoses,
+    medicationsById,
     units,
     prediction,
     message,

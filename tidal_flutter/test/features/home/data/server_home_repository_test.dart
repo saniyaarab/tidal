@@ -13,11 +13,17 @@ class FakeHomeServerApi implements HomeServerApi {
   List<BowelMovement> bowelMovements = [];
   List<MedicationReminder> reminders = [];
   List<Medication> medications = [];
+  List<DoseLog> doses = [];
   Object? error;
+  Object? dosesError;
+  Object? medicationsError;
 
   final rangeCalls = <(DateTime, DateTime)>[];
   (int, DateTime, DateTime)? loggedDose;
   int? dismissedReminderId;
+  final deletedDoseIds = <int>[];
+  final restoredDoses = <DoseLog>[];
+  DoseLog? deleteResult;
 
   final units = UnitPreferences(
     weightUnit: WeightUnit.kg,
@@ -55,7 +61,25 @@ class FakeHomeServerApi implements HomeServerApi {
   Future<List<MedicationReminder>> getReminders() async => reminders;
 
   @override
-  Future<List<Medication>> getMedications() async => medications;
+  Future<List<Medication>> getMedications() async {
+    if (medicationsError != null) throw medicationsError!;
+    return medications;
+  }
+
+  @override
+  Future<List<DoseLog>> getDoses(DateTime from, DateTime to) async {
+    if (dosesError != null) throw dosesError!;
+    return doses;
+  }
+
+  @override
+  Future<DoseLog?> deleteDose(int doseLogId) async {
+    deletedDoseIds.add(doseLogId);
+    return deleteResult;
+  }
+
+  @override
+  Future<void> restoreDose(DoseLog dose) async => restoredDoses.add(dose);
 
   @override
   Future<void> logDose(
@@ -106,6 +130,27 @@ void main() {
 
     test('propagates failures', () async {
       api.error = Exception('offline');
+      expect(repository.loadDay(day(10, 2)), throwsException);
+    });
+
+    test('includes the day\'s doses and the medications by id', () async {
+      final date = day(10, 2);
+      api.doses = [doseLog(1, 10, date.add(const Duration(hours: 8)))];
+      api.medications = [medication(10, 'Tylenol')];
+
+      final data = await repository.loadDay(date);
+
+      expect(data.doses, api.doses);
+      expect(data.medicationsById, {10: api.medications.single});
+    });
+
+    test('fails as a whole if the doses can\'t be loaded', () async {
+      api.dosesError = Exception('offline');
+      expect(repository.loadDay(day(10, 2)), throwsException);
+    });
+
+    test('fails as a whole if the medications can\'t be loaded', () async {
+      api.medicationsError = Exception('offline');
       expect(repository.loadDay(day(10, 2)), throwsException);
     });
   });
@@ -161,5 +206,28 @@ void main() {
       ),
     );
     expect(api.dismissedReminderId, 7);
+  });
+
+  group('doses', () {
+    final dose = doseLog(7, 10, DateTime.utc(2026, 10, 3, 8));
+
+    test(
+      'deleteDose sends the id and returns what the server answers',
+      () async {
+        api.deleteResult = dose;
+
+        expect(await repository.deleteDose(dose), dose);
+        expect(api.deletedDoseIds, [7]);
+      },
+    );
+
+    test('deleteDose passes on a null answer (already gone)', () async {
+      expect(await repository.deleteDose(dose), isNull);
+    });
+
+    test('restoreDose sends the whole dose', () async {
+      await repository.restoreDose(dose);
+      expect(api.restoredDoses, [dose]);
+    });
   });
 }
