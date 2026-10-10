@@ -22,12 +22,19 @@ class FakeHomeRepository implements HomeRepository {
   Object? remindersError;
   Object? logDoseError;
   Object? dismissError;
+  Object? deleteDoseError;
+  Object? restoreDoseError;
+
+  /// When true, [deleteDose] answers null (the dose was already gone).
+  bool deleteReturnsNull = false;
 
   final List<DateTime> loadedDays = [];
   int predictionLoads = 0;
   int reminderLoads = 0;
   final List<DueReminder> loggedDoses = [];
   final List<DueReminder> dismissed = [];
+  final List<DoseLog> deletedDoses = [];
+  final List<DoseLog> restoredDoses = [];
 
   static final emptyDay = DayData(
     dayLog: null,
@@ -73,5 +80,18 @@ class FakeHomeRepository implements HomeRepository {
   Future<void> dismissReminder(DueReminder reminder) async {
     if (dismissError != null) throw dismissError!;
     dismissed.add(reminder);
+  }
+
+  @override
+  Future<DoseLog?> deleteDose(DoseLog dose) async {
+    if (deleteDoseError != null) throw deleteDoseError!;
+    deletedDoses.add(dose);
+    return deleteReturnsNull ? null : dose;
+  }
+
+  @override
+  Future<void> restoreDose(DoseLog dose) async {
+    if (restoreDoseError != null) throw restoreDoseError!;
+    restoredDoses.add(dose);
   }
 }

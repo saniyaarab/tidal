@@ -41,6 +41,17 @@ class ClientHomeServerApi implements HomeServerApi {
   Future<List<Medication>> getMedications() => _client.pain.myMeds();
 
   @override
+  Future<List<DoseLog>> getDoses(DateTime from, DateTime to) =>
+      _client.pain.getDoseRange(from, to);
+
+  @override
+  Future<DoseLog?> deleteDose(int doseLogId) =>
+      _client.pain.deleteDose(doseLogId);
+
+  @override
+  Future<void> restoreDose(DoseLog dose) => _client.pain.restoreDose(dose);
+
+  @override
   Future<void> logDose(int medicationId, DateTime date, DateTime timestamp) =>
       _client.pain.logDose(medicationId, date, timestamp);
 

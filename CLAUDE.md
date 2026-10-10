@@ -64,7 +64,7 @@ A daily self-care journal, one page per day, with prev/next arrows to move betwe
 Saved on the server as the user taps/types. Included in "Delete all my data". Daily (not weekly) so future insights can relate self-care to pain and mood.
 
 ## More daily logging + medication reminders (agreed Oct 2, 2026)
-New tiles on the Log (+) screen, each with its own sheet. Today and past days only (future days: Note only). Each shows as a band on Home and in the Calendar's day view (medications still don't).
+New tiles on the Log (+) screen, each with its own sheet. Today and past days only (future days: Note only). Each shows as a band on Home and in the Calendar's day view. Medications show too (agreed Oct 9, 2026, issue #7): one lavender band per medication with its latest dose that day, "Tylenol 800 mg · taken 2h ago", with the medication's type icon, ordered by time with pain and bowel movements. Swiping a medication band left reveals a red Delete; deleting shows "Dose removed · Undo" for 4 seconds, and the medication's reminder follows its latest remaining dose. Full dose history is a separate issue (#8).
 - Water: glasses per day (1 glass = 250 ml), − / + counter.
 - Caffeine: caffeinated drinks per day (coffee, tea, energy drinks), − / + counter.
 - Alcohol: drinks per day, − / + counter.
@@ -103,7 +103,7 @@ Every endpoint only returns the signed-in user's own data.
 
 ## Screens (wireframes exist; layout inspired by the Maya app, look is Tidal's own)
 - Bottom nav: Home, Calendar, Insights, Journal, Me. Yellow round "+" button on Home and Calendar.
-- Home ("Today"): cycle day + next period at the top; a large lavender day circle (date, "Day 1", "Period · heavy") with prev/next arrows; below it, full-width pastel bands per logged item (pain = rose, mood = yellow, note = lavender; medications are not shown on Home or Calendar, only in the Medications sheet); a "your pattern" tip row.
+- Home ("Today"): cycle day + next period at the top; a large lavender day circle (date, "Day 1", "Period · heavy") with prev/next arrows; below it, full-width pastel bands per logged item (pain = rose, mood = yellow, note = lavender; medications = lavender, latest dose per medication, swipe left to delete); a "your pattern" tip row.
 - Log menu (+): two big tiles, Pain (rose) and Painkiller (lavender), then round pastel buttons: Flow, Mood, Symptoms, Note, Share, Reminder.
 - Log pain sheet: 0–10 circles (rose ramp), location chips, one-tap "my meds" list, "Save".
 - Calendar, Insights, Journal as described above.

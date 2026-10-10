@@ -104,6 +104,8 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
           painDates: {for (final entry in data.monthPainEntries) entry.date},
           selectedPainEntries: data.selectedPainEntries,
           selectedBowelMovements: data.selectedBowelMovements,
+          selectedDoses: data.selectedDoses,
+          medicationsById: data.medicationsById,
           units: data.units,
           prediction: data.prediction,
         ),
@@ -123,6 +125,8 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
     return switch (event) {
       CalendarDayLongPressed() => _onLongPress(event, emit),
       CalendarUndoPressed() => _onUndo(event, emit),
+      CalendarDoseDeleted() => _onDoseDeleted(event, emit),
+      CalendarDoseRestored() => _onDoseRestored(event, emit),
     };
   }
 
@@ -175,5 +179,50 @@ class CalendarBloc extends Bloc<CalendarEvent, CalendarState> {
     }
     if (_closing) return;
     await _load(emit);
+  }
+
+  Future<void> _onDoseDeleted(
+    CalendarDoseDeleted event,
+    Emitter<CalendarState> emit,
+  ) async {
+    final DoseLog? deleted;
+    try {
+      deleted = await _repository.deleteDose(event.dose);
+    } catch (e) {
+      if (_closing) return;
+      emit(
+        state.copyWith(
+          message: CalendarMessage.doseDeleteFailed(++_lastMessageId, '$e'),
+        ),
+      );
+      return;
+    }
+    if (_closing) return;
+
+    // Reload even when the dose was already gone, so the band goes away.
+    await _load(emit);
+    if (_closing || deleted == null) return;
+    emit(
+      state.copyWith(
+        message: CalendarMessage.doseRemoved(++_lastMessageId, deleted),
+      ),
+    );
+  }
+
+  Future<void> _onDoseRestored(
+    CalendarDoseRestored event,
+    Emitter<CalendarState> emit,
+  ) async {
+    CalendarMessage? failure;
+    try {
+      await _repository.restoreDose(event.dose);
+    } catch (e) {
+      failure = CalendarMessage.doseRestoreFailed(++_lastMessageId, '$e');
+    }
+    if (_closing) return;
+
+    await _load(emit);
+    if (_closing || failure == null) return;
+    emit(state.copyWith(message: failure));
   }
 }

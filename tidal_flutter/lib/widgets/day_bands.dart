@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:tidal_client/tidal_client.dart';
 
 import '../date_format.dart';
 import '../log_labels.dart';
+import '../shared/latest_doses.dart';
 import '../theme.dart';
 import '../units.dart';
+import 'pain_sheets.dart' show medicationIcon;
 
-/// The pastel bands showing what's logged for a day: pain entries and bowel
-/// movements (ordered by time), then the once-a-day details (mood, drinks,
-/// sleep, digestion, body, love) and the note last. Medications aren't
-/// shown here — they're in the Medications sheet. Weight and temperature
-/// are shown in [units]. Shows [emptyMessage] when nothing is logged.
+/// The pastel bands showing what's logged for a day: pain entries, bowel
+/// movements and medications (ordered by time), then the once-a-day details
+/// (mood, drinks, sleep, digestion, body, love) and the note last. Each
+/// medication shows its latest dose of the day, named from [medicationsById].
+/// When [onDeleteDose] is given, swiping a medication band left reveals a
+/// Delete action. Weight and temperature are shown in [units]. Shows
+/// [emptyMessage] when nothing is logged.
 class DayBands extends StatelessWidget {
   final DayLog? dayLog;
   final List<PainEntry> painEntries;
   final List<BowelMovement> bowelMovements;
+  final List<DoseLog> doses;
+  final Map<int, Medication> medicationsById;
+  final ValueChanged<DoseLog>? onDeleteDose;
   final UnitPreferences? units;
   final String emptyMessage;
 
@@ -23,6 +31,9 @@ class DayBands extends StatelessWidget {
     required this.dayLog,
     required this.painEntries,
     this.bowelMovements = const [],
+    this.doses = const [],
+    this.medicationsById = const {},
+    this.onDeleteDose,
     this.units,
     this.emptyMessage =
         'Nothing logged yet today. Tap + to add your flow, mood, or a note.',
@@ -62,6 +73,8 @@ class DayBands extends StatelessWidget {
             trailing: formatRelativeTime(movement.timestamp),
           ),
         ),
+      for (final dose in latestDosePerMedication(doses))
+        (dose.timestamp, _doseBand(dose)),
     ]..sort((a, b) => a.$1.compareTo(b.$1));
 
     final bands = <Widget>[
@@ -149,6 +162,43 @@ class DayBands extends StatelessWidget {
           if (i != bands.length - 1) const SizedBox(height: 12),
         ],
       ],
+    );
+  }
+
+  /// "Tylenol 800 mg · taken 2h ago", lavender with the medication's type
+  /// icon. Swipes left to Delete when [onDeleteDose] is set.
+  Widget _doseBand(DoseLog dose) {
+    final medication = medicationsById[dose.medicationId];
+    final band = Band(
+      color: TidalColors.lavenderBand,
+      iconColor: TidalColors.lavender,
+      icon: medicationIcon(medication?.type),
+      text:
+          '${medication?.name ?? 'Medication'} ${dose.dose} · '
+          'taken ${formatRelativeTime(dose.timestamp)}',
+    );
+    final onDelete = onDeleteDose;
+    if (onDelete == null) return band;
+
+    return Slidable(
+      key: ValueKey('dose-band-${dose.id}'),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.3,
+        children: [
+          SlidableAction(
+            onPressed: (_) => onDelete(dose),
+            backgroundColor: TidalColors.rose,
+            foregroundColor: Colors.white,
+            icon: Icons.delete_outline,
+            label: 'Delete',
+            borderRadius: const BorderRadius.horizontal(
+              right: Radius.circular(TidalRadius.large),
+            ),
+          ),
+        ],
+      ),
+      child: band,
     );
   }
 

@@ -341,6 +341,85 @@ void main() {
     );
   });
 
+  group('doses', () {
+    final tylenol = doseLog(7, 10, DateTime.utc(2026, 10, 3, 8));
+
+    test('deleting calls the repository, reloads, then says so', () async {
+      bloc.add(CalendarDoseDeleted(tylenol));
+      await settle();
+
+      expect(repo.deletedDoses, [tylenol]);
+      expect(repo.loads, hasLength(1));
+      final message = bloc.state.message!;
+      expect(message.kind, CalendarMessageKind.doseRemoved);
+      expect(message.dose, tylenol);
+      expect(message.canUndo, isTrue);
+    });
+
+    test('deleting a dose that is already gone reloads, no message', () async {
+      repo.deleteReturnsNull = true;
+
+      bloc.add(CalendarDoseDeleted(tylenol));
+      await settle();
+
+      expect(repo.loads, hasLength(1));
+      expect(bloc.state.message, isNull);
+    });
+
+    test('a failing delete says so and does not reload', () async {
+      repo.deleteDoseError = Exception('offline');
+
+      bloc.add(CalendarDoseDeleted(tylenol));
+      await settle();
+
+      expect(repo.loads, isEmpty);
+      expect(
+        bloc.state.message!.kind,
+        CalendarMessageKind.doseDeleteFailed,
+      );
+      expect(bloc.state.message!.canUndo, isFalse);
+    });
+
+    test('restoring calls the repository, then reloads', () async {
+      bloc.add(CalendarDoseRestored(tylenol));
+      await settle();
+
+      expect(repo.restoredDoses, [tylenol]);
+      expect(repo.loads, hasLength(1));
+    });
+
+    test('a failing restore says so and reloads', () async {
+      repo.restoreDoseError = Exception('offline');
+
+      bloc.add(CalendarDoseRestored(tylenol));
+      await settle();
+
+      expect(
+        bloc.state.message!.kind,
+        CalendarMessageKind.doseRestoreFailed,
+      );
+      expect(repo.loads, hasLength(1));
+    });
+
+    test('run in order with period edits', () async {
+      final order = <String>[];
+      final gate = Completer<void>();
+      repo.longPressGate = gate.future;
+      repo.onLongPress = () => order.add('period');
+      repo.onDeleteDose = () => order.add('dose');
+
+      bloc.add(CalendarDayLongPressed(day(10, 2)));
+      bloc.add(CalendarDoseDeleted(tylenol));
+      await settle();
+      expect(order, ['period']);
+
+      gate.complete();
+      await settle();
+
+      expect(order, ['period', 'dose']);
+    });
+  });
+
   test('refresh and returning from the log reload the same data', () async {
     bloc.add(const CalendarRefreshed());
     await settle();

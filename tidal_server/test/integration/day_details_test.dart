@@ -1,3 +1,4 @@
+import 'package:serverpod/serverpod.dart' show UuidValue;
 import 'package:test/test.dart';
 import 'package:tidal_server/src/generated/protocol.dart';
 import 'package:tidal_server/src/pain/medication_reminder_future_call.dart';
@@ -284,6 +285,185 @@ void main() {
         await expectLater(
           endpoints.pain.dismissReminder(asUserB, reminder.id!),
           throwsArgumentError,
+        );
+      });
+    });
+
+    group('when removing and restoring a dose', () {
+      Future<Medication> ibuprofenEvery4h() => endpoints.pain.addMedication(
+        asUserA,
+        'Ibuprofen',
+        '400 mg',
+        reminderEveryHours: 4,
+      );
+
+      Future<DoseLog> takeAt(Medication medication, Duration ago) =>
+          endpoints.pain.logDose(
+            asUserA,
+            medication.id!,
+            today,
+            now.subtract(ago),
+          );
+
+      Future<List<DoseLog>> dosesOfA() =>
+          endpoints.pain.getDoseRange(asUserA, today, today);
+
+      test('then deleteDose removes the dose and returns it', () async {
+        final medication = await ibuprofenEvery4h();
+        final dose = await takeAt(medication, const Duration(hours: 1));
+
+        final deleted = await endpoints.pain.deleteDose(asUserA, dose.id!);
+
+        expect(deleted?.id, dose.id);
+        expect(deleted?.dose, '400 mg');
+        expect(await dosesOfA(), isEmpty);
+      });
+
+      test('then another user cannot delete it', () async {
+        final medication = await ibuprofenEvery4h();
+        final dose = await takeAt(medication, const Duration(hours: 1));
+
+        final result = await endpoints.pain.deleteDose(asUserB, dose.id!);
+
+        expect(result, isNull);
+        expect(await dosesOfA(), hasLength(1));
+      });
+
+      test('then a missing dose, or a second delete, returns null', () async {
+        final medication = await ibuprofenEvery4h();
+        final dose = await takeAt(medication, const Duration(hours: 1));
+
+        expect(
+          await endpoints.pain.deleteDose(asUserA, dose.id! + 1000),
+          isNull,
+        );
+        expect(await endpoints.pain.deleteDose(asUserA, dose.id!), isNotNull);
+        expect(await endpoints.pain.deleteDose(asUserA, dose.id!), isNull);
+      });
+
+      test('then deleting the latest dose recalculates the reminder', () async {
+        final medication = await ibuprofenEvery4h();
+        final earlier = await takeAt(medication, const Duration(hours: 3));
+        final latest = await takeAt(medication, const Duration(hours: 1));
+
+        await endpoints.pain.deleteDose(asUserA, latest.id!);
+
+        final reminder = (await endpoints.pain.getReminders(asUserA)).single;
+        final expected = earlier.timestamp.add(const Duration(hours: 4));
+        expect(
+          reminder.dueAt.difference(expected).inSeconds.abs(),
+          lessThan(2),
+        );
+        expect(reminder.isDue, isFalse);
+      });
+
+      test('then deleting the only dose removes the reminder', () async {
+        final medication = await ibuprofenEvery4h();
+        final dose = await takeAt(medication, const Duration(hours: 1));
+        expect(await endpoints.pain.getReminders(asUserA), hasLength(1));
+
+        await endpoints.pain.deleteDose(asUserA, dose.id!);
+
+        expect(await endpoints.pain.getReminders(asUserA), isEmpty);
+      });
+
+      test('then deleting an older dose leaves the reminder alone', () async {
+        final medication = await ibuprofenEvery4h();
+        final older = await takeAt(medication, const Duration(hours: 6));
+        await takeAt(medication, const Duration(hours: 5));
+        final before = (await endpoints.pain.getReminders(asUserA)).single;
+        await endpoints.pain.dismissReminder(asUserA, before.id!);
+
+        await endpoints.pain.deleteDose(asUserA, older.id!);
+
+        final after = (await endpoints.pain.getReminders(asUserA)).single;
+        expect(after.isDue, isFalse);
+        expect(after.dueAt, before.dueAt);
+      });
+
+      test('then restoreDose brings back the same dose and reminder', () async {
+        final medication = await ibuprofenEvery4h();
+        final dose = await takeAt(medication, const Duration(hours: 1));
+        final deleted = await endpoints.pain.deleteDose(asUserA, dose.id!);
+        expect(await endpoints.pain.getReminders(asUserA), isEmpty);
+
+        await endpoints.pain.restoreDose(asUserA, deleted!);
+
+        final restored = (await dosesOfA()).single;
+        expect(restored.medicationId, medication.id);
+        expect(restored.date, dose.date);
+        expect(restored.timestamp, dose.timestamp);
+        expect(restored.dose, dose.dose);
+        expect(restored.loggedAt, dose.loggedAt);
+        final reminder = (await endpoints.pain.getReminders(asUserA)).single;
+        final expected = dose.timestamp.add(const Duration(hours: 4));
+        expect(
+          reminder.dueAt.difference(expected).inSeconds.abs(),
+          lessThan(2),
+        );
+      });
+
+      test('then restoring an older dose leaves the reminder alone', () async {
+        final medication = await ibuprofenEvery4h();
+        final older = await takeAt(medication, const Duration(hours: 6));
+        await takeAt(medication, const Duration(hours: 5));
+        final before = (await endpoints.pain.getReminders(asUserA)).single;
+        final deleted = await endpoints.pain.deleteDose(asUserA, older.id!);
+        await endpoints.pain.dismissReminder(asUserA, before.id!);
+
+        await endpoints.pain.restoreDose(asUserA, deleted!);
+
+        final after = (await endpoints.pain.getReminders(asUserA)).single;
+        expect(after.isDue, isFalse);
+        expect(after.dueAt, before.dueAt);
+      });
+
+      test('then another user cannot restore into my medication', () async {
+        final medication = await ibuprofenEvery4h();
+        final dose = await takeAt(medication, const Duration(hours: 1));
+
+        await expectLater(
+          endpoints.pain.restoreDose(asUserB, dose),
+          throwsArgumentError,
+        );
+        expect(await dosesOfA(), hasLength(1));
+      });
+
+      test('then restoring a future dose throws and saves nothing', () async {
+        final medication = await ibuprofenEvery4h();
+        final future = DoseLog(
+          userId: UuidValue.fromString(userAId),
+          medicationId: medication.id!,
+          date: today,
+          timestamp: now.add(const Duration(hours: 2)),
+          loggedAt: now,
+          dose: '400 mg',
+        );
+
+        await expectLater(
+          endpoints.pain.restoreDose(asUserA, future),
+          throwsArgumentError,
+        );
+        expect(await dosesOfA(), isEmpty);
+      });
+
+      test('then a restored dose is saved under the signed-in user', () async {
+        final medication = await ibuprofenEvery4h();
+        final stranger = DoseLog(
+          userId: UuidValue.fromString(userBId),
+          medicationId: medication.id!,
+          date: today,
+          timestamp: now.subtract(const Duration(hours: 1)),
+          loggedAt: now,
+          dose: '400 mg',
+        );
+
+        await endpoints.pain.restoreDose(asUserA, stranger);
+
+        expect((await dosesOfA()).single.userId.toString(), userAId);
+        expect(
+          await endpoints.pain.getDoseRange(asUserB, today, today),
+          isEmpty,
         );
       });
     });

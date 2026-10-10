@@ -66,7 +66,11 @@ class CalendarScreen extends StatelessWidget {
         action: message.canUndo
             ? SnackBarAction(
                 label: undoLabel,
-                onPressed: () => bloc.add(CalendarUndoPressed(message.change!)),
+                onPressed: () => bloc.add(
+                  message.dose != null
+                      ? CalendarDoseRestored(message.dose!)
+                      : CalendarUndoPressed(message.change!),
+                ),
               )
             : null,
       ),
@@ -138,6 +142,7 @@ class _DayDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bloc = context.read<CalendarBloc>();
     return switch (state.status) {
       CalendarLoadStatus.loading => const Center(
         child: CircularProgressIndicator(),
@@ -150,6 +155,9 @@ class _DayDetail extends StatelessWidget {
         dayLog: state.dayLogFor(state.selectedDate),
         painEntries: state.selectedPainEntries,
         bowelMovements: state.selectedBowelMovements,
+        doses: state.selectedDoses,
+        medicationsById: state.medicationsById,
+        onDeleteDose: (dose) => bloc.add(CalendarDoseDeleted(dose)),
         units: state.units,
         emptyMessage: emptyDayText,
       ),

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:tidal_client/tidal_client.dart';
 
 import '../../domain/due_reminder.dart';
 
@@ -56,4 +57,22 @@ class HomeReminderDismissed extends HomeEvent {
 
   @override
   List<Object?> get props => [reminder];
+}
+
+/// Delete on a medication band: removes that dose.
+class HomeDoseDeleted extends HomeEvent {
+  final DoseLog dose;
+  const HomeDoseDeleted(this.dose);
+
+  @override
+  List<Object?> get props => [dose];
+}
+
+/// Undo on a "Dose removed" message: puts the dose back.
+class HomeDoseRestored extends HomeEvent {
+  final DoseLog dose;
+  const HomeDoseRestored(this.dose);
+
+  @override
+  List<Object?> get props => [dose];
 }
