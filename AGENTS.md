@@ -60,7 +60,7 @@ Tidal is a period and pain tracker: a Flutter app (`tidal_flutter`) backed by a 
 - `InsightEndpoint`: cycles under 18 or over 45 days are excluded from the average; `CycleLength` gained `periodDays`; new `getCycleSummary` returns `CycleSummary` (average cycle, average period + how many confirmed periods it's from, recent cycles). `saveCycleLength` is sign-up-only like `savePeriodLength`.
 - `InsightsScreen` (`screens/insights_screen.dart`, uses `fl_chart`): two stat cards and a stacked bar chart of recent cycles (rose period days, dashed average line, faded "53*" for excluded cycles). `AppShell` rebuilds it on every visit so it reloads.
 - Me no longer shows cycle settings; it shows a read-only "Age" row and sign out. `saveBirthYear` is sign-up-only (throws once set); `cycle_length_sheet.dart` and `pickAndSaveBirthYear` were deleted.
-- `DayBands` shows pain (with time since, e.g. "3h ago"), mood and note only — medications were removed from Home and Calendar at the developer's request (they're in the Medications sheet), so neither screen fetches doses or meds any more. The Insights "Avg period" card shows just the number, with no note.
+- `DayBands` shows pain (with time since, e.g. "3h ago"), mood and note. (Medications were removed from Home and Calendar at first, then came back as bands: see the next section.) The Insights "Avg period" card shows just the number, with no note.
 
 **Step 9 (partner sharing) was cut** by the developer; its tab is now the Journal (below).
 
@@ -98,6 +98,13 @@ Tidal is a period and pain tracker: a Flutter app (`tidal_flutter`) backed by a 
 - Home's day circle still calls `onOpenCalendar(date)`; `AppShell` sends `CalendarDateRequested(date)` to the `CalendarBloc` (the old `ValueNotifier` is gone). Asking for the same date twice now moves the Calendar both times.
 - Period-change messages are one-time messages in bloc state; Undo that fails still reloads the grid.
 - Tests are under `tidal_flutter/test/features/calendar/` (headless domain, data and bloc tests, plus three widget happy paths).
+
+**Medication bands on Home and the Calendar are done (Oct 10, 2026).** See `specs/005-medication-bands/` and "More daily logging" in CLAUDE.md.
+
+- `DayBands` shows one lavender band per medication ("Tylenol 800 mg · taken 2h ago", the medication's type icon) for its latest dose of the day, ordered by time with pain and bowel movements. The rule is `latestDosePerMedication` in `tidal_flutter/lib/shared/latest_doses.dart`, shared by Home and the Calendar. When given `onDeleteDose`, each medication band is a `Slidable` (package `flutter_slidable`): swipe left, tap Delete.
+- `PainEndpoint.deleteDose(doseLogId)` returns the deleted dose, or null if it doesn't exist or isn't the user's (nothing deleted, and it doesn't reveal that someone else's dose exists). `restoreDose(dose)` is Undo: same medication, day, time, dose and saved-at as a new row, always under the signed-in user, refused for future times. Both call `_recalculateReminder`, which only acts when the changed dose is the medication's latest: it points the reminder at the latest remaining dose (cancelling the old future call, since the due time may move earlier) or removes it if none is left. A dismissed reminder is not brought back by deleting an older dose. Tested in `day_details_test.dart`.
+- Home and the Calendar load the day's doses and the medication list with the rest of the day (a failure in either fails the whole day load). New bloc events: `HomeDoseDeleted`/`HomeDoseRestored` and `CalendarDoseDeleted`/`CalendarDoseRestored` (sequential). Each shows a one-time message in the same way: `HomeMessage` (new, `features/home/domain/home_message.dart`) and `CalendarMessage` kinds `doseRemoved`/`doseDeleteFailed`/`doseRestoreFailed`; "Dose removed" has Undo and goes away after 4 seconds.
+- The Calendar and Home don't refresh each other when switching tabs (issue #6), so a dose logged or deleted on one shows on the other after a pull-to-refresh.
 
 **Next**: see "Plan to the deadline" in CLAUDE.md (deploy to Serverpod Cloud, demo video).
 

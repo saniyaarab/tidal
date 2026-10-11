@@ -1794,6 +1794,68 @@ class _PainEndpoint {
     });
   }
 
+  _ida.Future<_ixayhju8.DoseLog?> deleteDose(
+    _ist.TestSessionBuilder sessionBuilder,
+    int doseLogId,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'pain',
+            method: 'deleteDose',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'pain',
+          methodName: 'deleteDose',
+          parameters: _ist.testObjectToJson({'doseLogId': doseLogId}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ixayhju8.DoseLog?>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
+  _ida.Future<_ixayhju8.DoseLog> restoreDose(
+    _ist.TestSessionBuilder sessionBuilder,
+    _ixayhju8.DoseLog dose,
+  ) async {
+    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'pain',
+            method: 'restoreDose',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'pain',
+          methodName: 'restoreDose',
+          parameters: _ist.testObjectToJson({'dose': dose}),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _ida.Future<_ixayhju8.DoseLog>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+
   _ida.Future<List<_ixayhju8.DoseLog>> getDoseRange(
     _ist.TestSessionBuilder sessionBuilder,
     DateTime start,

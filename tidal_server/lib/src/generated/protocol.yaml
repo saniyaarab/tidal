@@ -49,6 +49,8 @@ pain:
   - getReminders:
   - dismissReminder:
   - logDose:
+  - deleteDose:
+  - restoreDose:
   - getDoseRange:
   - getLastDosePerMedication:
 period:

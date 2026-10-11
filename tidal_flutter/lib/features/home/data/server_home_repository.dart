@@ -16,6 +16,9 @@ abstract class HomeServerApi {
   Future<Prediction> getPrediction();
   Future<List<MedicationReminder>> getReminders();
   Future<List<Medication>> getMedications();
+  Future<List<DoseLog>> getDoses(DateTime from, DateTime to);
+  Future<DoseLog?> deleteDose(int doseLogId);
+  Future<void> restoreDose(DoseLog dose);
   Future<void> logDose(int medicationId, DateTime date, DateTime timestamp);
   Future<void> dismissReminder(int reminderId);
 }
@@ -34,6 +37,8 @@ class ServerHomeRepository implements HomeRepository {
       _api.getPeriods(date, date),
       _api.getBowelMovements(date, date),
       _api.getUnitPreferences(),
+      _api.getDoses(date, date),
+      _api.getMedications(),
     ]);
     final dayLogs = results[0] as List<DayLog>;
     final periods = results[2] as List<PeriodSpan>;
@@ -43,6 +48,10 @@ class ServerHomeRepository implements HomeRepository {
       painEntries: results[1] as List<PainEntry>,
       bowelMovements: results[3] as List<BowelMovement>,
       units: results[4] as UnitPreferences,
+      doses: results[5] as List<DoseLog>,
+      medicationsById: {
+        for (final med in results[6] as List<Medication>) med.id!: med,
+      },
     );
   }
 
@@ -78,4 +87,10 @@ class ServerHomeRepository implements HomeRepository {
   @override
   Future<void> dismissReminder(DueReminder reminder) =>
       _api.dismissReminder(reminder.reminderId);
+
+  @override
+  Future<DoseLog?> deleteDose(DoseLog dose) => _api.deleteDose(dose.id!);
+
+  @override
+  Future<void> restoreDose(DoseLog dose) => _api.restoreDose(dose);
 }

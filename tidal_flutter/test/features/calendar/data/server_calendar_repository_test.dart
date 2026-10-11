@@ -13,6 +13,11 @@ class FakeCalendarServerApi implements CalendarServerApi {
   final painEntries = [pain(day(10, 4))];
   final periods = [period(day(10, 1))];
   final bowelMovements = <BowelMovement>[];
+  final doses = [doseLog(1, 10, DateTime.utc(2026, 10, 20, 8))];
+  final medications = [medication(10, 'Tylenol')];
+  final deletedDoseIds = <int>[];
+  final restoredDoses = <DoseLog>[];
+  DoseLog? deleteResult;
   final units = UnitPreferences(
     weightUnit: WeightUnit.kg,
     temperatureUnit: TemperatureUnit.celsius,
@@ -43,6 +48,23 @@ class FakeCalendarServerApi implements CalendarServerApi {
   @override
   Future<List<BowelMovement>> getBowelMovements(DateTime from, DateTime to) =>
       _answer('bowel', from, to, bowelMovements);
+
+  @override
+  Future<List<DoseLog>> getDoses(DateTime from, DateTime to) =>
+      _answer('doses', from, to, doses);
+
+  @override
+  Future<List<Medication>> getMedications() =>
+      _answer('medications', DateTime(0), DateTime(0), medications);
+
+  @override
+  Future<DoseLog?> deleteDose(int doseLogId) async {
+    deletedDoseIds.add(doseLogId);
+    return deleteResult;
+  }
+
+  @override
+  Future<void> restoreDose(DoseLog dose) async => restoredDoses.add(dose);
 
   @override
   Future<UnitPreferences> getUnitPreferences() =>
@@ -90,6 +112,47 @@ void main() {
     expect(data.periods, api.periods);
     expect(data.units, api.units);
     expect(data.prediction, api.predictionResult);
+  });
+
+  test('load includes the selected day\'s doses and the medications', () async {
+    final data = await repo.load(day(10, 1), day(10, 20));
+
+    expect(api.calls, contains(('doses', day(10, 20), day(10, 20))));
+    expect(data.selectedDoses, api.doses);
+    expect(data.medicationsById, {10: api.medications.single});
+  });
+
+  test('load fails as a whole if the doses can\'t be loaded', () async {
+    api.failOn = 'doses';
+    expect(repo.load(day(10, 1), day(10, 20)), throwsStateError);
+  });
+
+  test('load fails as a whole if the medications can\'t be loaded', () async {
+    api.failOn = 'medications';
+    expect(repo.load(day(10, 1), day(10, 20)), throwsStateError);
+  });
+
+  group('doses', () {
+    final dose = doseLog(7, 10, DateTime.utc(2026, 10, 3, 8));
+
+    test(
+      'deleteDose sends the id and returns what the server answers',
+      () async {
+        api.deleteResult = dose;
+
+        expect(await repo.deleteDose(dose), dose);
+        expect(api.deletedDoseIds, [7]);
+      },
+    );
+
+    test('deleteDose passes on a null answer (already gone)', () async {
+      expect(await repo.deleteDose(dose), isNull);
+    });
+
+    test('restoreDose sends the whole dose', () async {
+      await repo.restoreDose(dose);
+      expect(api.restoredDoses, [dose]);
+    });
   });
 
   test('a selected day outside the month still gets its own range', () async {

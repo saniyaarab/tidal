@@ -50,8 +50,8 @@ class CalendarReturnedFromLog extends CalendarEvent {
   const CalendarReturnedFromLog();
 }
 
-/// Changes to periods. They share one base type so they run one at a time:
-/// two quick presses must not interleave their server writes.
+/// Changes to periods and doses. They share one base type so they run one
+/// at a time: two quick presses must not interleave their server writes.
 sealed class CalendarPeriodEdit extends CalendarEvent {
   const CalendarPeriodEdit();
 }
@@ -72,4 +72,22 @@ class CalendarUndoPressed extends CalendarPeriodEdit {
 
   @override
   List<Object?> get props => [change];
+}
+
+/// Delete on a medication band: removes that dose.
+class CalendarDoseDeleted extends CalendarPeriodEdit {
+  final DoseLog dose;
+  const CalendarDoseDeleted(this.dose);
+
+  @override
+  List<Object?> get props => [dose];
+}
+
+/// Undo on a "Dose removed" message: puts the dose back.
+class CalendarDoseRestored extends CalendarPeriodEdit {
+  final DoseLog dose;
+  const CalendarDoseRestored(this.dose);
+
+  @override
+  List<Object?> get props => [dose];
 }

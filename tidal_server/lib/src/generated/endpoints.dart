@@ -28,6 +28,7 @@ import 'package:tidal_server/src/generated/log/love_type.dart' as _i495j52x;
 import 'package:tidal_server/src/generated/log/mood.dart' as _ij0gfvc4;
 import 'package:tidal_server/src/generated/log/mucus_type.dart' as _iilodfy8;
 import 'package:tidal_server/src/generated/log/severity.dart' as _inu6v1qs;
+import 'package:tidal_server/src/generated/pain/dose_log.dart' as _ixayhju8;
 import 'package:tidal_server/src/generated/pain/medication_type.dart'
     as _i4gcwlpe;
 import 'package:tidal_server/src/generated/pain/pain_location.dart'
@@ -1070,6 +1071,44 @@ class Endpoints extends _is.EndpointDispatch {
                 params['date'],
                 params['timestamp'],
               ),
+        ),
+        'deleteDose': _is.MethodConnector(
+          name: 'deleteDose',
+          params: {
+            'doseLogId': _is.ParameterDescription(
+              name: 'doseLogId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['pain'] as _i9flen3s.PainEndpoint).deleteDose(
+                    session,
+                    params['doseLogId'],
+                  ),
+        ),
+        'restoreDose': _is.MethodConnector(
+          name: 'restoreDose',
+          params: {
+            'dose': _is.ParameterDescription(
+              name: 'dose',
+              type: _is.getType<_ixayhju8.DoseLog>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['pain'] as _i9flen3s.PainEndpoint).restoreDose(
+                    session,
+                    params['dose'],
+                  ),
         ),
         'getDoseRange': _is.MethodConnector(
           name: 'getDoseRange',

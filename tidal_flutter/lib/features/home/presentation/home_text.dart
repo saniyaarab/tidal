@@ -3,6 +3,7 @@ import 'package:tidal_client/tidal_client.dart';
 import '../../../log_labels.dart';
 import '../domain/cycle_outlook.dart';
 import '../domain/day_status.dart';
+import '../domain/home_message.dart';
 
 // The wording Home shows. The domain rules produce values; turning them into
 // text happens only here, so this is the one place to localize later.
@@ -39,3 +40,14 @@ String? cycleSubtitleText(CycleOutlook outlook) {
       ? 'Next period expected any day now'
       : 'Next period in $days days (±${outlook.confidenceDays})';
 }
+
+/// The text of a one-time message.
+String messageText(HomeMessage message) => switch (message.kind) {
+  HomeMessageKind.doseRemoved => 'Dose removed',
+  HomeMessageKind.doseDeleteFailed =>
+    "Couldn't delete the dose: ${message.error}",
+  HomeMessageKind.doseRestoreFailed =>
+    "Couldn't restore the dose: ${message.error}",
+};
+
+const undoLabel = 'Undo';

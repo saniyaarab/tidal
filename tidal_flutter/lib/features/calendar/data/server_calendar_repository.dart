@@ -13,6 +13,10 @@ abstract class CalendarServerApi {
   Future<List<BowelMovement>> getBowelMovements(DateTime from, DateTime to);
   Future<UnitPreferences> getUnitPreferences();
   Future<Prediction> getPrediction();
+  Future<List<DoseLog>> getDoses(DateTime from, DateTime to);
+  Future<List<Medication>> getMedications();
+  Future<DoseLog?> deleteDose(int doseLogId);
+  Future<void> restoreDose(DoseLog dose);
   Future<PeriodChange> longPress(DateTime date);
   Future<void> undo(PeriodChange change);
 }
@@ -36,6 +40,8 @@ class ServerCalendarRepository implements CalendarRepository {
       _api.getPeriods(grid.gridStart, grid.gridEnd),
       _api.getBowelMovements(selectedDate, selectedDate),
       _api.getUnitPreferences(),
+      _api.getDoses(selectedDate, selectedDate),
+      _api.getMedications(),
     ]);
     return CalendarData(
       monthDayLogs: results[0] as List<DayLog>,
@@ -45,6 +51,10 @@ class ServerCalendarRepository implements CalendarRepository {
       periods: results[4] as List<PeriodSpan>,
       selectedBowelMovements: results[5] as List<BowelMovement>,
       units: results[6] as UnitPreferences,
+      selectedDoses: results[7] as List<DoseLog>,
+      medicationsById: {
+        for (final med in results[8] as List<Medication>) med.id!: med,
+      },
     );
   }
 
@@ -53,4 +63,10 @@ class ServerCalendarRepository implements CalendarRepository {
 
   @override
   Future<void> undo(PeriodChange change) => _api.undo(change);
+
+  @override
+  Future<DoseLog?> deleteDose(DoseLog dose) => _api.deleteDose(dose.id!);
+
+  @override
+  Future<void> restoreDose(DoseLog dose) => _api.restoreDose(dose);
 }

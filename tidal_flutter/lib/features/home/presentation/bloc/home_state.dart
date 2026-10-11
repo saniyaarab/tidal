@@ -3,6 +3,7 @@ import 'package:tidal_client/tidal_client.dart';
 
 import '../../domain/day_data.dart';
 import '../../domain/due_reminder.dart';
+import '../../domain/home_message.dart';
 
 enum DayLoadStatus { loading, loaded, failed }
 
@@ -23,6 +24,10 @@ class HomeState extends Equatable {
 
   final List<DueReminder> dueReminders;
 
+  /// The latest one-time message. It stays here after being shown; the
+  /// screen shows each message id once, when it first appears.
+  final HomeMessage? message;
+
   const HomeState({
     required this.selectedDate,
     this.dayStatus = DayLoadStatus.loading,
@@ -30,6 +35,7 @@ class HomeState extends Equatable {
     this.error,
     this.prediction,
     this.dueReminders = const [],
+    this.message,
   });
 
   HomeState copyWith({
@@ -39,6 +45,7 @@ class HomeState extends Equatable {
     String? Function()? error,
     Prediction? prediction,
     List<DueReminder>? dueReminders,
+    HomeMessage? message,
   }) {
     return HomeState(
       selectedDate: selectedDate ?? this.selectedDate,
@@ -47,6 +54,7 @@ class HomeState extends Equatable {
       error: error != null ? error() : this.error,
       prediction: prediction ?? this.prediction,
       dueReminders: dueReminders ?? this.dueReminders,
+      message: message ?? this.message,
     );
   }
 
@@ -58,5 +66,6 @@ class HomeState extends Equatable {
     error,
     prediction,
     dueReminders,
+    message,
   ];
 }

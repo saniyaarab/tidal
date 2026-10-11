@@ -21,10 +21,23 @@ class FakeCalendarRepository implements CalendarRepository {
   PeriodChange changeToReturn = periodChange(PeriodChangeKind.started, 5);
   Object? longPressError;
   Object? undoError;
+  Object? deleteDoseError;
+  Object? restoreDoseError;
+
+  /// When true, [deleteDose] answers null (the dose was already gone).
+  bool deleteReturnsNull = false;
+
+  /// When set, [longPress] waits for it, and [onLongPress] and
+  /// [onDeleteDose] are called when those calls start (to check ordering).
+  Future<void>? longPressGate;
+  void Function()? onLongPress;
+  void Function()? onDeleteDose;
 
   final List<(DateTime, DateTime)> loads = [];
   final List<DateTime> longPresses = [];
   final List<PeriodChange> undone = [];
+  final List<DoseLog> deletedDoses = [];
+  final List<DoseLog> restoredDoses = [];
 
   static final emptyData = CalendarData(
     monthDayLogs: const [],
@@ -51,6 +64,8 @@ class FakeCalendarRepository implements CalendarRepository {
   @override
   Future<PeriodChange> longPress(DateTime date) async {
     longPresses.add(date);
+    onLongPress?.call();
+    await longPressGate;
     if (longPressError != null) throw longPressError!;
     return changeToReturn;
   }
@@ -59,5 +74,19 @@ class FakeCalendarRepository implements CalendarRepository {
   Future<void> undo(PeriodChange change) async {
     undone.add(change);
     if (undoError != null) throw undoError!;
+  }
+
+  @override
+  Future<DoseLog?> deleteDose(DoseLog dose) async {
+    onDeleteDose?.call();
+    if (deleteDoseError != null) throw deleteDoseError!;
+    deletedDoses.add(dose);
+    return deleteReturnsNull ? null : dose;
+  }
+
+  @override
+  Future<void> restoreDose(DoseLog dose) async {
+    if (restoreDoseError != null) throw restoreDoseError!;
+    restoredDoses.add(dose);
   }
 }

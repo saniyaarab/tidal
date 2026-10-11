@@ -49,9 +49,44 @@ class HomeScreen extends StatelessWidget {
     return bloc.stream.firstWhere((s) => s.dayStatus != DayLoadStatus.loading);
   }
 
+  /// Shows [state]'s newest message, replacing any still on screen.
+  void _showMessage(BuildContext context, HomeState state) {
+    final message = state.message!;
+    final bloc = context.read<HomeBloc>();
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(messageText(message)),
+        // Disappear after the default 4 seconds even with an Undo button:
+        // since Flutter 3.29 a SnackBar with an action stays until tapped
+        // unless told otherwise, and then it lingers on every tab.
+        persist: false,
+        action: message.canUndo
+            ? SnackBarAction(
+                label: undoLabel,
+                onPressed: () => bloc.add(HomeDoseRestored(message.dose!)),
+              )
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<HomeBloc>();
+    return BlocListener<HomeBloc, HomeState>(
+      // Only a message that is new (a different id) is shown, so rebuilding
+      // the screen never repeats one.
+      listenWhen: (previous, current) =>
+          current.message != null &&
+          previous.message?.id != current.message!.id,
+      listener: _showMessage,
+      child: _buildScaffold(context, bloc),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context, HomeBloc bloc) {
     return Scaffold(
       appBar: AppBar(title: const Text('Today')),
       floatingActionButton: FloatingActionButton(
@@ -105,6 +140,9 @@ class HomeScreen extends StatelessWidget {
                     dayLog: day.dayLog,
                     painEntries: day.painEntries,
                     bowelMovements: day.bowelMovements,
+                    doses: day.doses,
+                    medicationsById: day.medicationsById,
+                    onDeleteDose: (dose) => bloc.add(HomeDoseDeleted(dose)),
                     units: day.units,
                   ),
               ],

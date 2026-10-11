@@ -15,4 +15,11 @@ abstract class CalendarRepository {
 
   /// Reverses [change].
   Future<void> undo(PeriodChange change);
+
+  /// Deletes [dose]. Returns the deleted dose (for Undo), or null if it was
+  /// already gone.
+  Future<DoseLog?> deleteDose(DoseLog dose);
+
+  /// Puts back a dose returned by [deleteDose] (Undo).
+  Future<void> restoreDose(DoseLog dose);
 }
