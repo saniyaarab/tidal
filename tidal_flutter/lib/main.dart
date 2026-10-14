@@ -20,6 +20,18 @@ class TidalApp extends StatelessWidget {
     return MaterialApp(
       title: 'Tidal',
       theme: buildTidalTheme(),
+      // Tidal is a phone app: on a wide screen (the web build in a desktop
+      // browser), keep it phone-width and centred instead of stretched.
+      // Wrapping here also keeps sheets, dialogs and messages inside it.
+      builder: (context, child) => ColoredBox(
+        color: TidalColors.background,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: child,
+          ),
+        ),
+      ),
       home: const Scaffold(
         body: SignInScreen(
           child: CycleSetupGate(child: AppShell()),
